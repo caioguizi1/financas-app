@@ -3,7 +3,8 @@ export type Cat = readonly [key: string, emoji: string, nome: string];
 export const CAT_OUT: Cat[] = [
   ['mercado', '🛒', 'Mercado'], ['comida', '🍔', 'Comida'], ['transporte', '🚗', 'Transporte'], ['casa', '🏠', 'Casa'],
   ['contas', '💡', 'Contas'], ['saude', '💊', 'Saúde'], ['lazer', '🎉', 'Lazer'], ['compras', '🛍️', 'Compras'],
-  ['assinaturas', '📺', 'Assinaturas'], ['educacao', '📚', 'Educação'], ['outros', '•', 'Outros'],
+  ['assinaturas', '📺', 'Assinaturas'], ['educacao', '📚', 'Educação'], ['pets', '🐾', 'Pets'], ['beleza', '💇', 'Beleza'],
+  ['viagem', '✈️', 'Viagem'], ['outros', '•', 'Outros'],
 ];
 export const CAT_IN: Cat[] = [
   ['salario', '💼', 'Salário'], ['extra', '💻', 'Renda extra'], ['reembolso', '↩️', 'Reembolso'], ['outros_in', '✨', 'Outros'],

@@ -36,6 +36,8 @@ export interface Lancamento {
   data: ISODate;
   cartaoId?: string | null;
   parcelas?: number;
+  /** Ícone sugerido pelo dicionário (ex.: 🐾); se ausente, usa o da categoria. */
+  ico?: string;
   criado: number;
 }
 
@@ -56,6 +58,8 @@ export interface Data {
   lancamentos: Lancamento[];
   /** Contagem de uso por categoria, para ordenar sugestões. */
   uso: Record<string, number>;
+  /** O que o app aprendeu com as escolhas do usuário: 'tipo|termo' → categoria/ícone. */
+  aprendido?: Record<string, { cat: string; ico?: string; n: number }>;
 }
 
 /** Movimento de caixa já resolvido (data em que o dinheiro entra/sai da conta). */

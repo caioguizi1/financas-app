@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { CAT_IN, CAT_OUT, catN } from '../lib/categories';
+import { useMemo, useState } from 'react';
+import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
+import { aprender, sugerir } from '../lib/smart';
+import { SmartDesc, SmartHint } from '../ui/Smart';
 import { dateOf, monthKey, today } from '../lib/dates';
 import { uid } from '../lib/money';
 import type { Recorrente, Tipo } from '../lib/types';
@@ -15,12 +17,19 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const [r, setR] = useState<Draft>(() => rec ?? { tipo, desc: '', cat: tipo === 'entrada' ? 'salario' : 'contas', valor: 0, dia: null });
   const set = (p: Partial<Draft>) => setR((x) => ({ ...x, ...p }));
   const cats = r.tipo === 'entrada' ? CAT_IN : CAT_OUT;
-  const cartoes = getData().cartoes;
+  const D = getData();
+  const cartoes = D.cartoes;
+  // existente ou sugestão do cadastro (com ícone) = já escolhido; senão o dicionário decide até a pessoa tocar numa categoria
+  const [manual, setManual] = useState(!novo || !!rec?.ico);
+  const sug = useMemo(() => sugerir(r.desc, r.tipo, D.aprendido), [r.desc, r.tipo, D.aprendido]);
+  const usaSug = !manual && !!sug;
+  const cat = usaSug ? sug!.cat : r.cat;
+  const ico = usaSug ? sug!.ico || catE(cat) : r.ico || catE(cat);
 
   const salvar = () => {
     if (!r.valor || !r.dia) return;
-    const final: Recorrente = { ...r, dia: r.dia, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(r.cat) };
-    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : d.recorrentes.map((x) => (x.id === final.id ? final : x)) }));
+    const final: Recorrente = { ...r, cat, ico: ico !== catE(cat) ? ico : undefined, dia: r.dia, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(cat) };
+    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : d.recorrentes.map((x) => (x.id === final.id ? final : x)), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
     closeSheet();
     toast(novo ? 'Fixo adicionado' : 'Atualizado');
   };
@@ -43,14 +52,15 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   return (
     <>
       <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
-      <input className="field" placeholder="Nome (ex: Internet)" value={r.desc} onChange={(e) => set({ desc: e.target.value })} />
+      <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
+      <SmartHint sug={sug} aplicada={usaSug} />
       <AmountDisplay value={r.valor} />
       <Keypad value={r.valor} onChange={(valor) => set({ valor })} />
       <div className="lab">Todo dia</div>
       <DayGrid value={r.dia} onChange={(dia) => set({ dia })} />
       <div className="lab">Categoria</div>
       <div className="chips scroll">
-        {cats.map(([k, e, n]) => <Chip key={k} on={r.cat === k} onClick={() => set({ cat: k, ico: undefined })}>{e} {n}</Chip>)}
+        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k, ico: undefined }); }}>{e} {n}</Chip>)}
       </div>
       {r.tipo === 'saida' && cartoes.length > 0 && (
         <>

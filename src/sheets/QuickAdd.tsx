@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useMemo, useState } from 'react';
-import { CAT_IN, CAT_OUT } from '../lib/categories';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CAT_IN, CAT_OUT, catE } from '../lib/categories';
+import { aprender, sugerir } from '../lib/smart';
+import { SmartDesc, SmartHint } from '../ui/Smart';
 import { addDays, diaLabel, dm, today } from '../lib/dates';
 import { pagamentoCartao } from '../lib/engine';
 import { brl, uid } from '../lib/money';
@@ -16,12 +18,22 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const D = getData();
   const [l, setL] = useState<Lancamento>(() => lanc ?? { id: '', tipo: 'saida', valor: 0, cat: '', data: today(), cartaoId: null, parcelas: 1, desc: '', criado: 0 });
   const set = (p: Partial<Lancamento>) => setL((x) => ({ ...x, ...p }));
+  // categoria escolhida à mão? então a sugestão não sobrescreve
+  const [manual, setManual] = useState(!!lanc);
+  const sug = useMemo(() => sugerir(l.desc, l.tipo, D.aprendido), [l.desc, l.tipo, D.aprendido]);
 
   const cats = useMemo(() => {
     const list = l.tipo === 'saida' ? CAT_OUT : CAT_IN;
     return [...list].sort((a, b) => (D.uso[b[0]] ?? 0) - (D.uso[a[0]] ?? 0));
   }, [l.tipo, D.uso]);
-  const cat = l.cat && (l.cat === 'fatura' || cats.some((c) => c[0] === l.cat)) ? l.cat : cats[0][0];
+  const catEscolhida = l.cat && (l.cat === 'fatura' || cats.some((c) => c[0] === l.cat)) ? l.cat : '';
+  const usaSug = !manual && !!sug;
+  const cat = usaSug ? sug!.cat : catEscolhida || cats[0][0];
+  const ico = sug && sug.cat === cat ? sug.ico || catE(cat) : manual && lanc?.ico && lanc.cat === cat ? lanc.ico : catE(cat);
+  const chipsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    chipsRef.current?.querySelector('.chip.on')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [cat]);
   const cartao = l.cartaoId ? D.cartoes.find((c) => c.id === l.cartaoId) : undefined;
   const parcelas = l.parcelas ?? 1;
 
@@ -31,16 +43,16 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
 
   const salvar = () => {
     if (!l.valor) return;
-    const final: Lancamento = { ...l, cat, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' ? l.cartaoId : null, parcelas: cartao ? parcelas : 1 };
+    const final: Lancamento = { ...l, cat, ico: ico !== catE(cat) ? ico : undefined, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' ? l.cartaoId : null, parcelas: cartao ? parcelas : 1 };
     closeSheet();
     if (novo) {
       const before = getData();
       final.id = uid();
       final.criado = Date.now();
-      mutate((d) => ({ ...d, lancamentos: [...d.lancamentos, final], uso: { ...d.uso, [cat]: (d.uso[cat] ?? 0) + 1 } }));
+      mutate((d) => ({ ...d, lancamentos: [...d.lancamentos, final], uso: { ...d.uso, [cat]: (d.uso[cat] ?? 0) + 1 }, aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
       toast(`${final.tipo === 'saida' ? 'Saída' : 'Entrada'} de ${brl(final.valor)} lançada`, () => restore(before));
     } else {
-      mutate((d) => ({ ...d, lancamentos: d.lancamentos.map((x) => (x.id === final.id ? final : x)) }));
+      mutate((d) => ({ ...d, lancamentos: d.lancamentos.map((x) => (x.id === final.id ? final : x)), aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
       toast('Atualizado');
     }
   };
@@ -54,13 +66,16 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       <SheetHeader title={novo ? 'Novo lançamento' : 'Editar lançamento'} onDelete={novo ? undefined : apagar} />
       <Segmented
         value={l.tipo}
-        onChange={(tipo) => set({ tipo, cat: '', ...(tipo === 'entrada' ? { cartaoId: null, parcelas: 1 } : {}) })}
+        onChange={(tipo) => { setManual(false); set({ tipo, cat: '', ...(tipo === 'entrada' ? { cartaoId: null, parcelas: 1 } : {}) }); }}
         options={[{ v: 'saida', label: 'Saída', tone: 'out' }, { v: 'entrada', label: 'Entrada', tone: 'in' }]}
       />
       <AmountDisplay value={l.valor} compact />
 
-      <div className="chips scroll">
-        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => set({ cat: k })}>{e} {n}</Chip>)}
+      <SmartDesc value={l.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={l.tipo === 'saida' ? 'Com o quê? (ex: ração, uber, ifood)' : 'De onde veio? (ex: freela)'} />
+      <SmartHint sug={sug} aplicada={usaSug} />
+
+      <div className="chips scroll" ref={chipsRef} style={{ marginTop: 10 }}>
+        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k }); }}>{e} {n}</Chip>)}
       </div>
 
       {l.tipo === 'saida' && D.cartoes.length > 0 && (
@@ -92,8 +107,6 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
           <input type="date" value={l.data} onChange={(e) => e.target.value && set({ data: e.target.value })} className="date-overlay" />
         </label>
       </div>
-      <input className="field" placeholder="Descrição (opcional)" value={l.desc} onChange={(e) => set({ desc: e.target.value })}
-        onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget.blur(), e.preventDefault())} style={{ marginTop: 12 }} enterKeyHint="done" />
 
       <Keypad small value={l.valor} onChange={(valor) => set({ valor })} />
       <div className="actions tight">

@@ -239,3 +239,12 @@ html.sheet-open body{overflow:hidden}
 .sa{width:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:650;color:#fff}
 .sa.edit{background:#5B5B6B}
 .sa.del{background:#E5484D}
+
+/* dicionário inteligente */
+.smart-desc{position:relative;margin-top:6px}
+.smart-desc .field{padding-left:54px}
+.smart-ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:11px;background:#262631;display:grid;place-items:center;font-size:19px;pointer-events:none;overflow:hidden}
+.smart-ico span{display:block;line-height:1}
+.smart-hint{font-size:13px;color:var(--mut);padding:8px 4px 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.smart-hint b{color:var(--text);font-weight:600}
+.smart-hint .spark{margin-right:4px}

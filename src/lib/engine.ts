@@ -53,7 +53,7 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
         out.push({
           data: cash, valor: l.tipo === 'entrada' ? v : -v,
           desc: (l.desc || catN(l.cat)) + (n > 1 ? ` ${i + 1}/${n}` : ''),
-          cat: l.cat, ref: l.id, lanc: true, cartao: c?.nome ?? null, criado: l.criado || 0,
+          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: c?.nome ?? null, criado: l.criado || 0,
         });
       }
     }

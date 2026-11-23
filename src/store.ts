@@ -10,7 +10,7 @@ const KEY = 'fluxo.v1';
 export const blank = (): Data => ({
   v: 1, onboarded: false, perfil: { nome: '' },
   saldo: { valor: 0, data: today(), ts: Date.now() },
-  recorrentes: [], cartoes: [], lancamentos: [], uso: {},
+  recorrentes: [], cartoes: [], lancamentos: [], uso: {}, aprendido: {},
 });
 
 function load(): Data {
