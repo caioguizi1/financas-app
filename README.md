@@ -35,6 +35,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.2.1** — novo ícone vetorial (seta de tendência + selo de check), nítido em todos os tamanhos; fonte em `design/icon.svg`.
 - **v2.2** — dicionário inteligente: ícone e categoria sugeridos enquanto digita (sinônimos, marcas, plural, erro de digitação), aprendendo com as escolhas do usuário; novas categorias Pets, Beleza e Viagem.
 - **v2.1** — deslizar o item pro lado revela Editar/Apagar (arrastar até o fim apaga), com Desfazer; janelas com Cancelar, lixeira no cabeçalho e fechamento arrastando pra baixo de qualquer ponto, sem salvar nada.
 - **v2.0.1** — corrige destaque do dia selecionado (não aparecia); dias e valores agora são obrigatórios antes de avançar/salvar, com a seleção escrita abaixo do calendário; gastos fixos já cadastrados ganham ✓.
