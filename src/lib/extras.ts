@@ -3,6 +3,7 @@
  * Valores e datas são sugestões editáveis — cada empresa/acordo tem suas regras.
  */
 import { dateOf } from './dates';
+import { diaUtilAntes } from './folha';
 
 export interface ParcelaModelo { label: string; pct: number; data: (hoje: string) => string }
 export interface ExtraModelo {
@@ -32,10 +33,10 @@ export const EXTRAS: ExtraModelo[] = [
   {
     k: '13', nome: '13º salário', ico: '🎄', cat: 'salario',
     parcelas: [
-      { label: '1ª parcela', pct: 0.5, data: (h) => dateOf(ano13(h), 10, 30) },
-      { label: '2ª parcela', pct: 0.5, data: (h) => dateOf(ano13(h), 11, 20) },
+      { label: '1ª parcela', pct: 0.5, data: (h) => diaUtilAntes(dateOf(ano13(h), 10, 30)) },
+      { label: '2ª parcela', pct: 0.5, data: (h) => diaUtilAntes(dateOf(ano13(h), 11, 20)) },
     ],
-    nota: 'Pela CLT, a 1ª parcela sai até 30/nov, sem descontos; a 2ª até 20/dez, com INSS e IR — por isso costuma ser menor. Ajuste os valores pelo seu holerite.',
+    nota: 'Pela CLT, a 1ª parcela sai até 30/nov, sem descontos; a 2ª até 20/dez (antes, se cair no fim de semana), com INSS e IR do 13º inteiro — por isso é menor.',
   },
   {
     k: 'plr', nome: 'PLR', ico: '🏆', cat: 'extra', divisivel: true,
@@ -43,7 +44,7 @@ export const EXTRAS: ExtraModelo[] = [
       { label: '1ª parcela', pct: 0, data: (h) => proxData(h, 1, 28) },
       { label: '2ª parcela', pct: 0, data: (h) => proxData(h, 7, 30) },
     ],
-    nota: 'Datas e valores dependem do acordo da sua empresa. Muita gente recebe em 2 parcelas (ex.: fevereiro e agosto).',
+    nota: 'Informe o valor BRUTO: o app desconta o IR pela tabela exclusiva da PLR (sem INSS; isenta até R$ 8.214,40 no ano). Datas dependem do acordo da sua empresa.',
   },
   {
     k: 'ferias', nome: 'Férias (1/3)', ico: '🏖️', cat: 'salario',

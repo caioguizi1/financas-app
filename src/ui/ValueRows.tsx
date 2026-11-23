@@ -4,7 +4,7 @@ import { centsToStr } from '../lib/money';
 import { Keypad } from './Money';
 import { springSnappy } from './motion';
 
-export interface Linha { label: string; valor: number; data?: string; fixo?: boolean }
+export interface Linha { id?: string; label: string; valor: number; data?: string; fixo?: boolean; nota?: string }
 
 /**
  * Vários valores com UM teclado: toque na linha pra escolher qual está editando.
@@ -17,10 +17,11 @@ export function ValueRows({ linhas, ativa, onAtiva, onValor, onData }: {
     <>
       <div className="vrows">
         {linhas.map((l, i) => (
-          <m.div key={l.label} layout className={`vrow ${i === ativa ? 'on' : ''} ${l.fixo ? 'ro' : ''}`} onClick={() => !l.fixo && onAtiva(i)} transition={springSnappy}>
+          <m.div key={l.id ?? l.label} layout className={`vrow ${i === ativa ? 'on' : ''} ${l.fixo ? 'ro' : ''}`} onClick={() => !l.fixo && onAtiva(i)} transition={springSnappy}>
             {i === ativa && !l.fixo && <m.span layoutId="vrow-pill" className="vrow-pill" transition={springSnappy} />}
             <div className="vr-l">
               <div className="vr-t">{l.label}</div>
+              {l.nota && <div className="vr-n">{l.nota}</div>}
               {l.data && onData && (
                 <label className="vr-d" onClick={(e) => e.stopPropagation()}>
                   📅 {dm(l.data)}/{l.data.slice(2, 4)}

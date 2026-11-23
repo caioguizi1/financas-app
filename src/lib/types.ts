@@ -38,6 +38,8 @@ export interface Lancamento {
   data: ISODate;
   cartaoId?: string | null;
   parcelas?: number;
+  /** Valor bruto (ex.: PLR), quando o lançamento guarda o líquido. */
+  bruto?: number;
   /** Ícone sugerido pelo dicionário (ex.: 🐾); se ausente, usa o da categoria. */
   ico?: string;
   criado: number;
@@ -62,6 +64,8 @@ export interface Data {
   uso: Record<string, number>;
   /** O que o app aprendeu com as escolhas do usuário: 'tipo|termo' → categoria/ícone. */
   aprendido?: Record<string, { cat: string; ico?: string; n: number }>;
+  /** Salário bruto informado em Minha renda (para calcular INSS, IR, 13º). */
+  folha?: { bruto: number; dependentes: number; outros: number };
   /** Avisos que o usuário dispensou (ex.: '13-2026'). */
   dispensados?: string[];
 }

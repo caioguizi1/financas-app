@@ -48,7 +48,7 @@ describe('troca de renda', () => {
 describe('extras', () => {
   it('13º: datas da CLT no ciclo certo', () => {
     const m = EXTRAS.find((e) => e.k === '13')!;
-    expect(m.parcelas.map((p) => p.data('2026-11-23'))).toEqual(['2026-11-30', '2026-12-20']);
+    expect(m.parcelas.map((p) => p.data('2026-11-23'))).toEqual(['2026-11-30', '2026-12-18']); // 20/12/2026 é domingo
     expect(ano13('2026-12-21')).toBe(2027);
   });
   it('próxima data rola pro ano seguinte', () => {
