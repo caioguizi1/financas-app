@@ -133,6 +133,13 @@ function Detalhes({ c }: { c: Cartao }) {
     ? (fechada.antecipada && fechada.pagaEm <= t ? { t: `Fatura paga em ${dm(fechada.pagaEm)}`, k: 'ok' } : { t: `Fatura fechada · vence ${dm(fechada.vencimento)}`, k: 'warn' })
     : { t: `Fatura aberta · fecha ${dm(aberta.fecha)}`, k: 'open' };
 
+  // volta pro visual gerado (cores do banco + nome); dá pra desfazer pelo aviso
+  const voltarPadrao = () => {
+    const antes = img;
+    salvarImagem(c.id, null);
+    setImgAberta(false);
+    toast('Cartão voltou ao visual padrão', antes ? () => salvarImagem(c.id, antes) : undefined);
+  };
   const escolherImg = () => {
     const inp = document.createElement('input');
     inp.type = 'file'; inp.accept = 'image/*';
@@ -248,8 +255,8 @@ function Detalhes({ c }: { c: Cartao }) {
               </>
             ) : (
               <div className="wacts">
-                <Button onClick={escolherImg}>Escolher imagem</Button>
-                {img && <Button kind="ghost" onClick={() => { salvarImagem(c.id, null); setImgAberta(false); }}>Remover</Button>}
+                <Button onClick={escolherImg}>📷 Escolher</Button>
+                {img && <Button kind="ghost" onClick={voltarPadrao}>↺ Padrão</Button>}
               </div>
             )}
           </m.div>
