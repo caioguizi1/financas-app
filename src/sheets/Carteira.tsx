@@ -19,14 +19,15 @@ import { ImportarSheet } from './Importar';
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
 /** A "face" do cartão: arte enviada pelo usuário ou gradiente da marca. */
-export function CardFace({ c, mini, valor }: { c: Cartao; mini?: boolean; valor?: number }) {
-  const img = useImagem(c.id);
+export function CardFace({ c, mini, valor, src }: { c: Cartao; mini?: boolean; valor?: number; src?: string }) {
+  const salva = useImagem(c.id);
+  const img = src ?? salva;
   const [a, b] = corDoCartao(c.nome);
   return (
     <div className={`cface ${mini ? 'mini' : ''} ${img ? 'has-img' : ''}`} style={img ? { backgroundImage: `url(${img})` } : { background: `linear-gradient(135deg, ${a} 0%, ${b} 100%)` }}>
-      {!img && <><span className="cf-chip" /><span className="cf-name">{c.nome}</span></>}
-      <span className="cf-foot">{valor != null ? <b className="num">{brl(valor)}</b> : <>fecha {c.fechamento} · vence {c.vencimento}</>}</span>
-      {img && mini && <span className="cf-tag">{c.nome}</span>}
+      {/* com a arte do banco, nada por cima: a imagem já tem logo e bandeira */}
+      {!img && <><span className="cf-chip" /><span className="cf-name">{c.nome}</span>
+        <span className="cf-foot">{valor != null ? <b className="num">{brl(valor)}</b> : <>fecha {c.fechamento} · vence {c.vencimento}</>}</span></>}
     </div>
   );
 }
@@ -39,17 +40,16 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
   const inicial = useRef(false);
   const c = D.cartoes[Math.min(i, D.cartoes.length - 1)];
 
+  // ativo = cartão mais perto do centro (funciona com qualquer quantidade de cartões)
   const onScroll = () => {
     const el = trilho.current!;
-    const w = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? 1;
-    const n = Math.round(el.scrollLeft / (w + 12));
-    if (n !== i) setI(Math.max(0, Math.min(D.cartoes.length - 1, n)));
+    const meio = el.scrollLeft + el.clientWidth / 2;
+    let n = 0, menor = Infinity;
+    Array.from(el.children).forEach((ch, k) => { const c = ch as HTMLElement; const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - meio); if (d < menor) { menor = d; n = k; } });
+    if (n !== i) setI(n);
   };
-  const irPara = (n: number) => {
-    const el = trilho.current!;
-    const w = (el.firstElementChild as HTMLElement).offsetWidth;
-    el.scrollTo({ left: n * (w + 12), behavior: 'smooth' });
-  };
+  const posDe = (el: HTMLDivElement, n: number) => { const c = el.children[n] as HTMLElement; return c.offsetLeft + c.offsetWidth / 2 - el.clientWidth / 2; };
+  const irPara = (n: number) => trilho.current!.scrollTo({ left: posDe(trilho.current!, n), behavior: 'smooth' });
 
   if (!c) {
     return (
@@ -67,7 +67,7 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
       <div className="sl-mid" data-scroll>
         <div className="wallet" ref={(el) => {
           trilho.current = el;
-          if (el && !inicial.current && ini) { inicial.current = true; requestAnimationFrame(() => { const w = (el.firstElementChild as HTMLElement).offsetWidth; el.scrollLeft = ini * (w + 12); }); }
+          if (el && !inicial.current && ini) { inicial.current = true; requestAnimationFrame(() => { el.scrollLeft = posDe(el, ini); }); }
         }} onScroll={onScroll}>
           {D.cartoes.map((x, k) => (
             <button key={x.id} className={`wslot ${k === i ? 'on' : ''}`} onClick={() => (k === i ? openSheet(<EditCartao cartao={x} />) : irPara(k))} aria-label={x.nome}>
@@ -90,6 +90,7 @@ function Detalhes({ c }: { c: Cartao }) {
   const D = useData();
   const t = today();
   const [imgAberta, setImgAberta] = useState(false);
+  const [previa, setPrevia] = useState<string | null>(null);
   const img = useImagem(c.id);
   const v = useMemo(() => {
     const fats = faturasAtuais(D, c, t);
@@ -115,7 +116,7 @@ function Detalhes({ c }: { c: Cartao }) {
     inp.type = 'file'; inp.accept = 'image/*';
     inp.onchange = async () => {
       const f = inp.files?.[0]; if (!f) return;
-      try { await salvarImagem(c.id, await prepararImagem(f)); setImgAberta(false); toast('Imagem do cartão salva'); } catch { toast('Não consegui abrir essa imagem'); }
+      try { setPrevia(await prepararImagem(f)); } catch { toast('Não consegui abrir essa imagem'); }
     };
     inp.click();
   };
@@ -194,10 +195,21 @@ function Detalhes({ c }: { c: Cartao }) {
         {imgAberta && (
           <m.div className="wimg" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
             <div className="alert"><span>🔒</span><div>Use só a <b>arte</b> do cartão (a imagem do site do banco ou uma foto do verso liso). <b>Nunca</b> uma foto com número, nome, validade ou CVV. A imagem fica só neste aparelho.</div></div>
-            <div className="wacts">
-              <Button onClick={escolherImg}>Escolher imagem</Button>
-              {img && <Button kind="ghost" onClick={() => { salvarImagem(c.id, null); setImgAberta(false); }}>Remover</Button>}
-            </div>
+            {previa ? (
+              <>
+                <div className="lab">Recortado automaticamente — ficou assim:</div>
+                <div className="wprev"><CardFace c={c} src={previa} /></div>
+                <div className="wacts">
+                  <Button onClick={async () => { await salvarImagem(c.id, previa); setPrevia(null); setImgAberta(false); toast('Imagem do cartão salva'); }}>Usar esta</Button>
+                  <Button kind="ghost" onClick={escolherImg}>Escolher outra</Button>
+                </div>
+              </>
+            ) : (
+              <div className="wacts">
+                <Button onClick={escolherImg}>Escolher imagem</Button>
+                {img && <Button kind="ghost" onClick={() => { salvarImagem(c.id, null); setImgAberta(false); }}>Remover</Button>}
+              </div>
+            )}
           </m.div>
         )}
       </AnimatePresence>

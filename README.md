@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.11.1** — imagem do cartão recortada automaticamente (acha o cartão no print/foto, tira moldura e fundo, deita se estiver em pé) com prévia antes de salvar; nada por cima da arte (valor vai abaixo); carteira sempre mostra os dados do cartão em destaque; ícone dos avisos não invade mais o texto.
 - **v2.11** — carteira de cartões (arrastar entre cartões, imagem da arte do cartão guardada só no aparelho, status, faturas fechada/aberta com progresso do gasto típico, próximas faturas, parcelas e categorias; vitrine na Início); modo claro "Ametista clara" (Automático · Claro · Escuro); importação **opcional** de fatura e extrato (CSV, OFX e PDF lidos no aparelho): categoria automática, parcelas "03/10" viram as parcelas restantes nos meses seguintes, duplicados/fixos/pagamento da fatura reconhecidos, análise de categorias, compromisso dos próximos 6 meses, assinaturas e gasto típico sugerido.
 - **v2.10** — resumo dos meses que fecha a conta (começa com + entra − sai = termina com, encadeado; mês atual a partir do saldo de hoje, só o que ainda falta), resultado do mês em destaque; números com desenho e largura uniformes.
 - **v2.9.2** — "Fatura atual" em destaque no formulário do cartão, na criação e na edição (fechada a vencer + aberta, já com o que o app somou; ajusta a diferença ao salvar); gasto típico separado como opcional.

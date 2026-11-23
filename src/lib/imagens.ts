@@ -58,25 +58,88 @@ export function useImagem(id: string) {
   return v;
 }
 
-/** Recorta no formato de cartão (ISO 7810, 1,586:1), reduz pra ~856×540 e comprime em JPEG. */
+export interface Caixa { x: number; y: number; w: number; h: number }
+
+/** Um nível de busca: o maior bloco "cheio" que difere do fundo (borda) dentro de `r`. */
+function bloco(px: Uint8ClampedArray, W: number, r: Caixa): Caixa | null {
+  const at = (x: number, y: number) => (y * W + x) * 4;
+  const borda: number[][] = [];
+  const dx = Math.max(1, Math.round(r.w * 0.015)), dy = Math.max(1, Math.round(r.h * 0.015));
+  for (let x = r.x + Math.round(r.w * 0.2); x < r.x + r.w * 0.8; x++) for (const y of [r.y + dy, r.y + r.h - 1 - dy]) borda.push([px[at(x, y)], px[at(x, y) + 1], px[at(x, y) + 2]]);
+  for (let y = r.y + Math.round(r.h * 0.2); y < r.y + r.h * 0.8; y++) for (const x of [r.x + dx, r.x + r.w - 1 - dx]) borda.push([px[at(x, y)], px[at(x, y) + 1], px[at(x, y) + 2]]);
+  const med = (k: number) => borda.map((c) => c[k]).sort((a, b) => a - b)[borda.length >> 1];
+  const bg = [med(0), med(1), med(2)];
+  const dif = (c: number[]) => Math.max(Math.abs(c[0] - bg[0]), Math.abs(c[1] - bg[1]), Math.abs(c[2] - bg[2]));
+  // sensibilidade pelo ruído do fundo: print liso → bem sensível (cartão preto em fundo preto); foto → menos
+  const ruido = borda.map(dif).sort((a, b) => a - b)[borda.length >> 1]; // mediana: uma ponta do cartão encostando na borda não estraga
+  const lim = Math.max(6, ruido * 2 + 4);
+  const fg = (x: number, y: number) => dif([px[at(x, y)], px[at(x, y) + 1], px[at(x, y) + 2]]) > lim;
+  const trecho = (ini: number, n: number, cheio: (i: number) => boolean, folga: number) => {
+    let best = [0, -1], a0 = -1, ult = -1;
+    for (let i = ini; i < ini + n; i++) {
+      if (!cheio(i)) continue;
+      if (a0 < 0 || i - ult > folga) a0 = i;
+      ult = i;
+      if (ult - a0 > best[1] - best[0]) best = [a0, ult];
+    }
+    return best;
+  };
+  const linha = (y: number) => { let c = 0; for (let x = r.x; x < r.x + r.w; x++) c += +fg(x, y); return c / r.w; };
+  const [y0, y1] = trecho(r.y, r.h, (y) => linha(y) >= 0.3, Math.max(2, r.h * 0.04));
+  if (y1 - y0 < r.h * 0.12) return null;
+  const col = (x: number) => { let c = 0; for (let y = y0; y <= y1; y++) c += +fg(x, y); return c / (y1 - y0 + 1); };
+  const [x0, x1] = trecho(r.x, r.w, (x) => col(x) >= 0.3, Math.max(2, r.w * 0.04));
+  if (x1 - x0 < r.w * 0.12) return null;
+  return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
+const quaseCartao = (c: Caixa) => { const q = c.w / c.h; return (q > 1.35 && q < 1.85) || (1 / q > 1.35 && 1 / q < 1.85); };
+
+/**
+ * Acha o cartão dentro da imagem (print do app do banco, foto, cartão com moldura).
+ * Procura o bloco que difere do fundo e repete por dentro dele — tira molduras
+ * e sombras em volta até chegar no cartão.
+ */
+export function acharCartao(px: Uint8ClampedArray, W: number, H: number): Caixa {
+  const tudo = { x: 0, y: 0, w: W, h: H };
+  let atual = tudo;
+  for (let nivel = 0; nivel < 4; nivel++) {
+    const b = bloco(px, W, atual);
+    if (!b || b.w < 12 || b.h < 12) break;
+    const area = (b.w * b.h) / (atual.w * atual.h);
+    if (area > 0.96) break; // nada a tirar
+    // por dentro de uma moldura: só aceita se ainda parecer um cartão e não for um detalhe (logo, texto)
+    if (nivel > 0 && (area < 0.45 || !quaseCartao(b))) break;
+    atual = b;
+  }
+  if (atual === tudo) return tudo;
+  const ins = Math.round(Math.min(atual.w, atual.h) * 0.02); // borda arredondada / antisserrilhado
+  return { x: atual.x + ins, y: atual.y + ins, w: atual.w - 2 * ins, h: atual.h - 2 * ins };
+}
+
+/** Recorta automaticamente o cartão, deita se estiver em pé, ~856×540 em JPEG. */
 export async function prepararImagem(f: File): Promise<string> {
   const bmp = await createImageBitmap(f);
-  const R = 1.586, W = 856, H = 540;
-  let sw = bmp.width, sh = bmp.height;
-  if (sw / sh > R) sw = sh * R; else sh = sw / R;
-  // foto em pé (cartão vertical): gira pra deitar
-  const vertical = bmp.height > bmp.width * 1.2;
-  const cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
+  // análise numa cópia pequena
+  const k = Math.min(1, 360 / Math.max(bmp.width, bmp.height));
+  const aw = Math.max(8, Math.round(bmp.width * k)), ah = Math.max(8, Math.round(bmp.height * k));
+  const ac = document.createElement('canvas'); ac.width = aw; ac.height = ah;
+  const ag = ac.getContext('2d', { willReadFrequently: true })!;
+  ag.drawImage(bmp, 0, 0, aw, ah);
+  const cx = acharCartao(ag.getImageData(0, 0, aw, ah).data, aw, ah);
+  let sx = cx.x / k, sy = cx.y / k, sw = cx.w / k, sh = cx.h / k;
+  const vertical = sh > sw * 1.2;
+  const R = vertical ? 1 / 1.586 : 1.586;
+  // ajusta à proporção de cartão (corta o excesso no centro)
+  if (sw / sh > R) { const n = sh * R; sx += (sw - n) / 2; sw = n; } else { const n = sw / R; sy += (sh - n) / 2; sh = n; }
+  const W = 856, H = 540;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d')!;
-  if (vertical) {
-    let vw = bmp.width, vh = bmp.height;
-    if (vh / vw > R) vh = vw * R; else vw = vh / R;
-    g.translate(W / 2, H / 2); g.rotate(-Math.PI / 2);
-    g.drawImage(bmp, (bmp.width - vw) / 2, (bmp.height - vh) / 2, vw, vh, -H / 2, -W / 2, H, W);
-  } else g.drawImage(bmp, (bmp.width - sw) / 2, (bmp.height - sh) / 2, sw, sh, 0, 0, W, H);
+  g.imageSmoothingQuality = 'high';
+  if (vertical) { g.translate(W / 2, H / 2); g.rotate(-Math.PI / 2); g.drawImage(bmp, sx, sy, sw, sh, -H / 2, -W / 2, H, W); }
+  else g.drawImage(bmp, sx, sy, sw, sh, 0, 0, W, H);
   bmp.close();
-  return cv.toDataURL('image/jpeg', 0.82);
+  return cv.toDataURL('image/jpeg', 0.85);
 }
 
 /** Cor da marca pelo nome do cartão (fundo quando não há imagem). */

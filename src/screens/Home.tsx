@@ -111,7 +111,8 @@ export function Home() {
               const f = faturasAtuais(D, c, t)[0];
               return (
                 <button key={c.id} className="wmini-b" onClick={() => openSheet(<CarteiraSheet cartaoId={c.id} />)}>
-                  <CardFace c={c} mini valor={f.total} />
+                  <CardFace c={c} mini />
+                  <b className="wmini-v num">{brl(f.total)}</b>
                   <span className="wmini-s">{f.status === 'fechada' ? `vence ${dm(f.vencimento)}` : `aberta · fecha ${dm(f.fecha)}`}</span>
                 </button>
               );
