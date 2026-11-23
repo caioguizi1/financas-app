@@ -7,11 +7,13 @@ import { addDays, dateOf, diaLabel, dm, parse, today } from '../lib/dates';
 import { pagamentoCartao } from '../lib/engine';
 import { brl, uid } from '../lib/money';
 import type { Lancamento, Meio } from '../lib/types';
-import { closeSheet, getData, mutate, restore, toast, withUndo } from '../store';
+import { closeSheet, getData, mutate, openSheet, restore, toast, withUndo } from '../store';
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { SheetHeader } from '../ui/Sheet';
+import { EditRec } from './EditRec';
+import { ExtraSheet } from './Extras';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const novo = !lanc;
@@ -81,14 +83,17 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   };
 
   return (
-    <>
+    <div className="sl">
       <SheetHeader title={novo ? 'Novo lançamento' : 'Editar lançamento'} onDelete={novo ? undefined : apagar} />
+      <div className="sl-top">
       <Segmented
         value={l.tipo}
         onChange={(tipo) => { setManual(false); set({ tipo, cat: '', ...(tipo === 'entrada' ? { cartaoId: null, parcelas: 1 } : {}) }); }}
         options={[{ v: 'saida', label: 'Saída', tone: 'out' }, { v: 'entrada', label: 'Entrada', tone: 'in' }]}
       />
       <AmountDisplay value={l.valor} compact />
+      </div>
+      <div className="sl-mid" data-scroll>
 
       <SmartDesc value={l.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={l.tipo === 'saida' ? 'Com o quê? (ex: ração, uber, ifood)' : 'De onde veio? (ex: freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
@@ -160,10 +165,22 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         </label>
       </div>
 
+      {l.tipo === 'entrada' && (
+        <div className="ent-extra">
+          <div className="lab">Isso se repete?</div>
+          <div className="chips">
+            <Chip onClick={() => openSheet(<EditRec tipo="entrada" rec={{ tipo: 'entrada', desc: l.desc, cat, valor: l.valor, dia: parse(l.data).getDate() }} />)}>🔁 É fixo todo mês</Chip>
+            <Chip onClick={() => openSheet(<ExtraSheet />)}>🎁 13º, PLR, férias…</Chip>
+          </div>
+        </div>
+      )}
+      </div>
+      <div className="sl-foot">
       <Keypad small value={l.valor} onChange={(valor) => set({ valor })} />
       <div className="actions tight">
         <Button disabled={!l.valor} onClick={salvar}>{novo ? 'Lançar' : 'Salvar'}</Button>
       </div>
-    </>
+      </div>
+    </div>
   );
 }

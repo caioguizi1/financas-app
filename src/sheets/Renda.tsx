@@ -76,8 +76,9 @@ export function RendaSheet() {
   };
 
   return (
-    <>
+    <div className="sl">
       <SheetHeader title="Minha renda" />
+      <div className="sl-mid" data-scroll>
       <Segmented value={modo} onChange={(v) => { setModo(v); setAtiva(0); }} options={[{ v: 'bruto', label: 'Sei o bruto' }, { v: 'liquido', label: 'Sei o líquido' }]} />
 
       <div style={{ marginTop: 12 }}>
@@ -119,11 +120,14 @@ export function RendaSheet() {
       <DayGrid value={dia} onChange={setDia} caption={(d) => `${freq === 2 ? 'restante' : 'salário'} todo dia ${d}`} />
 
       <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico={atual.length > 0} antes={liqAtual} depois={liq} />
-      <div className="actions">
+      </div>
+      <div className="sl-foot">
+        <div className="actions sl-actions">
         <Button disabled={!ok} onClick={salvar}>Salvar renda</Button>
         {!ok && <div className="need">{!liq ? 'Coloque o valor' : !dia || (freq === 2 && !adDia) ? 'Escolha os dias' : 'O adiantamento precisa ser menor que o líquido'}</div>}
       </div>
-    </>
+      </div>
+    </div>
   );
 }
 

@@ -10,6 +10,7 @@ import { rendaAtual } from '../sheets/Renda';
 import { ano13 } from '../lib/extras';
 import { mutate } from '../store';
 import { InsightsStrip } from '../ui/Insights';
+import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
 import { Button, itemVariants, listVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
@@ -34,7 +35,7 @@ export function Home() {
       const r = resumoMes(D, d.getFullYear(), d.getMonth());
       return { ...r, fim: p.saldoEm(r.ate), nome: MESL[d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : '') };
     });
-    const prox = p.evs.filter((e) => e.data >= t).slice(0, 8);
+    const prox = agruparFaturas(p.evs.filter((e) => e.data >= t), D.cartoes).slice(0, 8);
     return { p, fut, hoje, fimMes, min, months, prox };
   }, [D, t]);
 
@@ -44,7 +45,7 @@ export function Home() {
   const mostra13 = (now.getMonth() >= 10 || a13 > now.getFullYear()) && t <= `${a13}-12-20` && rendaAtual().length > 0
     && !D.lancamentos.some((l) => l.desc.startsWith('13º') && l.data.startsWith(String(a13))) && !(D.dispensados ?? []).includes(chave13);
   const sp = scrubI != null ? vm.fut[scrubI] : null;
-  const spEvs = sp ? vm.p.evs.filter((e) => e.data === sp.d) : [];
+  const spEvs = sp ? agruparFaturas(vm.p.evs.filter((e) => e.data === sp.d), D.cartoes) : [];
   const shown = sp ? sp.v : vm.hoje;
   const ultimo = vm.fut[vm.fut.length - 1].v;
 

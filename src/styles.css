@@ -393,3 +393,27 @@ html { touch-action: manipulation }
 
 .pay-row { margin-top: 10px; min-height: 44px; display: flex; flex-direction: column; justify-content: center }
 .pay-info { font-size: 13.5px; color: var(--mut); background: var(--card2); border: 1px dashed var(--line); border-radius: 14px; padding: 0 14px; height: 44px; display: flex; align-items: center }
+
+/* ===== janelas com altura fixa: topo fixo · meio rolável · rodapé fixo (teclado + botão) ===== */
+.sheet:has(.sl) { height: min(92dvh, 880px) }
+.sheet-body:has(> .sl) { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0 }
+.sl { flex: 1; min-height: 0; display: flex; flex-direction: column }
+.sl > .sheet-head { flex: none }
+.sl-top { flex: none }
+.sl-mid { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -20px; padding: 2px 20px 14px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 14px), transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 14px), transparent 100%) }
+.sl-foot { flex: none; padding: 8px 0 calc(var(--sab) + 14px); border-top: 1px solid var(--line); margin: 0 -20px; padding-left: 20px; padding-right: 20px; background: rgba(14, 12, 24, 0.6) }
+.sl-foot .keys { margin-top: 0 }
+.sl-foot .actions { margin-top: 10px }
+.sl-foot .actions.sl-actions { margin-top: 0 }
+.ent-extra { margin-top: 6px }
+.fat-box { background: var(--card2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px }
+.fat-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.fat-tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 7px; text-transform: uppercase; letter-spacing: 0.04em }
+.fat-tag.fechada { background: rgba(168, 51, 88, 0.2); color: var(--out) }
+.fat-tag.aberta { background: rgba(110, 91, 255, 0.18); color: var(--acc-hi) }
+.fat-itens { margin: 8px 0 4px; border-top: 1px solid var(--line) }
+.fat-it { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--line) }
+.fat-it .m { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fat-tot { display: flex; justify-content: space-between; padding-top: 6px; font-size: 14px }

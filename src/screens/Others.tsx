@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
 import { ativaEm, serieDe } from '../lib/versions';
+import { agruparFaturas } from '../lib/faturas';
 import type { Recorrente } from '../lib/types';
 import { ExtraSheet } from '../sheets/Extras';
+import { FaturasSheet } from '../sheets/Faturas';
 import { RendaSheet, resumoRenda } from '../sheets/Renda';
 import { brl } from '../lib/money';
 import type { Evento } from '../lib/types';
@@ -28,7 +30,7 @@ export function Extrato() {
   const r = resumoMes(D, y, mo);
   const t = today();
   const byDay = new Map<string, Evento[]>();
-  r.evs.forEach((e) => byDay.set(e.data, [...(byDay.get(e.data) ?? []), e]));
+  agruparFaturas(r.evs, D.cartoes).forEach((e) => byDay.set(e.data, [...(byDay.get(e.data) ?? []), e]));
   const days = [...byDay.keys()].sort().reverse();
   const sob = r.ent - r.sai;
   const move = (d: 1 | -1) => { const x = new Date(y, mo + d, 1); setDir(d); setYM([x.getFullYear(), x.getMonth()]); };
@@ -131,6 +133,7 @@ export function Ajustes() {
       <h2>Você</h2>
       <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
         <Row ico="🙂" t="Nome" s={D.perfil.nome} onClick={() => openSheet(<EditNome />)} />
+        {D.cartoes.length > 0 && <Row ico="💳" t="Conferir faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<FaturasSheet cartaoId={D.cartoes[0].id} />)} />}
         <Row ico="🏦" t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
         <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
         <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />

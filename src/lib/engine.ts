@@ -31,7 +31,7 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
         const c = cartao(r.cartaoId);
         const cash = c ? pagamentoCartao(c, occ) : occ;
         if (cash >= de && cash <= ate) {
-          out.push({ data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, criado: 0 });
+          out.push({ data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: 0 });
         }
       }
       m++;
@@ -55,7 +55,7 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
         out.push({
           data: cash, valor: l.tipo === 'entrada' ? v : -v,
           desc: (l.desc || catN(l.cat)) + (n > 1 ? ` ${i + 1}/${n}` : ''),
-          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: c?.nome ?? null, criado: l.criado || 0,
+          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: c?.nome ?? null, cartaoId: c?.id, criado: l.criado || 0,
         });
       }
     }

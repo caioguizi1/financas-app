@@ -3,8 +3,9 @@
  * Cada insight tem um "peso" para ordenar o que é mais útil agora.
  */
 import { catN } from './categories';
-import { addDays, addMonths, dateOf, dm, mesCurto, monthKey, parse } from './dates';
-import { eventosEntre, pagamentoCartao, projecao } from './engine';
+import { addDays, addMonths, dm, mesCurto, monthKey, parse } from './dates';
+import { eventosEntre, projecao } from './engine';
+import { faturasAtuais } from './faturas';
 import { brl } from './money';
 import { normalizar } from './smart';
 import { ativaEm } from './versions';
@@ -121,13 +122,14 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
     if (out.filter((i) => i.id.startsWith('rec-')).length >= 2) break;
   }
 
-  // 5) próxima fatura de cada cartão
+  // 5) faturas de cada cartão (a fechada a vencer, se houver, e a aberta)
   for (const c of D.cartoes) {
-    const venc = pagamentoCartao(c, hoje) ;
-    const anterior = dateOf(parse(venc).getFullYear(), parse(venc).getMonth() - 1, c.vencimento);
-    const alvo = anterior >= hoje ? anterior : venc; // fatura já fechada que ainda não venceu
-    const tot = -eventosEntre(D, alvo, alvo).filter((e) => e.cartao === c.nome).reduce((a, e) => a + e.valor, 0);
-    if (tot > 0) out.push({ id: `fat-${c.id}`, ico: '💳', tom: 'info', peso: 70, titulo: `Fatura ${c.nome}: ${brl(tot)}`, texto: `Prevista pra ${dm(alvo)}, com o que já está lançado.` });
+    for (const f of faturasAtuais(D, c, hoje)) {
+      if (f.total <= 0) continue;
+      out.push({ id: `fat-${c.id}-${f.status}`, ico: '💳', tom: f.status === 'fechada' ? 'alerta' : 'info', peso: f.status === 'fechada' ? 85 : 70,
+        titulo: `Fatura ${c.nome}${f.status === 'fechada' ? ' fechada' : ''}: ${brl(f.total)}`,
+        texto: f.status === 'fechada' ? `Já fechou — vence ${dm(f.vencimento)}.` : `Aberta, vence ${dm(f.vencimento)}. Compras até o dia ${c.fechamento - 1 || 'do fechamento'} entram nela.` });
+    }
   }
 
   // 6) parcelas comprometidas

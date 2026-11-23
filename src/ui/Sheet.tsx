@@ -59,8 +59,9 @@ function SheetFrame({ children }: { children: ReactNode }) {
     };
 
     // corpo: só arrasta quando já está rolado até o topo e o gesto é pra baixo
-    const ts = (e: TouchEvent) => start(e.touches[0].clientY);
-    const tm = (e: TouchEvent) => move(e.touches[0].clientY, body.scrollTop <= 0, e);
+    let scroller: Element = body;
+    const ts = (e: TouchEvent) => { scroller = (e.target as Element).closest('[data-scroll]') ?? body; start(e.touches[0].clientY); };
+    const tm = (e: TouchEvent) => move(e.touches[0].clientY, scroller.scrollTop <= 0 && body.scrollTop <= 0, e);
     body.addEventListener('touchstart', ts, { passive: true });
     body.addEventListener('touchmove', tm, { passive: false });
     body.addEventListener('touchend', end);

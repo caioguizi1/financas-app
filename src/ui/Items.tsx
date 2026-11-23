@@ -6,6 +6,7 @@ import type { Evento, Recorrente } from '../lib/types';
 import { getData, openSheet, withUndo } from '../store';
 import { EditRec } from '../sheets/EditRec';
 import { QuickAdd } from '../sheets/QuickAdd';
+import { FaturasSheet } from '../sheets/Faturas';
 import { SwipeRow } from './SwipeRow';
 
 /** Apaga o fixo inteiro (todas as versões do histórico). */
@@ -38,6 +39,7 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
 export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }) {
   const edit = () => {
     const D = getData();
+    if (e.itens && e.cartaoId) return openSheet(<FaturasSheet cartaoId={e.cartaoId} />);
     if (e.lanc) {
       const l = D.lancamentos.find((x) => x.id === e.ref);
       if (l) openSheet(<QuickAdd lanc={l} />);
@@ -46,10 +48,10 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
       if (r) openSheet(<EditRec rec={r} />);
     }
   };
-  const sub = [showDate ? diaLabel(e.data) : '', e.cartao ? `💳 ${e.cartao}` : ''].filter(Boolean).join(' · ');
+  const sub = [showDate ? diaLabel(e.data) : '', e.itens ? `${e.itens.length} ${e.itens.length === 1 ? 'item' : 'itens'}` : e.cartao ? `💳 ${e.cartao}` : ''].filter(Boolean).join(' · ');
   return (
     // Fixos só editam daqui (apagar um fixo some de todos os meses — isso fica na aba Fixos)
-    <SwipeRow id={`ev-${e.ref}-${e.data}`} onTap={edit} onEdit={edit} onDelete={e.lanc ? () => apagarLanc(e.ref) : undefined}>
+    <SwipeRow id={`ev-${e.ref}-${e.data}`} onTap={edit} onEdit={edit} onDelete={e.lanc && !e.itens ? () => apagarLanc(e.ref) : undefined}>
       <div className="item">
         <div className="ico">{e.ico || catE(e.cat)}</div>
         <div className="m">

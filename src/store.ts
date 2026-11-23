@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ReactNode } from 'react';
 import { today } from './lib/dates';
+import { diaDoCiclo } from './lib/faturas';
 import type { Data } from './lib/types';
 
 /* ---------- dados (persistidos no aparelho) ---------- */
@@ -13,10 +14,20 @@ export const blank = (): Data => ({
   recorrentes: [], cartoes: [], lancamentos: [], uso: {}, aprendido: {},
 });
 
+/** Atualiza dados de versões antigas sem perder nada. */
+function migrar(d: Data): Data {
+  const lancamentos = d.lancamentos.map((l) => {
+    if (l.cartaoId || l.cat !== 'fatura' || !l.desc.endsWith('(já gasto)')) return l;
+    const c = d.cartoes.find((x) => l.desc === `Fatura ${x.nome} (já gasto)`);
+    return c ? { ...l, cartaoId: c.id, meio: 'credito' as const, data: diaDoCiclo(c, l.data), ico: '💳' } : l;
+  });
+  return { ...d, lancamentos };
+}
+
 function load(): Data {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    if (s && s.v) return { ...blank(), ...s };
+    if (s && s.v) return migrar({ ...blank(), ...s });
   } catch { /* sem dados ou corrompido */ }
   return blank();
 }

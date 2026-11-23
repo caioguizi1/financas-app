@@ -4,20 +4,8 @@ Ideias e ajustes registrados para as próximas versões. Ao implementar, mover p
 
 ## 🔧 Ajustes de UX
 
-### Altura da janela de lançamento oscila (registrado em 23/11/2026)
-Prints: `design/backlog/2026-11-23-lancamento-saida.png` e `...-entrada.png`.
-**Problema:** a janela "Novo lançamento" muda de altura conforme o conteúdo, e o topo dela sobe e desce:
-- ✅ v2.7: trocar a forma de pagamento já não muda a altura (linha de altura fixa). Falta: Saída × Entrada e o bloco de parcelas.
-- **Saída** tem "Como pagou" e "À vista / Parcelado"; **Entrada** não tem → ao alternar, a janela encolhe ~400px e o topo "pula".
-- Também mexem na altura: a linha "✨ Categoria/Sugestão" (aparece/some ao digitar), o bloco de parcelas e o cronograma do cartão.
-- Resultado: botões mudam de lugar sob o dedo e a tela parece instável.
-
-**Direção da correção:**
-- Janela com **altura fixa** (ex.: ~92% da tela) nos lançamentos: o topo nunca se move.
-- **Teclado numérico e botão Lançar fixos embaixo** (sempre no mesmo lugar, perto do polegar); só a área do meio rola se precisar.
-- **Reservar espaço** das linhas que aparecem/somem (dica do dicionário, cronograma) ou animar a altura suavemente, sem empurrar o teclado.
-- Em Entrada, ocupar o espaço de "Como pagou" com algo útil (ex.: "Recebimento fixo? / Extra previsto?") em vez de deixar a janela encolher.
-- Aplicar a mesma regra às outras janelas (gasto fixo, cartão, renda) para consistência.
+### ✅ Altura das janelas — resolvido na v2.8
+Janelas com topo fixo, meio rolável e teclado/botão fixos embaixo (prints originais em `design/backlog/`).
 
 ## ✨ Funcionalidades
 

@@ -53,8 +53,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   };
 
   return (
-    <>
+    <div className="sl">
       <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
+      <div className="sl-mid" data-scroll>
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
       <AmountDisplay value={r.valor} />
@@ -87,11 +88,14 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
           </div>
         </>
       )}
-      <div className="actions">
+      </div>
+      <div className="sl-foot">
+        <div className="actions sl-actions">
         <Button disabled={!r.valor || !r.dia} onClick={salvar}>Salvar</Button>
         {(!r.valor || !r.dia) && <div className="need">Falta {[!r.valor && 'o valor', !r.dia && 'o dia'].filter(Boolean).join(' e ')}</div>}
         {!novo && <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês (mantém o histórico)</Button>}
       </div>
-    </>
+      </div>
+    </div>
   );
 }

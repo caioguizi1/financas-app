@@ -86,5 +86,8 @@ export interface Evento {
   fixo?: boolean;
   lanc?: boolean;
   cartao: string | null;
+  cartaoId?: string;
+  /** Item agrupado (fatura): as compras que o compõem. */
+  itens?: Evento[];
   criado: number;
 }

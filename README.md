@@ -18,7 +18,7 @@ src/
   lib/        motor financeiro puro (tipos, datas, dinheiro, engine + testes)
               smart.ts = dicionário inteligente + aprendizado local (com testes)
               versions.ts = histórico/vigência dos fixos · extras.ts = 13º, PLR, férias…
-              insights.ts = insights locais · folha.ts = INSS, IRRF (Lei 15.270), 13º e PLR — tabelas 2026, com testes dos exemplos da Receita
+              faturas.ts = ciclos, conferência e agrupamento de faturas · insights.ts = insights locais · folha.ts = INSS, IRRF (Lei 15.270), 13º e PLR — tabelas 2026, com testes dos exemplos da Receita
   store.ts    dados persistidos + estado de interface (abas, janelas, toasts)
   ui/         componentes base (Sheet, teclado numérico, controles, gráfico)
   sheets/     janelas: lançamento rápido, fixos, cartões, ajuste de saldo
@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.8** — faturas de cartão: ciclos com fatura fechada a vencer + aberta, conferência com o valor do banco (ajusta só a diferença), cartão novo pergunta cada fatura, compras agrupadas como "Fatura X" nas listas e no gráfico, migração do valor antigo "já gasto"; janelas com altura fixa (topo, meio rolável, teclado e botão fixos embaixo); atalhos de recebimento fixo/extra em Entrada.
 - **v2.7** — formas de pagamento separadas: Pix/débito (sai na hora, sem parcelar), crédito por cartão e boleto (à vista ou parcelado), Pix parcelado (sempre parcelado; 1ª parcela na data ou no mês seguinte); linha de pagamento com altura fixa; ＋ mais rápido (toques por CSS em vez de dezenas de componentes animados, mola de abertura mais firme, sem atraso de toque do iOS).
 - **v2.6** — troca de abas instantânea (telas mantidas prontas, sem esperar animação de saída, provedores de animação fora do App, pílulas por CSS); compra à vista/parcelada (cartão com ciclo de fatura explicado, ou Pix/boleto mês a mês; total ou valor da parcela; até 48x); parcelas em aberto; insights locais (gasto por dia até a próxima entrada, dia apertado, categoria acima da média, virar fixo, fatura prevista, parcelas, assinaturas); dicionário ampliado (99, 99Food, Uber Eats, transporte público, centenas de marcas).
 - **v2.5** — salário bruto → líquido com INSS e IRRF 2026 (redução da Lei 15.270, dependentes, desconto simplificado, outros descontos); 13º calculado (1ª sem descontos, 2ª com INSS/IR do 13º inteiro, avos, prazo antecipado em fim de semana); PLR pelo bruto com a tabela exclusiva anual (acumula no ano).

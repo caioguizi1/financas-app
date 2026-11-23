@@ -41,7 +41,7 @@ describe('insights', () => {
   });
   it('fatura prevista do cartão', () => {
     const D = base({ cartoes: [{ id: 'nu', nome: 'Nubank', fechamento: 3, vencimento: 10 }], lancamentos: [lanc('c', '2026-11-20', 15_000, 'compras', 'Tênis', { cartaoId: 'nu' })] });
-    const i = gerarInsights(D, HOJE).find((x) => x.id === 'fat-nu')!;
+    const i = gerarInsights(D, HOJE).find((x) => x.id === 'fat-nu-aberta')!;
     expect(i.titulo).toBe('Fatura Nubank: R$ 150,00');
     expect(i.texto).toContain('10/12');
   });

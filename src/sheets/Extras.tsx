@@ -78,8 +78,9 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
   };
 
   return (
-    <>
+    <div className="sl">
       <SheetHeader title={`${modelo.ico} ${modelo.nome}`} />
+      <div className="sl-mid" data-scroll>
       {voltar && <button className="link-back" onClick={voltar}>‹ Outros tipos</button>}
       <div className="extra-nota">{modelo.nota}</div>
       {modelo.divisivel && (
@@ -114,9 +115,12 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
         </div>
       )}
       {!e13 && !ePLR && renda > 0 && modelo.parcelas.some((p) => p.pct > 0) && <div className="dim hint">Sugestão calculada sobre sua renda de {brl(renda)}. Toque na linha e ajuste pelo teclado.</div>}
-      <div className="actions">
+      </div>
+      <div className="sl-foot">
+        <div className="actions sl-actions">
         <Button disabled={!ok} onClick={salvar}>{ok ? `Adicionar ${brl(total)}${ePLR ? ' líquido' : ''} à previsão` : 'Coloque os valores'}</Button>
       </div>
-    </>
+      </div>
+    </div>
   );
 }
