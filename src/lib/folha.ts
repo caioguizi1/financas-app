@@ -78,6 +78,16 @@ export function holerite(brutoC: number, dependentes = 0, outrosC = 0): Holerite
   return { bruto: brutoC, inss: i, ir, outros: outrosC, liquido: brutoC - i - ir.devido - outrosC };
 }
 
+/** Bruto mensal que resulta neste líquido (inverso do holerite, por busca binária). Sem bruto informado, é a melhor estimativa. */
+export function brutoDoLiquido(liquidoC: number, dependentes = 0): number {
+  let lo = liquidoC, hi = liquidoC * 2;
+  for (let k = 0; k < 40 && hi - lo > 1; k++) {
+    const mid = Math.round((lo + hi) / 2);
+    if (holerite(mid, dependentes).liquido < liquidoC) lo = mid; else hi = mid;
+  }
+  return hi;
+}
+
 export interface Decimo { bruto: number; parcela1: number; inss: number; ir: IR; parcela2: number; liquido: number }
 
 /**

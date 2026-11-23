@@ -402,7 +402,7 @@ html { touch-action: manipulation }
 .sl { flex: 1; min-height: 0; display: flex; flex-direction: column }
 .sl > .sheet-head { flex: none }
 .sl-top { flex: none }
-.sl-mid { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -20px; padding: 2px 20px 14px;
+.sl-mid { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -20px; padding: 12px 20px 16px;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 14px), transparent 100%);
           mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 14px), transparent 100%) }
 .sl-foot { flex: none; padding: 8px 0 calc(var(--sab) + 14px); border-top: 1px solid var(--line); margin: 0 -20px; padding-left: 20px; padding-right: 20px; background: rgba(14, 12, 24, 0.6) }

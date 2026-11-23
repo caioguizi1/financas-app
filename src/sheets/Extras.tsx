@@ -1,6 +1,6 @@
 import { m } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { decimoTerceiro, irPLR } from '../lib/folha';
+import { brutoDoLiquido, decimoTerceiro, irPLR } from '../lib/folha';
 import { today } from '../lib/dates';
 import { EXTRAS, type ExtraModelo } from '../lib/extras';
 import { brl, uid } from '../lib/money';
@@ -40,7 +40,9 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
   const e13 = modelo.k === '13';
   const ePLR = modelo.k === 'plr'; // valores digitados são BRUTOS; IR pela tabela exclusiva
   const [meses, setMeses] = useState(12);
-  const dec = e13 && folha ? decimoTerceiro(folha.bruto, folha.dependentes, meses) : null;
+  // sem o bruto cadastrado, estima pelo líquido (inverso do holerite 2026) — nunca divide o líquido ao meio
+  const brutoBase = folha?.bruto ?? (e13 && renda > 0 ? brutoDoLiquido(renda) : 0);
+  const dec = e13 && brutoBase ? decimoTerceiro(brutoBase, folha?.dependentes ?? 0, meses) : null;
   const [n, setN] = useState(modelo.divisivel ? 1 : modelo.parcelas.length);
   const inicial = () => modelo.parcelas.map((p, i) => ({
     label: p.label,
@@ -106,12 +108,9 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
             <span className="mut small">Meses trabalhados no ano</span><span className="sp" />
             <Stepper value={meses} min={1} max={12} onChange={setMeses} fmt={(v) => `${v}/12`} />
           </div>
-          <div className="dim hint">Calculado sobre o bruto de {brl(folha!.bruto)}. Médias de horas extras e comissões não entram. Ajuste pelo holerite se precisar.</div>
-        </div>
-      )}
-      {e13 && !folha && (
-        <div className="dim hint">
-          Estimativa sobre o líquido de {brl(renda)}. <button className="inline-link" onClick={() => openSheet(<RendaSheet />)}>Informe o bruto em Minha renda</button> pro cálculo com INSS e IR.
+          <div className="dim hint">{folha
+            ? <>Calculado sobre o bruto de {brl(folha.bruto)}. Médias de horas extras e comissões não entram. Ajuste pelo holerite se precisar.</>
+            : <>Bruto estimado em <b>{brl(brutoBase)}</b> a partir do seu líquido de {brl(renda)} (INSS e IR de 2026, sem dependentes nem outros descontos). <button className="inline-link" onClick={() => openSheet(<RendaSheet />)}>Informe o bruto em Minha renda</button> pra ficar exato.</>}</div>
         </div>
       )}
       {!e13 && !ePLR && renda > 0 && modelo.parcelas.some((p) => p.pct > 0) && <div className="dim hint">Sugestão calculada sobre sua renda de {brl(renda)}. Toque na linha e ajuste pelo teclado.</div>}

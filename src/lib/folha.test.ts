@@ -78,3 +78,14 @@ describe('PLR (tabela exclusiva anual)', () => {
     expect(p1 + p2).toBe(irPLR(R(16000)));
   });
 });
+
+describe('bruto a partir do líquido (13º sem bruto cadastrado)', () => {
+  it('é o inverso do holerite', async () => {
+    const { brutoDoLiquido, holerite, decimoTerceiro } = await import('./folha');
+    const b = brutoDoLiquido(525000);
+    expect(Math.abs(holerite(b).liquido - 525000)).toBeLessThanOrEqual(1);
+    const d = decimoTerceiro(b);
+    expect(d.parcela1).toBe(Math.round(b / 2)); // 1ª = metade do BRUTO
+    expect(d.parcela2).toBeLessThan(d.parcela1); // 2ª menor: INSS + IR do 13º inteiro
+  });
+});
