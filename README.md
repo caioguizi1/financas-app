@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.13** — auditoria do motor (saldo, gráfico, faturas, parcelas, estimativas e resumo dos meses conferidos por invariantes); ao conferir o saldo, o app pergunta se o que estava previsto pra hoje (salário, aluguel…) já caiu; recalcula sozinho quando o dia vira com o app aberto; procura versão nova ao voltar pro app e avisa "Atualizado para vX".
 - **v2.12.1** — 13º sem bruto cadastrado: bruto estimado a partir do líquido (inverso do holerite 2026), 1ª parcela = metade do bruto, 2ª com INSS e IR do 13º inteiro; primeira caixa das janelas não fica mais cortada no topo.
 - **v2.12** — importação de fatura em PDF calibrada com faturas reais do Itaú e do PicPay (duas colunas, "PARC02/04", seção de próximas faturas ignorada, conferência com o total do banco); cada item fica preso à fatura pelo vencimento impresso: fatura já vencida vira histórico e as parcelas restantes caem nas faturas seguintes; valor informado à mão nas faturas seguintes é descontado das parcelas importadas; corrige dia de fechamento/vencimento do cartão pela fatura; não duplica parcela ao importar o mês seguinte; recorte da imagem do cartão com ajuste manual (arrastar, aproximar, girar).
 - **v2.11.1** — imagem do cartão recortada automaticamente (acha o cartão no print/foto, tira moldura e fundo, deita se estiver em pé) com prévia antes de salvar; nada por cima da arte (valor vai abaixo); carteira sempre mostra os dados do cartão em destaque; ícone dos avisos não invade mais o texto.

@@ -575,3 +575,10 @@ html { touch-action: manipulation }
 .rec-ctl { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: var(--mut); font-weight: 700 }
 .rec-ctl input { flex: 1; accent-color: var(--acc) }
 .rec-auto { display: block; margin: 6px auto 0; font-size: 13px; color: var(--acc-hi); padding: 6px 10px }
+
+.hoje-box { margin: 12px 0 4px; display: grid; gap: 6px }
+.hoje-it { display: grid; grid-template-columns: 1fr auto; grid-template-areas: 't v' 's s'; gap: 2px 10px; text-align: left; padding: 10px 12px; border-radius: 14px; background: var(--card2); border: 1px solid var(--line) }
+.hoje-it .t { grid-area: t; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.hoje-it .num { grid-area: v; font-weight: 650; font-size: 14px }
+.hoje-it .st { grid-area: s; font-size: 12px; color: var(--warn); font-weight: 600 }
+.hoje-it.ok .st { color: var(--in) }

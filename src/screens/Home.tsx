@@ -1,7 +1,7 @@
 import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { dateOf, diaLabel, dm, MESL, parse, saudacao, today } from '../lib/dates';
-import { fluxoMeses, projecao } from '../lib/engine';
+import { fluxoMeses, pendentesHoje, projecao } from '../lib/engine';
 import { brl } from '../lib/money';
 import { openSheet, useData } from '../store';
 import { AjustarSaldo } from '../sheets/Misc';
@@ -29,7 +29,9 @@ export function Home() {
   const vm = useMemo(() => {
     const p = projecao(D, 90, t);
     const fut = p.pts.filter((x) => x.d >= t);
-    const hoje = p.saldoEm(t) ?? D.saldo.valor;
+    const pend = pendentesHoje(D, p.evs, t);
+    const pendV = pend.reduce((a, e) => a + e.valor, 0);
+    const hoje = (p.saldoEm(t) ?? D.saldo.valor) - pendV; // saldo AGORA: sem o que ainda vai cair hoje
     const fimMes = p.saldoEm(dateOf(now.getFullYear(), now.getMonth(), 31)) ?? hoje;
     const prox30 = fut.slice(0, 31);
     const min = prox30.reduce((a, b) => (b.v < a.v ? b : a), prox30[0]);
@@ -41,7 +43,7 @@ export function Home() {
     const voltaPor = tn?.volta ? p.evs.filter((e) => e.data === tn.volta!.d && e.valor > 0).sort((a, b) => b.valor - a.valor)[0]?.desc : undefined;
     const neg = tn ? { ...tn, voltaPor } : null;
     const prox = agruparFaturas(p.evs.filter((e) => e.data >= t), D.cartoes).slice(0, 8);
-    return { p, fut, hoje, fimMes, min, months, prox, neg };
+    return { p, fut, hoje, pendV, fimMes, min, months, prox, neg };
   }, [D, t]);
 
   // nov/dez: lembrar do 13º se ainda não está na previsão
@@ -64,7 +66,7 @@ export function Home() {
         <div className="sub">
           <AnimatePresence mode="wait" initial={false}>
             <m.span key={sp ? sp.d : 'hint'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}>
-              {sp ? (spEvs.length ? spEvs.map((e) => `${e.desc} ${brl(e.valor, true)}`).join(' · ') : 'Sem movimentação neste dia') : 'Toque e arraste no gráfico pra ver qualquer dia'}
+              {sp ? (spEvs.length ? spEvs.map((e) => `${e.desc} ${brl(e.valor, true)}`).join(' · ') : 'Sem movimentação neste dia') : vm.pendV ? `${brl(vm.pendV, true)} ainda hoje · arraste no gráfico pra ver qualquer dia` : 'Toque e arraste no gráfico pra ver qualquer dia'}
             </m.span>
           </AnimatePresence>
         </div>

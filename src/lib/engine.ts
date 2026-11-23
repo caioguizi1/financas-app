@@ -74,11 +74,15 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
   return out.sort(ordem);
 }
 
+export const chaveEvento = (e: Evento) => `${e.ref}|${e.data}`;
+
 /** O saldo informado já inclui tudo até a data dele; só conta o que vem depois. */
 export function entraNaConta(D: Data, ev: Evento) {
   const b = D.saldo;
   if (ev.data > b.data) return true;
-  return ev.data === b.data && !!ev.lanc && ev.criado > b.ts;
+  if (ev.data < b.data) return false;
+  // no próprio dia: entra o que foi lançado depois de informar o saldo, ou o que o usuário disse que ainda não caiu
+  return (!!ev.lanc && ev.criado > b.ts) || !!b.pendentes?.includes(chaveEvento(ev));
 }
 
 export interface Ponto { d: ISODate; v: number }
@@ -138,6 +142,12 @@ export function resumoMes(D: Data, y: number, m: number, hoje?: ISODate): Resumo
   return { de, ate, ent, sai, evs };
 }
 
+/** Movimentos de hoje que o usuário disse que ainda não caíram (contam como "ainda entra/sai", não como saldo atual). */
+export function pendentesHoje(D: Data, evs: Evento[], hoje: ISODate) {
+  if (D.saldo.data !== hoje || !D.saldo.pendentes?.length) return [];
+  return evs.filter((e) => e.data === hoje && D.saldo.pendentes!.includes(chaveEvento(e)));
+}
+
 export interface MesFluxo { de: ISODate; ate: ISODate; atual: boolean; inicio: number; ent: number; sai: number; fim: number }
 /**
  * Resumo de caixa por mês que FECHA a conta: começa com + entra − sai = termina com.
@@ -154,9 +164,10 @@ export function fluxoMeses(D: Data, hoje: ISODate, n: number): MesFluxo[] {
     const ate = dateOf(h.getFullYear(), h.getMonth() + k, 31);
     const atual = k === 0;
     const desde = atual ? hoje : addDays(de, -1); // eventos estritamente depois deste dia
-    const inicio = p.saldoEm(desde) ?? D.saldo.valor;
+    const pend = atual ? pendentesHoje(D, p.evs, hoje) : [];
+    const inicio = (p.saldoEm(desde) ?? D.saldo.valor) - pend.reduce((a, e) => a + e.valor, 0);
     let ent = 0, sai = 0;
-    for (const e of p.evs) if (e.data > desde && e.data <= ate) (e.valor > 0 ? (ent += e.valor) : (sai -= e.valor));
+    for (const e of [...pend, ...p.evs.filter((x) => x.data > desde && x.data <= ate)]) (e.valor > 0 ? (ent += e.valor) : (sai -= e.valor));
     return { de, ate, atual, inicio, ent, sai, fim: p.saldoEm(ate) ?? inicio + ent - sai };
   });
 }

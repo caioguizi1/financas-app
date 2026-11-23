@@ -44,6 +44,8 @@ useDataStore.subscribe((s) => {
 
 export const useData = () => useDataStore((s) => s.d);
 export const getData = () => useDataStore.getState().d;
+/** Recalcula as telas sem mudar os dados (ex.: virou o dia com o app aberto). */
+export const recalcular = () => useDataStore.setState((s) => ({ d: { ...s.d } }));
 export const mutate = (fn: (d: Data) => Data) => useDataStore.getState().set(fn);
 export const restore = (d: Data) => useDataStore.getState().replace(d);
 export const resetData = () => {

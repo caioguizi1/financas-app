@@ -61,6 +61,8 @@ export interface Saldo {
   data: ISODate;
   /** Momento em que o saldo foi informado (ms). */
   ts: number;
+  /** Movimentos previstos para o próprio dia do saldo que AINDA NÃO tinham caído quando ele foi informado (`ref|data`). */
+  pendentes?: string[];
 }
 
 export interface Data {
