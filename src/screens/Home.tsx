@@ -10,6 +10,8 @@ import { rendaAtual } from '../sheets/Renda';
 import { ano13 } from '../lib/extras';
 import { mutate } from '../store';
 import { InsightsStrip } from '../ui/Insights';
+import { CardFace, CarteiraSheet } from '../sheets/Carteira';
+import { faturasAtuais } from '../lib/faturas';
 import { trechoNegativo } from '../lib/insights';
 import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
@@ -100,6 +102,23 @@ export function Home() {
       </AnimatePresence>
 
       <InsightsStrip />
+
+      {D.cartoes.length > 0 && (
+        <>
+          <h2>Cartões</h2>
+          <div className="wmini">
+            {D.cartoes.map((c) => {
+              const f = faturasAtuais(D, c, t)[0];
+              return (
+                <button key={c.id} className="wmini-b" onClick={() => openSheet(<CarteiraSheet cartaoId={c.id} />)}>
+                  <CardFace c={c} mini valor={f.total} />
+                  <span className="wmini-s">{f.status === 'fechada' ? `vence ${dm(f.vencimento)}` : `aberta · fecha ${dm(f.fecha)}`}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <h2>Próximos meses</h2>
       <m.div className="months" variants={listVariants} initial="hidden" animate="shown">

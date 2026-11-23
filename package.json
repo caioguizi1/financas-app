@@ -1,7 +1,7 @@
 {
   "name": "fluxo",
   "private": true,
-  "version": "2.10.0",
+  "version": "2.11.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "motion": "^14.14.0",
+    "pdfjs-dist": "^5.7.284",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "zustand": "^5.1.0"

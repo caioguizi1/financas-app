@@ -23,7 +23,7 @@ export default defineConfig({
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,png,svg,webmanifest,woff2}'] },
+      workbox: { globPatterns: ['**/*.{js,mjs,css,html,png,svg,webmanifest,woff2}'], globIgnores: ['**/pdf*'], runtimeCaching: [{ urlPattern: /\/assets\/pdf/, handler: 'CacheFirst', options: { cacheName: 'pdfjs' } }] },
     }),
   ],
   test: { environment: 'node' },

@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import './styles.css';
+import { aplicarTema } from './lib/tema';
+
+aplicarTema();
 
 registerSW({ immediate: true });
 const loadFeatures = () => import('./motion-features').then((r) => r.default);

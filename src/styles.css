@@ -438,3 +438,121 @@ html { touch-action: manipulation }
 /* números sempre com o mesmo desenho e largura */
 .num, .ico, .vr-v, .amount .v, .stat .v, .tot .v, .hero .big { font-variant-numeric: tabular-nums lining-nums }
 .ob .ico { font-size: 17px; font-weight: 650; letter-spacing: -0.02em }
+
+/* ===== importação ===== */
+.imp-opc { font-size: 13.5px; color: var(--acc-hi); background: rgba(110, 91, 255, 0.1); border: 1px solid rgba(110, 91, 255, 0.22); border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; line-height: 1.4 }
+.imp-drop { margin-top: 16px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 16px; border-radius: 20px; border: 1.5px dashed rgba(154, 140, 255, 0.45); background: rgba(110, 91, 255, 0.06) }
+.imp-drop:disabled { opacity: 0.5 }
+.imp-drop:active { background: rgba(110, 91, 255, 0.12) }
+.imp-ico { font-size: 30px }
+.imp-dicas { margin-top: 16px; display: grid; gap: 8px; font-size: 13px; color: var(--mut); line-height: 1.4 }
+.imp-an { background: var(--card2); border: 1px solid var(--line); border-radius: 18px; padding: 14px }
+.imp-tot { display: flex; justify-content: space-between; align-items: baseline }
+.imp-tot b { font-size: 24px; font-weight: 700 }
+.imp-split { display: flex; gap: 14px; font-size: 13px; color: var(--mut); margin-top: 4px }
+.imp-split b { color: var(--text) }
+.imp-cat { display: grid; grid-template-columns: 9.5em 1fr auto; gap: 8px; align-items: center; font-size: 13.5px; padding: 3px 0 }
+.imp-bar { height: 6px; border-radius: 4px; background: var(--card3); overflow: hidden }
+.imp-bar i { display: block; height: 100%; border-radius: 4px; background: var(--acc-grad) }
+.imp-meses { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none }
+.imp-meses div { flex: none; display: flex; flex-direction: column; gap: 2px; background: var(--card3); border-radius: 12px; padding: 8px 10px; font-size: 13px }
+.imp-opt { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-size: 13.5px; line-height: 1.4 }
+.imp-opt input { margin-top: 3px; accent-color: var(--acc); width: 18px; height: 18px; flex: none }
+.imp-it { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; border-bottom: 1px solid var(--line) }
+.imp-it:last-child { border-bottom: 0 }
+.imp-it.off { opacity: 0.45 }
+.imp-it .m { flex: 1; min-width: 0 }
+.imp-it .t { font-size: 14.5px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.imp-it .s { font-size: 12px; color: var(--mut) }
+.imp-it .v { font-weight: 600; font-size: 14px; white-space: nowrap }
+.imp-chk { width: 24px; height: 24px; flex: none; border-radius: 8px; border: 1.5px solid var(--acc); color: #fff; font-weight: 800; font-size: 14px; margin-top: 7px; display: grid; place-items: center; background: transparent }
+.imp-it:not(.off) .imp-chk { background: var(--acc) }
+
+/* ===== carteira ===== */
+.cface { position: relative; width: 100%; aspect-ratio: 1.586; border-radius: 18px; overflow: hidden; background-size: cover; background-position: center; color: #fff; box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.22); isolation: isolate }
+.cface::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(120% 90% at 0% 0%, rgba(255, 255, 255, 0.22), transparent 55%), linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.28)) }
+.cface.has-img::after { z-index: 0; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.55)) }
+.cf-chip { position: absolute; left: 7%; top: 36%; width: 13%; aspect-ratio: 1.3; border-radius: 6px; background: linear-gradient(135deg, #f4dc9a, #b8913d); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15) }
+.cf-name { position: absolute; left: 7%; top: 9%; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25) }
+.cf-foot { position: absolute; left: 7%; right: 7%; bottom: 9%; z-index: 1; font-size: 13px; font-weight: 550; opacity: 0.95 }
+.cf-foot b { font-size: 17px; font-weight: 700 }
+.cf-tag { position: absolute; left: 6%; top: 8%; z-index: 1; font-size: 11px; font-weight: 650; padding: 3px 8px; border-radius: 99px; background: rgba(0, 0, 0, 0.45) }
+.cface.mini { border-radius: 14px }
+.cface.mini .cf-name { font-size: 14px }
+.cface.mini .cf-chip { border-radius: 4px; top: 38% }
+.cface.mini .cf-foot b { font-size: 15px }
+.wallet { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -18px; padding: 4px 18px 10px; scroll-padding: 0 18px; overscroll-behavior-x: contain }
+.wallet::-webkit-scrollbar { display: none }
+.wslot { flex: none; width: 82%; scroll-snap-align: start; padding: 0; background: none; border: 0; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s; transform: scale(0.93); opacity: 0.55 }
+.wslot.on { transform: none; opacity: 1 }
+.wslot:active .cface { transform: scale(0.985) }
+.wdots { display: flex; justify-content: center; gap: 6px; margin: 2px 0 6px }
+.wdots i { width: 6px; height: 6px; border-radius: 3px; background: var(--card3); transition: width 0.3s, background 0.3s }
+.wdots i.on { width: 18px; background: var(--acc) }
+.wdet { padding-top: 6px }
+.wstatus { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 99px; background: var(--card2); margin-bottom: 10px }
+.wstatus i { width: 8px; height: 8px; border-radius: 4px; background: var(--acc-hi) }
+.wstatus.warn i { background: var(--warn) } .wstatus.ok i { background: var(--in) }
+.wbill { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: var(--card2); border: 1px solid var(--line); border-radius: 18px; padding: 13px 14px; margin-bottom: 8px; color: inherit }
+.wbill:active { background: var(--card3) }
+.wbill > div { display: flex; flex-direction: column; gap: 3px }
+.wbill b { font-size: 22px; font-weight: 700 }
+.wbill .chev { margin-left: auto; color: var(--dim); font-size: 22px }
+.wprog { height: 6px; border-radius: 4px; background: var(--card3); overflow: hidden; margin-top: 6px }
+.wprog i { display: block; height: 100%; border-radius: 4px; background: var(--acc-grad) }
+.wprog i.over { background: var(--bdx-grad) }
+.wparc { display: flex; justify-content: space-between; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line) }
+.wparc:last-child { border-bottom: 0 }
+.wparc .t { font-size: 14.5px; font-weight: 550 } .wparc .s { font-size: 12px; color: var(--mut) }
+.wparc .r { display: flex; flex-direction: column; align-items: flex-end; gap: 2px }
+.wacts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px }
+.wimg { overflow: hidden }
+.wmini { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 2px 18px 4px }
+.wmini::-webkit-scrollbar { display: none }
+.wmini-b { flex: none; width: 46%; max-width: 210px; padding: 0; background: none; border: 0; color: inherit; text-align: left; transition: transform 0.15s }
+.wmini-b:active { transform: scale(0.97) }
+.wmini-s { display: block; font-size: 12px; color: var(--mut); margin: 6px 2px 0 }
+
+/* ===== modo claro — "Ametista clara" ===== */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f6f4fb; --card: #ffffff; --card2: #f1eef8; --card3: #e5e0f2;
+  --line: rgba(35, 25, 80, 0.09);
+  --text: #16122a; --mut: #5d5876; --dim: #8e89a6;
+  --acc: #5b47f0; --acc-hi: #4a36dc; --acc-lo: #c9c1ff;
+  --in: #0e9a6a; --out: #c2315f; --warn: #b5761a;
+  --glass: rgba(255, 255, 255, 0.74); --glass-strong: rgba(255, 255, 255, 0.94);
+  --glass-brd: rgba(35, 25, 80, 0.08); --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+[data-theme='light'] body::before {
+  background:
+    radial-gradient(70% 45% at 10% -5%, rgba(110, 91, 255, 0.16), transparent 70%),
+    radial-gradient(55% 40% at 105% 8%, rgba(194, 49, 95, 0.1), transparent 70%),
+    radial-gradient(80% 50% at 50% 115%, rgba(110, 91, 255, 0.1), transparent 70%);
+}
+[data-theme='light'] body::after { opacity: 0.025 }
+[data-theme='light'] .tabs { box-shadow: var(--glass-hi), 0 10px 34px rgba(40, 25, 110, 0.14) }
+[data-theme='light'] .tab-pill, [data-theme='light'] .tabs .tab-pill { background: rgba(91, 71, 240, 0.1); box-shadow: none }
+[data-theme='light'] .veil { background: rgba(22, 16, 48, 0.32) }
+[data-theme='light'] .sheet { background: linear-gradient(180deg, #ffffff, #f7f5fc); box-shadow: 0 -18px 50px rgba(40, 25, 110, 0.16) }
+[data-theme='light'] .sheet::after { background: #f7f5fc }
+[data-theme='light'] .grab { background: rgba(35, 25, 80, 0.18) }
+[data-theme='light'] .sl-foot { background: rgba(247, 245, 252, 0.8) }
+[data-theme='light'] .sa.edit { background: #8a84a3 }
+[data-theme='light'] .seg-pill:not(.out):not(.in) { background: #ffffff; box-shadow: 0 1px 4px rgba(35, 25, 80, 0.12) }
+[data-theme='light'] .seg button.on { color: var(--text) }
+[data-theme='light'] .seg button.on.in, [data-theme='light'] .seg button.on.out { color: #fff }
+[data-theme='light'] .seg button.on.in { color: #06281c }
+[data-theme='light'] .cface { box-shadow: 0 12px 28px -12px rgba(40, 25, 110, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) }
+[data-theme='light'] .wslot:not(.on) { opacity: 0.7 }
+[data-theme='light'] .chip { background: var(--card) }
+[data-theme='light'] .item, [data-theme='light'] .list { box-shadow: 0 1px 2px rgba(35, 25, 80, 0.04) }
+/* peças que seguem escuras nos dois temas (assinatura): card principal com gráfico e o aviso flutuante */
+[data-theme='light'] .hero, [data-theme='light'] .toast {
+  --card: #14102a; --card2: #1d1836; --card3: #282147; --line: rgba(255, 255, 255, 0.08);
+  --text: #f5f3fc; --mut: #b3adcc; --dim: #7d779a; --acc-hi: #a99dff; --in: #5fe3b3; --out: #ef6f95;
+  --glass-brd: rgba(255, 255, 255, 0.1); --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+[data-theme='light'] .hero { box-shadow: 0 18px 44px -10px rgba(40, 25, 110, 0.45) }
+[data-theme='light'] .toast { background: rgba(28, 23, 50, 0.9) }

@@ -6,7 +6,8 @@ import { ativaEm, serieDe } from '../lib/versions';
 import { agruparFaturas } from '../lib/faturas';
 import type { Recorrente } from '../lib/types';
 import { ExtraSheet } from '../sheets/Extras';
-import { FaturasSheet } from '../sheets/Faturas';
+import { ImportarSheet } from '../sheets/Importar';
+import { CarteiraSheet } from '../sheets/Carteira';
 import { RendaSheet, resumoRenda } from '../sheets/Renda';
 import { brl } from '../lib/money';
 import type { Evento } from '../lib/types';
@@ -14,7 +15,8 @@ import { openSheet, resetData, useData, useUI } from '../store';
 import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
 import { AjustarSaldo, EditNome } from '../sheets/Misc';
-import { Button, itemVariants, listVariants } from '../ui/Controls';
+import { Button, itemVariants, listVariants, Segmented } from '../ui/Controls';
+import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
 import { EvItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
@@ -122,6 +124,7 @@ export function Fixos() {
 export function Ajustes() {
   const D = useData();
   const [confirm, setConfirm] = useState(false);
+  const [tema, setT] = useState<Tema>(getTema);
   const Row = ({ ico, t, s, onClick }: { ico: string; t: string; s?: string; onClick: () => void }) => (
     <m.button variants={itemVariants} className="item" onClick={onClick}>
       <div className="ico">{ico}</div><div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
@@ -133,7 +136,8 @@ export function Ajustes() {
       <h2>Você</h2>
       <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
         <Row ico="🙂" t="Nome" s={D.perfil.nome} onClick={() => openSheet(<EditNome />)} />
-        {D.cartoes.length > 0 && <Row ico="💳" t="Conferir faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<FaturasSheet cartaoId={D.cartoes[0].id} />)} />}
+        {D.cartoes.length > 0 && <Row ico="💳" t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
+        <Row ico="📥" t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
         <Row ico="🏦" t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
         <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
         <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
@@ -145,6 +149,9 @@ export function Ajustes() {
         </m.div>
       )}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditCartao />)}>＋ Adicionar cartão</Button>
+      <h2>Aparência</h2>
+      <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: 'Automático' }, { v: 'claro', label: '☀️ Claro' }, { v: 'escuro', label: '🌙 Escuro' }]} />
+      <div className="dim hint" style={{ margin: '8px 2px 0' }}>Automático segue o modo do iPhone.</div>
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
       <m.div className="list" variants={listVariants} initial="hidden" animate="shown">

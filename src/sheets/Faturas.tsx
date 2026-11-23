@@ -9,6 +9,7 @@ import { Button, Chip } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { ValueRows } from '../ui/ValueRows';
 import { QuickAdd } from './QuickAdd';
+import { ImportarSheet } from './Importar';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
@@ -93,6 +94,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
         />
       </div>
       <div className="sl-foot">
+        <Button kind="link" onClick={() => openSheet(<ImportarSheet cartaoId={sel} />)}>📥 Importar esta fatura (opcional)</Button>
         <Button disabled={!mudou} onClick={salvar}>{mudou ? 'Ajustar faturas' : 'Faturas conferidas'}</Button>
       </div>
     </div>
