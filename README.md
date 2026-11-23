@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.15.2** — cartões de dica no padrão de carrossel: mesma altura na faixa, ícone e título na mesma linha, texto até 3 linhas (toque mostra inteiro), ação presa na base.
 - **v2.15.1** — faixas "Pra você" e "Próximos meses": ao deslizar, o cartão assenta na margem (antes colava na borda da tela); cartões de dica com a altura do próprio conteúdo.
 - **v2.15** — arrastar o dedo pela barra de abas (como no iOS 26): a bolha segue o dedo, a aba embaixo acende e, ao soltar, abre; toque simples e o ＋ continuam iguais.
 - **v2.14.1** — correção: listas das abas pré-montadas (Fixos, Extrato, Ajustes) apareciam em branco; agora nascem prontas e só animam quando a tela está à vista.

@@ -359,16 +359,18 @@ html.sheet-open .toast-host { bottom: auto; top: calc(var(--sat) + 12px) }
 .item.parc { align-items: flex-start }
 
 /* ===== insights ===== */
-.insights { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -18px; padding: 0 18px 4px; scrollbar-width: none; scroll-padding-inline: 18px }
+.insights { display: flex; align-items: stretch; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -18px; padding: 0 18px 4px; scrollbar-width: none; scroll-padding-inline: 18px }
 .insights::-webkit-scrollbar { display: none }
-.insight { flex: 0 0 74%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); cursor: default }
+/* cartões de dica: mesma altura na faixa (padrão de carrossel); conteúdo limitado e ação presa na base */
+.insight { flex: 0 0 74%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 15px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line); cursor: default; min-height: 128px }
 .insight.bom { background: linear-gradient(160deg, rgba(95, 227, 179, 0.1), var(--card) 60%); border-color: rgba(95, 227, 179, 0.2) }
 .insight.alerta { background: linear-gradient(160deg, rgba(168, 51, 88, 0.16), var(--card) 60%); border-color: rgba(224, 87, 127, 0.25) }
 .insight.info { background: linear-gradient(160deg, rgba(110, 91, 255, 0.12), var(--card) 60%) }
-.in-ico { font-size: 22px; line-height: 1 }
-.in-t { font-size: 17px; font-weight: 650; letter-spacing: -0.02em }
-.in-x { font-size: 13.5px; color: var(--mut); line-height: 1.4 }
-.in-a { align-self: flex-start; margin-top: 4px; color: var(--acc-hi); font-weight: 650; font-size: 14px; cursor: pointer }
+.in-h { display: flex; align-items: center; gap: 9px; min-width: 0 }
+.in-ico { flex: none; font-size: 20px; line-height: 1 }
+.in-t { font-size: 16.5px; font-weight: 650; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0 }
+.in-x { font-size: 13.5px; color: var(--mut); line-height: 1.4; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden }
+.in-a { align-self: flex-start; margin-top: auto; color: var(--acc-hi); font-weight: 650; font-size: 14px; cursor: pointer }
 
 /* ===== pílulas por CSS (compositor; sem medir layout) ===== */
 .tabs { position: relative }
