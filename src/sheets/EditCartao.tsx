@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { dm, today } from '../lib/dates';
 import { ajusteFatura, faturasAtuais } from '../lib/faturas';
-import { uid } from '../lib/money';
+import { brl, uid } from '../lib/money';
 import type { Cartao, Lancamento } from '../lib/types';
 import { closeSheet, getData, mutate, openSheet, withUndo } from '../store';
 import { SheetHeader } from '../ui/Sheet';
@@ -20,22 +20,26 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
   const ok = !!c.fechamento && !!c.vencimento;
   const [id] = useState(() => cartao?.id ?? uid());
 
-  // cartão novo: pergunta o valor de CADA fatura que ainda vai sair (fechada a vencer + aberta)
+  // valor ATUAL de cada fatura que ainda vai sair (fechada a vencer + aberta) — no cadastro e na edição
   const fats = useMemo(() => {
-    if (!novo || !ok) return [];
+    if (!ok) return [];
     const cc: Cartao = { id, nome: c.nome || 'Cartão', fechamento: c.fechamento!, vencimento: c.vencimento! };
-    return faturasAtuais({ ...getData(), cartoes: [cc] }, cc, today());
-  }, [novo, ok, id, c.nome, c.fechamento, c.vencimento]);
+    const D = getData();
+    return faturasAtuais({ ...D, cartoes: [...D.cartoes.filter((x) => x.id !== id), cc] }, cc, today());
+  }, [ok, id, c.nome, c.fechamento, c.vencimento]);
   const [valores, setValores] = useState<Record<string, number>>({});
+  const valorDe = (f: (typeof fats)[number]) => valores[f.vencimento] ?? f.total;
   const [ativa, setAtiva] = useState(0);
 
   const salvar = () => {
     if (!ok) return;
     const final: Cartao = { ...c, fechamento: c.fechamento!, vencimento: c.vencimento!, id, nome: c.nome.trim() || 'Cartão', estimativa: estimativa || undefined };
-    const ajustes = fats.map((f) => ajusteFatura({ ...f, cartao: final }, valores[f.vencimento] ?? 0)).filter(Boolean) as Lancamento[];
-    mutate((d) => (novo
-      ? { ...d, cartoes: [...d.cartoes, final], lancamentos: [...d.lancamentos, ...ajustes] }
-      : { ...d, cartoes: d.cartoes.map((x) => (x.id === final.id ? final : x)) }));
+    const ajustes = fats.map((f) => ajusteFatura({ ...f, cartao: final }, valorDe(f))).filter(Boolean) as Lancamento[];
+    mutate((d) => ({
+      ...d,
+      cartoes: novo ? [...d.cartoes, final] : d.cartoes.map((x) => (x.id === final.id ? final : x)),
+      lancamentos: [...d.lancamentos, ...ajustes],
+    }));
     closeSheet();
   };
   const apagar = () => {
@@ -48,26 +52,31 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
       <SheetHeader title={novo ? 'Novo cartão' : 'Editar cartão'} onDelete={novo ? undefined : apagar} />
       <div className="sl-mid" data-scroll>
         <input className="field" placeholder="Nome (ex: Nubank)" value={c.nome} onChange={(e) => set({ nome: e.target.value })} />
-        {!novo && (
-          <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<FaturasSheet cartaoId={cartao!.id} />)}>💳 Ver e conferir faturas</Button>
-        )}
         <div className="lab">Dia do fechamento</div>
         <DayGrid value={c.fechamento} onChange={(fechamento) => set({ fechamento })} caption={(d) => `fecha todo dia ${d} (compras a partir dele vão pra próxima)`} />
         <div className="lab">Dia do vencimento</div>
         <DayGrid value={c.vencimento} onChange={(vencimento) => set({ vencimento })} caption={(d) => `vence todo dia ${d}`} />
-        {ok && (
+        <div className="lab-big">💳 Fatura atual</div>
+        {!ok ? (
+          <div className="pay-info" style={{ height: 'auto', padding: '12px 14px' }}>Escolha os dias de fechamento e vencimento acima pra informar o valor da fatura.</div>
+        ) : (
           <>
-            <div className="lab">{novo && fats.length ? `Quanto já tem ${fats.length > 1 ? 'em cada fatura' : 'na fatura'}? ` : 'Valores'}{novo && fats.length > 0 && <span className="dim">(veja no app do banco)</span>}</div>
-            {novo && fats.length > 1 && <div className="dim hint" style={{ marginTop: -4, marginBottom: 8 }}>Hoje existem duas: a que já fechou e ainda vai vencer, e a aberta.</div>}
+            <div className="dim hint" style={{ marginTop: -2, marginBottom: 8 }}>
+              {fats.length > 1 ? 'Hoje existem duas: a que já fechou e ainda vai vencer, e a aberta. ' : ''}Digite o valor que aparece no app do banco{novo ? '' : ' (já vem com o que o app somou)'}.
+            </div>
             <ValueRows
               linhas={[
-                ...fats.map((f) => ({ id: f.vencimento, label: `${f.status === 'fechada' ? 'Fechada' : 'Aberta'} · vence ${fmt(f.vencimento)}`, valor: valores[f.vencimento] ?? 0 })),
-                { id: 'est', label: 'Gasto típico por fatura', valor: estimativa, nota: 'Opcional: completa as faturas futuras no gráfico com essa média' },
+                ...fats.map((f) => ({ id: f.vencimento, label: `${f.status === 'fechada' ? 'Fechada' : 'Aberta'} · vence ${fmt(f.vencimento)}`, valor: valorDe(f),
+                  nota: !novo && valorDe(f) !== f.total ? `ajuste de ${brl(valorDe(f) - f.total, true)}` : f.status === 'fechada' ? 'já fechou, ainda não venceu' : `recebendo compras até o dia ${c.fechamento! - 1 || c.fechamento}` })),
+                { id: 'est', label: 'Gasto típico por fatura', valor: estimativa, nota: 'Opcional: média que completa as próximas faturas' },
               ]}
               ativa={Math.min(ativa, fats.length)} onAtiva={setAtiva}
               onValor={(i, v) => (i < fats.length ? setValores((x) => ({ ...x, [fats[i].vencimento]: v })) : setEstimativa(v))}
             />
           </>
+        )}
+        {!novo && (
+          <Button kind="ghost" style={{ marginTop: 12 }} onClick={() => openSheet(<FaturasSheet cartaoId={cartao!.id} />)}>Ver compras de cada fatura e data de pagamento</Button>
         )}
       </div>
       <div className="sl-foot">

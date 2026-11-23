@@ -420,3 +420,5 @@ html { touch-action: manipulation }
 
 .fat-pag { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px }
 .fat-pag b { color: var(--text) }
+
+.lab-big { font-size: 16px; font-weight: 650; margin: 22px 2px 8px }

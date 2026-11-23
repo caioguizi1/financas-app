@@ -32,7 +32,7 @@ function fatura(D: Data, c: Cartao, venc: ISODate, status: Fatura['status']): Fa
   // a fatura é identificada pelo vencimento original, mesmo que paga em outra data
   const itens = eventosEntre(D, addDays(venc, -62), addDays(venc, 45)).filter((e) => e.cartaoId === c.id && e.venc === venc);
   const pg = pagamentoFatura(D, c, venc);
-  return { cartao: c, vencimento: venc, fecha: fechamentoDe(c, venc), status, total: -itens.reduce((a, e) => a + e.valor, 0), itens, pagaEm: pg.data, antecipada: pg.data !== venc };
+  return { cartao: c, vencimento: venc, fecha: fechamentoDe(c, venc), status, total: -itens.reduce((a, e) => a + e.valor, 0) || 0, itens, pagaEm: pg.data, antecipada: pg.data !== venc };
 }
 
 /** Marca a fatura como paga (ou agendada) numa data diferente do vencimento. `null` volta pro vencimento. */

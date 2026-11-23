@@ -6,6 +6,6 @@ export function brl(c: number, sign = false) {
   return (c < 0 ? '−' : sign && c > 0 ? '+' : '') + 'R$ ' + s;
 }
 
-export const centsToStr = (c: number) => nf.format(c / 100);
+export const centsToStr = (c: number) => nf.format((c || 0) / 100); // (-0 → 0)
 
 export const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-5);
