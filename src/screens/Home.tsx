@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
-import { dateOf, diaLabel, MESL, saudacao, today } from '../lib/dates';
+import { dateOf, diaLabel, dm, MESL, saudacao, today } from '../lib/dates';
 import { projecao, resumoMes } from '../lib/engine';
 import { brl } from '../lib/money';
 import { openSheet, useData } from '../store';
@@ -10,6 +10,7 @@ import { rendaAtual } from '../sheets/Renda';
 import { ano13 } from '../lib/extras';
 import { mutate } from '../store';
 import { InsightsStrip } from '../ui/Insights';
+import { trechoNegativo } from '../lib/insights';
 import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
 import { Button, itemVariants, listVariants } from '../ui/Controls';
@@ -35,8 +36,11 @@ export function Home() {
       const r = resumoMes(D, d.getFullYear(), d.getMonth(), t);
       return { ...r, fim: p.saldoEm(r.ate), nome: MESL[d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : '') };
     });
+    const tn = trechoNegativo(fut);
+    const voltaPor = tn?.volta ? p.evs.filter((e) => e.data === tn.volta!.d && e.valor > 0).sort((a, b) => b.valor - a.valor)[0]?.desc : undefined;
+    const neg = tn ? { ...tn, voltaPor } : null;
     const prox = agruparFaturas(p.evs.filter((e) => e.data >= t), D.cartoes).slice(0, 8);
-    return { p, fut, hoje, fimMes, min, months, prox };
+    return { p, fut, hoje, fimMes, min, months, prox, neg };
   }, [D, t]);
 
   // nov/dez: lembrar do 13º se ainda não está na previsão
@@ -71,8 +75,13 @@ export function Home() {
         <m.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
       </m.div>
 
-      {vm.min.v < 0 && (
-        <div className="alert"><span>⚠️</span><div>Seu saldo fica <b>negativo em {diaLabel(vm.min.d).toLowerCase()}</b> ({brl(vm.min.v)}). Vale segurar gastos até lá.</div></div>
+      {vm.neg && (
+        <div className="alert"><span>⚠️</span><div>
+          Seu saldo fica <b>negativo a partir de {diaLabel(vm.neg.inicio.d).toLowerCase()}</b> ({brl(vm.neg.inicio.v)})
+          {vm.neg.pior.d !== vm.neg.inicio.d && <> e chega a <b>{brl(vm.neg.pior.v)}</b> em {dm(vm.neg.pior.d)}</>}
+          {vm.neg.volta ? <>. Volta ao positivo em {dm(vm.neg.volta.d)}{vm.neg.voltaPor ? ` (${vm.neg.voltaPor})` : ''}.</> : <> e não volta ao positivo nos próximos 90 dias.</>}
+          {' '}Vale segurar gastos até lá.
+        </div></div>
       )}
 
       <AnimatePresence initial={false}>

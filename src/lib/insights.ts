@@ -4,7 +4,7 @@
  */
 import { catN } from './categories';
 import { addDays, addMonths, dm, mesCurto, monthKey, parse } from './dates';
-import { eventosEntre, projecao } from './engine';
+import { eventosEntre, projecao, type Ponto } from './engine';
 import { faturasAtuais } from './faturas';
 import { brl } from './money';
 import { normalizar } from './smart';
@@ -151,4 +151,15 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
   }
 
   return out.sort((a, b) => b.peso - a.peso);
+}
+
+export interface TrechoNegativo { inicio: Ponto; pior: Ponto; volta?: Ponto }
+/** Primeiro trecho em que o saldo fica negativo: quando começa, o pior ponto e quando volta ao positivo. */
+export function trechoNegativo(pts: Ponto[]): TrechoNegativo | null {
+  const i = pts.findIndex((p) => p.v < 0);
+  if (i < 0) return null;
+  let pior = pts[i];
+  let j = i;
+  for (; j < pts.length && pts[j].v < 0; j++) if (pts[j].v < pior.v) pior = pts[j];
+  return { inicio: pts[i], pior, volta: pts[j] };
 }

@@ -54,3 +54,17 @@ describe('insights', () => {
     expect(a.ultima).toBe('2027-07-15');
   });
 });
+
+import { trechoNegativo } from './insights';
+describe('trecho negativo (alerta do Início)', () => {
+  it('avisa o PRIMEIRO dia negativo, o pior ponto e a volta', () => {
+    const pts = [['12-10', 5000], ['12-11', -8000], ['12-12', -8000], ['12-15', -115500], ['12-19', -20000], ['12-20', 242500], ['12-28', -1000]].map(([d, v]) => ({ d: `2026-${d}`, v: v as number }));
+    const t = trechoNegativo(pts)!;
+    expect([t.inicio.d, t.inicio.v]).toEqual(['2026-12-11', -8000]);
+    expect([t.pior.d, t.pior.v]).toEqual(['2026-12-15', -115500]);
+    expect(t.volta?.d).toBe('2026-12-20');
+  });
+  it('sem negativo → nada', () => {
+    expect(trechoNegativo([{ d: '2026-12-01', v: 1 }])).toBeNull();
+  });
+});
