@@ -15,7 +15,8 @@ import { openSheet, resetData, useData, useUI } from '../store';
 import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
 import { AjustarSaldo, EditNome } from '../sheets/Misc';
-import { Button, itemVariants, listVariants, Segmented } from '../ui/Controls';
+import { Button, Chip, itemVariants, listVariants, Segmented } from '../ui/Controls';
+import { catE, catN } from '../lib/categories';
 import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
 import { EvItem, RecItem } from '../ui/Items';
@@ -31,10 +32,18 @@ export function Extrato() {
   const [dir, setDir] = useState(1);
   const r = resumoMes(D, y, mo);
   const t = today();
+  // filtro por categoria: mostra cada compra (inclusive as do cartão, no dia da fatura) e o total da categoria
+  const [cat, setCat] = useState<string | null>(null);
+  const cats = new Map<string, number>();
+  for (const e of r.evs) if (e.valor < 0) cats.set(e.cat, (cats.get(e.cat) ?? 0) - e.valor);
+  const listaCats = [...cats.entries()].sort((a, b) => b[1] - a[1]);
+  const evsView = cat ? r.evs.filter((e) => e.cat === cat) : agruparFaturas(r.evs, D.cartoes);
+  const ent = cat ? evsView.filter((e) => e.valor > 0).reduce((a, e) => a + e.valor, 0) : r.ent;
+  const sai = cat ? -evsView.filter((e) => e.valor < 0).reduce((a, e) => a + e.valor, 0) : r.sai;
   const byDay = new Map<string, Evento[]>();
-  agruparFaturas(r.evs, D.cartoes).forEach((e) => byDay.set(e.data, [...(byDay.get(e.data) ?? []), e]));
+  evsView.forEach((e) => byDay.set(e.data, [...(byDay.get(e.data) ?? []), e]));
   const days = [...byDay.keys()].sort().reverse();
-  const sob = r.ent - r.sai;
+  const sob = ent - sai;
   const move = (d: 1 | -1) => { const x = new Date(y, mo + d, 1); setDir(d); setYM([x.getFullYear(), x.getMonth()]); };
 
   return (
@@ -48,11 +57,20 @@ export function Extrato() {
         <m.button whileTap={{ scale: 0.85 }} onClick={() => move(1)} aria-label="Próximo mês">›</m.button>
       </div>
       <div className="tot">
-        <div><div className="k">Entrou</div><div className="v num pos"><AnimatedBRL value={r.ent} /></div></div>
-        <div><div className="k">Saiu</div><div className="v num"><AnimatedBRL value={-r.sai} /></div></div>
-        <div><div className="k">Sobra</div><div className={`v num ${sob < 0 ? 'neg' : 'pos'}`}><AnimatedBRL value={sob} sign /></div></div>
+        <div><div className="k">Entrou</div><div className="v num pos"><AnimatedBRL value={ent} /></div></div>
+        <div><div className="k">{cat ? `Em ${catN(cat)}` : 'Saiu'}</div><div className="v num"><AnimatedBRL value={-sai} /></div></div>
+        {cat
+          ? <div><div className="k">Do total</div><div className="v num">{r.sai ? Math.round((sai / r.sai) * 100) : 0}%</div></div>
+          : <div><div className="k">Sobra</div><div className={`v num ${sob < 0 ? 'neg' : 'pos'}`}><AnimatedBRL value={sob} sign /></div></div>}
       </div>
-      <m.div key={`${y}-${mo}`} variants={listVariants} initial="hidden" animate="shown">
+      {listaCats.length > 1 && (
+        <div className="catf">
+          <Chip on={!cat} onClick={() => setCat(null)}>Todas</Chip>
+          {listaCats.map(([k, v]) => <Chip key={k} on={cat === k} onClick={() => setCat(cat === k ? null : k)}>{catE(k)} {catN(k)} · {brl(v)}</Chip>)}
+          {cat && !cats.has(cat) && <Chip on onClick={() => setCat(null)}>{catE(cat)} {catN(cat)}</Chip>}
+        </div>
+      )}
+      <m.div key={`${y}-${mo}-${cat ?? ''}`} variants={listVariants} initial="hidden" animate="shown">
         {days.length ? days.map((d) => {
           const tot = byDay.get(d)!.reduce((a, e) => a + e.valor, 0);
           return (
@@ -61,9 +79,9 @@ export function Extrato() {
               <div className="list"><AnimatePresence initial={false}>{byDay.get(d)!.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}</AnimatePresence></div>
             </m.div>
           );
-        }) : <div className="card empty" style={{ marginTop: 14 }}>Nenhuma movimentação neste mês.</div>}
+        }) : <div className="card empty" style={{ marginTop: 14 }}>{cat ? `Nada em ${catN(cat)} neste mês.` : 'Nenhuma movimentação neste mês.'}</div>}
       </m.div>
-      <div className="footnote">Compras no cartão aparecem no dia em que a fatura vence.</div>
+      <div className="footnote">{cat ? 'Cada compra aparece no dia em que sai da conta (no cartão, o vencimento da fatura).' : 'Compras no cartão aparecem no dia em que a fatura vence.'}</div>
     </>
   );
 }

@@ -483,14 +483,15 @@ html { touch-action: manipulation }
 .cface.mini .cf-name { font-size: 14px }
 .cface.mini .cf-chip { border-radius: 4px; top: 38% }
 .cface.mini .cf-foot b { font-size: 15px }
-.wallet { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -18px; padding: 4px 9% 10px; overscroll-behavior-x: contain }
+.wallet { margin: 0 -20px; padding: 4px 0 10px; overflow: hidden }
+.wtrack { display: flex; touch-action: pan-y; will-change: transform; cursor: grab }
 .wallet::-webkit-scrollbar { display: none }
-.wslot { flex: none; width: 82%; scroll-snap-align: center; padding: 0; background: none; border: 0; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s; transform: scale(0.93); opacity: 0.55 }
+.wslot { flex: none; flex: none; padding: 0; background: none; border: 0; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s; transform: scale(0.93); opacity: 0.55 }
 .wslot.on { transform: none; opacity: 1 }
 .wslot:active .cface { transform: scale(0.985) }
 .wdots { display: flex; justify-content: center; gap: 6px; margin: 2px 0 6px }
-.wdots i { width: 6px; height: 6px; border-radius: 3px; background: var(--card3); transition: width 0.3s, background 0.3s }
-.wdots i.on { width: 18px; background: var(--acc) }
+.wdots button { width: 6px; height: 6px; padding: 0; border-radius: 3px; background: var(--card3); transition: width 0.3s, background 0.3s }
+.wdots button.on { width: 18px; background: var(--acc) }
 .wdet { padding-top: 6px }
 .wstatus { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 99px; background: var(--card2); margin-bottom: 10px }
 .wstatus i { width: 8px; height: 8px; border-radius: 4px; background: var(--acc-hi) }
@@ -582,3 +583,13 @@ html { touch-action: manipulation }
 .hoje-it .num { grid-area: v; font-weight: 650; font-size: 14px }
 .hoje-it .st { grid-area: s; font-size: 12px; color: var(--warn); font-weight: 600 }
 .hoje-it.ok .st { color: var(--in) }
+
+/* categorias filtráveis */
+.wcat > .imp-cat { width: 100%; text-align: left; color: inherit; padding: 6px 0 }
+.wcat.off { opacity: 0.45 }
+.wcat.on > .imp-cat { color: var(--acc-hi); font-weight: 650 }
+.wcat-list { overflow: hidden; padding-left: 8px; border-left: 2px solid var(--acc); margin: 2px 0 8px 6px }
+.wcat-it { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 5px 0 }
+.wcat-it .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.catf { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 12px -18px 0; padding: 0 18px 2px }
+.catf::-webkit-scrollbar { display: none }

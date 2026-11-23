@@ -1,5 +1,5 @@
-import { AnimatePresence, m } from 'motion/react';
-import { useMemo, useRef, useState } from 'react';
+import { animate, AnimatePresence, m, useMotionValue, type PanInfo } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { catE, catN } from '../lib/categories';
 import { dm, mesCurto, monthKey, today } from '../lib/dates';
 import { projecao } from '../lib/engine';
@@ -12,7 +12,7 @@ import { brl } from '../lib/money';
 import { openSheet, toast, useData } from '../store';
 import { Button } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
-import { spring } from '../ui/motion';
+import { spring, springSnappy } from '../ui/motion';
 import { EditCartao } from './EditCartao';
 import { FaturasSheet } from './Faturas';
 import { ImportarSheet } from './Importar';
@@ -37,20 +37,25 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
   const D = useData();
   const ini = Math.max(0, D.cartoes.findIndex((c) => c.id === cartaoId));
   const [i, setI] = useState(ini);
-  const trilho = useRef<HTMLDivElement>(null);
-  const inicial = useRef(false);
   const c = D.cartoes[Math.min(i, D.cartoes.length - 1)];
-
-  // ativo = cartão mais perto do centro (funciona com qualquer quantidade de cartões)
-  const onScroll = () => {
-    const el = trilho.current!;
-    const meio = el.scrollLeft + el.clientWidth / 2;
-    let n = 0, menor = Infinity;
-    Array.from(el.children).forEach((ch, k) => { const c = ch as HTMLElement; const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - meio); if (d < menor) { menor = d; n = k; } });
-    if (n !== i) setI(n);
+  // carrossel próprio: ao soltar, o cartão SEMPRE assenta no centro (a rolagem nativa às vezes parava no meio)
+  const [cw, setCw] = useState(0);
+  const x = useMotionValue(0);
+  const arrastou = useRef(false);
+  const inicioX = useRef(0);
+  const slot = cw * 0.8, GAP = 12;
+  const pos = (n: number) => (cw - slot) / 2 - n * (slot + GAP);
+  useEffect(() => { if (cw) animate(x, pos(i), springSnappy); }, [i, cw]); // eslint-disable-line react-hooks/exhaustive-deps
+  const irPara = (n: number) => setI(Math.max(0, Math.min(D.cartoes.length - 1, n)));
+  const soltar = (_: unknown, info: PanInfo) => {
+    const passo = slot + GAP;
+    // quantos cartões andar: pela distância + impulso do gesto (um toque rápido também troca)
+    const projetado = -(info.offset.x + info.velocity.x * 0.18) / passo;
+    let n = i + Math.round(projetado);
+    if (n === i && Math.abs(info.velocity.x) > 350) n = i + (info.velocity.x < 0 ? 1 : -1);
+    n = Math.max(0, Math.min(D.cartoes.length - 1, n));
+    if (n === i) animate(x, pos(i), springSnappy); else setI(n);
   };
-  const posDe = (el: HTMLDivElement, n: number) => { const c = el.children[n] as HTMLElement; return c.offsetLeft + c.offsetWidth / 2 - el.clientWidth / 2; };
-  const irPara = (n: number) => trilho.current!.scrollTo({ left: posDe(trilho.current!, n), behavior: 'smooth' });
 
   if (!c) {
     return (
@@ -66,17 +71,30 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
     <div className="sl">
       <SheetHeader title="Carteira" />
       <div className="sl-mid" data-scroll>
-        <div className="wallet" ref={(el) => {
-          trilho.current = el;
-          if (el && !inicial.current && ini) { inicial.current = true; requestAnimationFrame(() => { el.scrollLeft = posDe(el, ini); }); }
-        }} onScroll={onScroll}>
-          {D.cartoes.map((x, k) => (
-            <button key={x.id} className={`wslot ${k === i ? 'on' : ''}`} onClick={() => (k === i ? openSheet(<EditCartao cartao={x} />) : irPara(k))} aria-label={x.nome}>
-              <CardFace c={x} />
-            </button>
-          ))}
+        <div className="wallet" ref={(el) => { if (el && el.clientWidth !== cw) { setCw(el.clientWidth); const w = el.clientWidth; x.jump((w - w * 0.8) / 2 - i * (w * 0.8 + GAP)); /* posição inicial sem animar */ } }}>
+          <m.div
+            className="wtrack"
+            style={{ x, gap: GAP }}
+            drag={D.cartoes.length > 1 ? 'x' : false}
+            dragDirectionLock
+            dragElastic={0.18}
+            dragMomentum={false}
+            dragConstraints={{ left: pos(D.cartoes.length - 1) - 40, right: pos(0) + 40 }}
+            // bolha (não captura): o arrasto do próprio carrossel precisa receber o toque; só a janela não
+            onPointerDown={(e) => { e.stopPropagation(); arrastou.current = false; inicioX.current = e.clientX; }}
+            onPointerMove={(e) => { if (Math.abs(e.clientX - inicioX.current) > 6) arrastou.current = true; }}
+            onDragStart={() => { arrastou.current = true; }}
+            onDragEnd={soltar}
+          >
+            {D.cartoes.map((cc, k) => (
+              <button key={cc.id} className={`wslot ${k === i ? 'on' : ''}`} style={{ width: slot || '80%' }} aria-label={cc.nome}
+                onClick={() => { if (arrastou.current) return; if (k === i) openSheet(<EditCartao cartao={cc} />); else irPara(k); }}>
+                <CardFace c={cc} />
+              </button>
+            ))}
+          </m.div>
         </div>
-        {D.cartoes.length > 1 && <div className="wdots">{D.cartoes.map((x, k) => <i key={x.id} className={k === i ? 'on' : ''} />)}</div>}
+        {D.cartoes.length > 1 && <div className="wdots">{D.cartoes.map((cc, k) => <button key={cc.id} className={k === i ? 'on' : ''} onClick={() => irPara(k)} aria-label={cc.nome} />)}</div>}
         <AnimatePresence mode="popLayout" initial={false}>
           <m.div key={c.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={spring}>
             <Detalhes c={c} />
@@ -91,6 +109,7 @@ function Detalhes({ c }: { c: Cartao }) {
   const D = useData();
   const t = today();
   const [imgAberta, setImgAberta] = useState(false);
+  const [catSel, setCatSel] = useState<string | null>(null);
   const [fonte, setFonte] = useState<(FonteRecorte & { canvas: HTMLCanvasElement }) | null>(null);
   const [caixa, setCaixa] = useState<Caixa | null>(null);
   const abrir = async (f: File | HTMLCanvasElement, girar = false) => { const x = await abrirImagem(f, girar); setFonte(x); setCaixa(x.caixa); };
@@ -161,14 +180,33 @@ function Detalhes({ c }: { c: Cartao }) {
 
       {v.cats.length > 0 && (
         <>
-          <div className="lab">Nesta fatura</div>
-          {v.cats.map(([cat, val]) => (
-            <div key={cat} className="imp-cat">
-              <span>{catE(cat)} {catN(cat)}</span>
-              <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, (val / v.totCat) * 100)}%` }} transition={spring} /></div>
-              <span className="num">{brl(val)}</span>
-            </div>
-          ))}
+          <div className="lab">Nesta fatura <span className="dim">· toque pra ver as compras</span></div>
+          {v.cats.map(([cat, val]) => {
+            const aberto = catSel === cat;
+            const itens = aberto ? aberta.itens.filter((e) => e.cat === cat && e.valor < 0).sort((a, b) => a.valor - b.valor) : [];
+            return (
+              <div key={cat} className={`wcat ${aberto ? 'on' : ''} ${catSel && !aberto ? 'off' : ''}`}>
+                <button className="imp-cat" onClick={() => setCatSel(aberto ? null : cat)} aria-expanded={aberto}>
+                  <span>{catE(cat)} {catN(cat)}</span>
+                  <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, (val / v.totCat) * 100)}%` }} transition={spring} /></div>
+                  <span className="num">{brl(val)}</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {aberto && (
+                    <m.div className="wcat-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring}>
+                      {itens.map((e) => (
+                        <div key={`${e.ref}${e.desc}`} className="wcat-it">
+                          <span className="t">{e.ico || catE(e.cat)} {e.desc}</span>
+                          <span className="num">{brl(-e.valor)}</span>
+                        </div>
+                      ))}
+                      <div className="dim small" style={{ padding: '4px 0 2px' }}>{itens.length} {itens.length === 1 ? 'compra' : 'compras'} · {Math.round((val / v.totCat) * 100)}% da fatura</div>
+                    </m.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </>
       )}
 
