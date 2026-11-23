@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { dateOf, diaLabel, dm, MESL, saudacao, today } from '../lib/dates';
 import { projecao, resumoMes } from '../lib/engine';
@@ -17,7 +17,7 @@ export function Home() {
   const t = today();
   const now = new Date();
 
-  const m = useMemo(() => {
+  const vm = useMemo(() => {
     const p = projecao(D, 90, t);
     const fut = p.pts.filter((x) => x.d >= t);
     const hoje = p.saldoEm(t) ?? D.saldo.valor;
@@ -33,65 +33,65 @@ export function Home() {
     return { p, fut, hoje, fimMes, min, months, prox };
   }, [D, t]);
 
-  const sp = scrubI != null ? m.fut[scrubI] : null;
-  const spEvs = sp ? m.p.evs.filter((e) => e.data === sp.d) : [];
-  const shown = sp ? sp.v : m.hoje;
-  const ultimo = m.fut[m.fut.length - 1].v;
+  const sp = scrubI != null ? vm.fut[scrubI] : null;
+  const spEvs = sp ? vm.p.evs.filter((e) => e.data === sp.d) : [];
+  const shown = sp ? sp.v : vm.hoje;
+  const ultimo = vm.fut[vm.fut.length - 1].v;
 
   return (
     <>
       <div className="top"><div><div className="hello">{saudacao()},</div><h1>{D.perfil.nome || 'você'}</h1></div></div>
 
-      <motion.div className="hero" initial={{ opacity: 0, y: 12, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }}>
+      <m.div className="hero" initial={{ opacity: 0, y: 12, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }}>
         <div className="lbl">{sp ? diaLabel(sp.d) : 'Saldo hoje'}</div>
-        <div className={`big num ${shown < 0 ? 'neg' : ''}`}>{sp ? brl(sp.v) : <AnimatedBRL value={m.hoje} />}</div>
+        <div className={`big num ${shown < 0 ? 'neg' : ''}`}>{sp ? brl(sp.v) : <AnimatedBRL value={vm.hoje} />}</div>
         <div className="sub">
           <AnimatePresence mode="wait" initial={false}>
-            <motion.span key={sp ? sp.d : 'hint'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}>
+            <m.span key={sp ? sp.d : 'hint'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}>
               {sp ? (spEvs.length ? spEvs.map((e) => `${e.desc} ${brl(e.valor, true)}`).join(' · ') : 'Sem movimentação neste dia') : 'Toque e arraste no gráfico pra ver qualquer dia'}
-            </motion.span>
+            </m.span>
           </AnimatePresence>
         </div>
-        <BalanceChart pts={m.fut} onScrub={setScrubI} />
-      </motion.div>
+        <BalanceChart pts={vm.fut} onScrub={setScrubI} />
+      </m.div>
 
-      <motion.div className="stats" variants={listVariants} initial="hidden" animate="shown">
-        <motion.div variants={itemVariants} className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${m.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={m.fimMes} /></div></motion.div>
-        <motion.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></motion.div>
-      </motion.div>
+      <m.div className="stats" variants={listVariants} initial="hidden" animate="shown">
+        <m.div variants={itemVariants} className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${vm.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={vm.fimMes} /></div></m.div>
+        <m.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
+      </m.div>
 
-      {m.min.v < 0 ? (
-        <div className="alert"><span>⚠️</span><div>Seu saldo fica <b>negativo em {diaLabel(m.min.d).toLowerCase()}</b> ({brl(m.min.v)}). Vale segurar gastos até lá.</div></div>
+      {vm.min.v < 0 ? (
+        <div className="alert"><span>⚠️</span><div>Seu saldo fica <b>negativo em {diaLabel(vm.min.d).toLowerCase()}</b> ({brl(vm.min.v)}). Vale segurar gastos até lá.</div></div>
       ) : (
-        <div className="alert ok"><span>✅</span><div>Sem saldo negativo nos próximos 30 dias. Menor saldo: <b>{brl(m.min.v)}</b> em {dm(m.min.d)}.</div></div>
+        <div className="alert ok"><span>✅</span><div>Sem saldo negativo nos próximos 30 dias. Menor saldo: <b>{brl(vm.min.v)}</b> em {dm(vm.min.d)}.</div></div>
       )}
 
       <h2>Próximos meses</h2>
-      <motion.div className="months" variants={listVariants} initial="hidden" animate="shown">
-        {m.months.map((r) => {
+      <m.div className="months" variants={listVariants} initial="hidden" animate="shown">
+        {vm.months.map((r) => {
           const tot = Math.max(r.ent + r.sai, 1);
           const sob = r.ent - r.sai;
           return (
-            <motion.div key={r.de} variants={itemVariants} whileTap={{ scale: 0.98 }} transition={springSnappy} className="month">
+            <m.div key={r.de} variants={itemVariants} whileTap={{ scale: 0.98 }} transition={springSnappy} className="month">
               <div className="t">{r.nome}</div>
               <div className="bar">
-                <motion.i initial={{ width: 0 }} animate={{ width: `${(r.ent / tot) * 100}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.2 }} style={{ background: 'var(--in)' }} />
-                <motion.i initial={{ width: 0 }} animate={{ width: `${(r.sai / tot) * 100}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.3 }} style={{ background: 'var(--out)' }} />
+                <m.i initial={{ width: 0 }} animate={{ width: `${(r.ent / tot) * 100}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.2 }} style={{ background: 'var(--in)' }} />
+                <m.i initial={{ width: 0 }} animate={{ width: `${(r.sai / tot) * 100}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.3 }} style={{ background: 'var(--bdx-grad)' }} />
               </div>
               <div className="l"><span className="mut">Entra</span><span className="num">{brl(r.ent)}</span></div>
               <div className="l"><span className="mut">Sai</span><span className="num">{brl(-r.sai)}</span></div>
               <div className="l"><span className="mut">Sobra do mês</span><b className={`num ${sob < 0 ? 'neg' : 'pos'}`}>{brl(sob, true)}</b></div>
               <div className="l end"><span className="mut">Saldo no fim</span><b className={`num ${(r.fim ?? 0) < 0 ? 'neg' : ''}`}>{r.fim == null ? '—' : brl(r.fim)}</b></div>
-            </motion.div>
+            </m.div>
           );
         })}
-      </motion.div>
+      </m.div>
 
       <h2>Vem aí</h2>
-      {m.prox.length ? (
-        <motion.div className="list" variants={listVariants} initial="hidden" animate="shown">
-          <AnimatePresence initial={false}>{m.prox.map((e) => <EvItem key={`${e.ref}-${e.data}-${e.desc}`} e={e} />)}</AnimatePresence>
-        </motion.div>
+      {vm.prox.length ? (
+        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+          <AnimatePresence initial={false}>{vm.prox.map((e) => <EvItem key={`${e.ref}-${e.data}-${e.desc}`} e={e} />)}</AnimatePresence>
+        </m.div>
       ) : (
         <div className="card empty">Nada programado. Cadastre seus fixos em <b>Fixos</b>.</div>
       )}

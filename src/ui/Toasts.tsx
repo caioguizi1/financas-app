@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { useUI } from '../store';
 import { spring } from './motion';
 
@@ -9,7 +9,7 @@ export function Toasts() {
     <div className="toast-host" aria-live="polite">
       <AnimatePresence>
         {toasts.map((t) => (
-          <motion.div
+          <m.div
             key={t.id}
             className="toast"
             initial={{ opacity: 0, y: 24, scale: 0.94 }}
@@ -21,7 +21,7 @@ export function Toasts() {
             {t.undo && (
               <button onClick={() => { t.undo!(); dismiss(t.id); }}>Desfazer</button>
             )}
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
     </div>

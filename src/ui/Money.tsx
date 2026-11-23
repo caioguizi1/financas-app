@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue, useTransform } from 'motion/react';
+import { animate, m, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useId, useRef } from 'react';
 import { brl, centsToStr } from '../lib/money';
 import { springSnappy } from './motion';
@@ -7,7 +7,7 @@ import { springSnappy } from './motion';
 export function AmountDisplay({ value, compact }: { value: number; compact?: boolean }) {
   return (
     <div className={`amount ${value ? '' : 'zero'} ${compact ? 'compact' : ''}`}>
-      <motion.div
+      <m.div
         key={value}
         className="v num"
         initial={{ scale: value ? 1.035 : 1 }}
@@ -15,7 +15,7 @@ export function AmountDisplay({ value, compact }: { value: number; compact?: boo
         transition={springSnappy}
       >
         <small>R$</small>{centsToStr(value)}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -30,7 +30,7 @@ export function AnimatedBRL({ value, sign, className }: { value: number; sign?: 
     const c = animate(mv, value, { duration: 0.6, ease: [0.22, 1, 0.36, 1] });
     return c.stop;
   }, [value, mv]);
-  return <motion.span className={className}>{text}</motion.span>;
+  return <m.span className={className}>{text}</m.span>;
 }
 
 /* ---------- teclado numérico (tela + teclado físico) ---------- */
@@ -70,9 +70,9 @@ export function Keypad({ value, onChange, small }: { value: number; onChange: (v
   return (
     <div className={`keys ${small ? 'small' : ''}`}>
       {KEYS.map((k) => (
-        <motion.button key={k} className="key" whileTap={{ scale: 0.92 }} transition={springSnappy} onClick={() => press(k)} aria-label={k === '⌫' ? 'Apagar' : k}>
+        <m.button key={k} className="key" whileTap={{ scale: 0.92 }} transition={springSnappy} onClick={() => press(k)} aria-label={k === '⌫' ? 'Apagar' : k}>
           {k}
-        </motion.button>
+        </m.button>
       ))}
     </div>
   );

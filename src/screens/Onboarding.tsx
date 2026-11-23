@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PRESETS } from '../lib/categories';
 import { dateOf, MESL, monthKey, today } from '../lib/dates';
@@ -20,9 +20,9 @@ type Step = (typeof STEPS)[number];
 interface Ob { renda: number; freq: 1 | 2; adDia: number | null; adValor: number | null; rendaDia: number | null }
 
 const slide = {
-  enter: (dir: number) => ({ x: dir * 48, opacity: 0, filter: 'blur(4px)' }),
-  center: { x: 0, opacity: 1, filter: 'blur(0px)' },
-  exit: (dir: number) => ({ x: dir * -48, opacity: 0, filter: 'blur(4px)' }),
+  enter: (dir: number) => ({ x: dir * 44, opacity: 0, scale: 0.985 }),
+  center: { x: 0, opacity: 1, scale: 1 },
+  exit: (dir: number) => ({ x: dir * -44, opacity: 0, scale: 0.985 }),
 };
 
 export function Onboarding() {
@@ -73,7 +73,7 @@ export function Onboarding() {
     case 'welcome':
       body = (
         <div className="welcome">
-          <motion.div className="logo" initial={{ scale: 0.6, rotate: -12, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ ...spring, delay: 0.1 }}><ITrend /></motion.div>
+          <m.div className="logo" initial={{ scale: 0.6, rotate: -12, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ ...spring, delay: 0.1 }}><ITrend /></m.div>
           <div className="q" style={{ marginTop: 0 }}>Seu dinheiro,<br />daqui pra frente.</div>
           <div className="h">Em menos de 2 minutos eu monto o seu mapa: quanto entra, quanto sai e quanto sobra em cada dia dos próximos meses.</div>
         </div>
@@ -107,13 +107,13 @@ export function Onboarding() {
       body = <>
         <div className="q">Como ela cai na conta?</div>
         <div className="h">Muita empresa paga em duas partes: adiantamento (vale) e o restante.</div>
-        <motion.div className="list" variants={listVariants} initial="hidden" animate="shown">
+        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
           {([[1, 'Uma vez por mês', 'Tudo num dia só'], [2, 'Duas vezes por mês', 'Adiantamento + salário, ou quinzena']] as const).map(([f, t, s]) => (
-            <motion.button key={f} variants={itemVariants} className="item" onClick={() => { const o = { ...ob, freq: f }; setOb(o); next(o); }}>
+            <m.button key={f} variants={itemVariants} className="item" onClick={() => { const o = { ...ob, freq: f }; setOb(o); next(o); }}>
               <div className="ico">{f}×</div><div className="m"><div className="t">{t}</div><div className="s">{s}</div></div><span className="dim"><IChevron /></span>
-            </motion.button>
+            </m.button>
           ))}
-        </motion.div>
+        </m.div>
       </>;
       break;
     case 'adiantDia':
@@ -156,7 +156,7 @@ export function Onboarding() {
           <Chip onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Outro</Chip>
         </div>
         {fix.length > 0 && <>
-          <motion.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown"><AnimatePresence initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></motion.div>
+          <m.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown"><AnimatePresence initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>
           <div className="row" style={{ padding: '12px 4px' }}><span className="mut">Total fixo</span><span className="sp" /><b className="num"><AnimatedBRL value={-tot} /></b></div>
         </>}
       </>;
@@ -168,13 +168,13 @@ export function Onboarding() {
         <div className="q">Usa cartão de crédito?</div>
         <div className="h">Assim o app joga cada compra pro dia certo: o vencimento da fatura.</div>
         {D.cartoes.length > 0 && (
-          <motion.div className="list" style={{ marginBottom: 14 }} variants={listVariants} initial="hidden" animate="shown">
+          <m.div className="list" style={{ marginBottom: 14 }} variants={listVariants} initial="hidden" animate="shown">
             {D.cartoes.map((c) => (
-              <motion.button key={c.id} variants={itemVariants} className="item" onClick={() => openSheet(<EditCartao cartao={c} />)}>
+              <m.button key={c.id} variants={itemVariants} className="item" onClick={() => openSheet(<EditCartao cartao={c} />)}>
                 <div className="ico">💳</div><div className="m"><div className="t">{c.nome}</div><div className="s">Fecha dia {c.fechamento} · vence dia {c.vencimento}</div></div>
-              </motion.button>
+              </m.button>
             ))}
-          </motion.div>
+          </m.div>
         )}
         <Button kind="ghost" onClick={() => openSheet(<EditCartao />)}>＋ Adicionar cartão</Button>
       </>;
@@ -185,7 +185,7 @@ export function Onboarding() {
       const fimMes = projecao(getData(), 60).saldoEm(dateOf(n.getFullYear(), n.getMonth(), 31)) ?? 0;
       body = (
         <div className="welcome">
-          <motion.div className="logo ok" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.1 }}><ICheck /></motion.div>
+          <m.div className="logo ok" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.1 }}><ICheck /></m.div>
           <div className="q" style={{ marginTop: 0 }}>Pronto{nome ? `, ${nome}` : ''}!</div>
           <div className="h">Pela sua base, você deve fechar {MESL[n.getMonth()]} com</div>
           <div className={`hero-num num ${fimMes < 0 ? 'neg' : ''}`}><CountUp to={fimMes} /></div>
@@ -200,13 +200,13 @@ export function Onboarding() {
   return (
     <div className="ob">
       <div className="head" style={{ visibility: i === 0 ? 'hidden' : 'visible' }}>
-        <motion.button whileTap={{ scale: 0.9 }} className="back" onClick={() => go(-1)} aria-label="Voltar"><IBack /></motion.button>
-        <div className="sp"><div className="bar"><motion.i animate={{ width: `${pct}%` }} transition={spring} /></div></div>
+        <m.button whileTap={{ scale: 0.9 }} className="back" onClick={() => go(-1)} aria-label="Voltar"><IBack /></m.button>
+        <div className="sp"><div className="bar"><m.i animate={{ width: `${pct}%` }} transition={spring} /></div></div>
       </div>
       <AnimatePresence mode="wait" custom={dir} initial={false}>
-        <motion.div key={step} className="body" custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={{ ...spring, opacity: { duration: 0.18 } }}>
+        <m.div key={step} className="body" custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={{ ...spring, opacity: { duration: 0.18 } }}>
           {body}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
       <div className="foot">{foot}</div>
     </div>

@@ -53,7 +53,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
     <>
       <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
-      <SmartHint sug={sug} aplicada={usaSug} />
+      <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
       <AmountDisplay value={r.valor} />
       <Keypad value={r.valor} onChange={(valor) => set({ valor })} />
       <div className="lab">Todo dia</div>

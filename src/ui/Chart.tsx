@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useId, useRef } from 'react';
 import { MES, parse } from '../lib/dates';
 import type { Ponto } from '../lib/engine';
@@ -45,17 +45,19 @@ export function BalanceChart({ pts, onScrub }: { pts: Ponto[]; onScrub: (i: numb
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Saldo projetado nos próximos 90 dias">
         <defs>
           <linearGradient id={`g${id}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#8B7CFF" stopOpacity=".42" /><stop offset="1" stopColor="#8B7CFF" stopOpacity="0" />
+            <stop offset="0" stopColor="#6E5BFF" stopOpacity=".5" /><stop offset=".7" stopColor="#6E5BFF" stopOpacity=".06" /><stop offset="1" stopColor="#6E5BFF" stopOpacity="0" />
           </linearGradient>
           <clipPath id={`a${id}`}><rect x="0" y="0" width={W} height={zeroY} /></clipPath>
           <clipPath id={`b${id}`}><rect x="0" y={zeroY} width={W} height={H} /></clipPath>
         </defs>
         {ticks.map((i) => <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H} stroke="rgba(255,255,255,.07)" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />)}
         {neg && <line x1="0" x2={W} y1={zeroY} y2={zeroY} stroke="rgba(255,255,255,.25)" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
-        <motion.path d={area} fill={`url(#g${id})`} clipPath={`url(#a${id})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.35 }} />
-        <motion.path d={line} fill="none" stroke="#B3A8FF" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`}
+        <m.path d={area} fill={`url(#g${id})`} clipPath={`url(#a${id})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.35 }} />
+        <m.path d={line} fill="none" stroke="#9A8CFF" strokeOpacity={0.25} strokeWidth={7} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`}
           initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
-        <motion.path d={line} fill="none" stroke="#FF7A7A" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#b${id})`}
+        <m.path d={line} fill="none" stroke="#B9AFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`}
+          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
+        <m.path d={line} fill="none" stroke="#E0577F" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#b${id})`}
           initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
         <line ref={crossRef} x1="0" x2="0" y1={PT - 6} y2={H} stroke="rgba(255,255,255,.55)" vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
       </svg>

@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react';
+import { animate, m, useMotionValue, useTransform, type PanInfo } from 'motion/react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { create } from 'zustand';
 import { IEdit, ITrash } from './Icons';
@@ -42,14 +42,14 @@ export function SwipeRow({ id, onTap, onEdit, onDelete, children }: {
   };
 
   return (
-    <motion.div className="swipe" variants={itemVariants} exit={{ height: 0, opacity: 0, transition: { duration: 0.22 } }}>
+    <m.div className="swipe" variants={itemVariants} exit={{ height: 0, opacity: 0, transition: { duration: 0.22 } }}>
       {W > 0 && (
         <div className="swipe-actions" aria-hidden={openId !== id}>
           {onEdit && <button className="sa edit" onClick={() => { setOpen(null); onEdit(); }}><IEdit /><span>Editar</span></button>}
-          {onDelete && <motion.button className="sa del" style={{ width: delW }} onClick={fullDelete}><ITrash /><span>Apagar</span></motion.button>}
+          {onDelete && <m.button className="sa del" style={{ width: delW }} onClick={fullDelete}><ITrash /><span>Apagar</span></m.button>}
         </div>
       )}
-      <motion.div
+      <m.div
         className="swipe-front"
         role="button"
         tabIndex={0}
@@ -70,7 +70,7 @@ export function SwipeRow({ id, onTap, onEdit, onDelete, children }: {
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(); } }}
       >
         {children}
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

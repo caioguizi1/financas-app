@@ -6,7 +6,8 @@ App pessoal de finanças (PWA): controle de gastos e projeção do saldo futuro,
 
 ## Stack
 - **React 19 + TypeScript** (modo estrito) · **Vite** (build)
-- **Motion** (`motion/react`) — animações com mola, janelas arrastáveis, transições de tela
+- **Motion** (`motion/react`, via `LazyMotion`) — animações com mola, janelas arrastáveis, transições de tela
+- **Geist** (OFL) — tipografia, subconjunto latino embutido
 - **Zustand** — estado; dados salvos no aparelho (`localStorage`, chave `fluxo.v1`)
 - **vite-plugin-pwa / Workbox** — instalável e funciona offline, atualiza sozinho
 - **Vitest** — testes do motor financeiro (datas de fatura, parcelas, projeção)
@@ -35,6 +36,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.3** — identidade *Ametista noturna*: fundo quase preto com aurora índigo/bordeaux e granulado, violeta-índigo como marca, bordeaux nas saídas, menta nas entradas; vidro (Liquid Glass) na barra, janelas e avisos; fonte Geist; novo ícone escuro. Desempenho: motor de animação carregado sob demanda (JS inicial −14%), fonte só com subconjunto latino, sem blur animado.
 - **v2.2.1** — novo ícone vetorial (seta de tendência + selo de check), nítido em todos os tamanhos; fonte em `design/icon.svg`.
 - **v2.2** — dicionário inteligente: ícone e categoria sugeridos enquanto digita (sinônimos, marcas, plural, erro de digitação), aprendendo com as escolhas do usuário; novas categorias Pets, Beleza e Viagem.
 - **v2.1** — deslizar o item pro lado revela Editar/Apagar (arrastar até o fim apaga), com Desfazer; janelas com Cancelar, lixeira no cabeçalho e fechamento arrastando pra baixo de qualquer ponto, sem salvar nada.

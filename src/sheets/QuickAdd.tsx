@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE } from '../lib/categories';
 import { aprender, sugerir } from '../lib/smart';
@@ -72,7 +72,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       <AmountDisplay value={l.valor} compact />
 
       <SmartDesc value={l.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={l.tipo === 'saida' ? 'Com o quê? (ex: ração, uber, ifood)' : 'De onde veio? (ex: freela)'} />
-      <SmartHint sug={sug} aplicada={usaSug} />
+      <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
 
       <div className="chips scroll" ref={chipsRef} style={{ marginTop: 10 }}>
         {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k }); }}>{e} {n}</Chip>)}
@@ -86,7 +86,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       )}
       <AnimatePresence initial={false}>
         {cartao && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring} style={{ overflow: 'hidden' }}>
+          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring} style={{ overflow: 'hidden' }}>
             <div className="row" style={{ marginTop: 12 }}>
               <span className="mut" style={{ fontSize: 14 }}>Parcelas</span>
               <span className="sp" />
@@ -96,7 +96,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
               Sai da conta em {dm(pagamentoCartao(cartao, l.data))}
               {parcelas > 1 && ` · ${parcelas}x de ${brl(Math.floor(l.valor / parcelas))}`}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, MotionConfig } from 'motion/react';
+import { AnimatePresence, LazyMotion, m, MotionConfig } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
@@ -16,6 +16,7 @@ const TABS: { id: Tab; label: string; Icon: () => React.ReactElement }[] = [
   { id: 'fixos', label: 'Fixos', Icon: IRepeat },
   { id: 'ajustes', label: 'Ajustes', Icon: IGear },
 ];
+const loadFeatures = () => import('./motion-features').then((r) => r.default);
 const SCREENS: Record<Tab, () => React.ReactElement> = { home: Home, extrato: Extrato, fixos: Fixos, ajustes: Ajustes };
 
 export default function App() {
@@ -51,35 +52,37 @@ export default function App() {
 
   const Screen = SCREENS[tab];
   return (
+    <LazyMotion features={loadFeatures} strict>
     <MotionConfig reducedMotion="user">
       <div id="app">
         <AnimatePresence mode="wait" initial={false}>
           {!onboarded ? (
-            <motion.div key="ob" exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}><Onboarding /></motion.div>
+            <m.div key="ob" exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}><Onboarding /></m.div>
           ) : (
-            <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <m.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <AnimatePresence mode="wait" initial={false}>
-                <motion.main key={tab} className="screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
+                <m.main key={tab} className="screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
                   <Screen />
-                </motion.main>
+                </m.main>
               </AnimatePresence>
               <nav className="tabbar">
                 <div className="tabs">
                   {TABS.slice(0, 2).map((x) => <TabBtn key={x.id} {...x} />)}
-                  <motion.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
+                  <m.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
                     onClick={() => (sheetOpen ? useUI.getState().closeSheet() : openSheet(<QuickAdd />))}>
                     <IPlus />
-                  </motion.button>
+                  </m.button>
                   {TABS.slice(2).map((x) => <TabBtn key={x.id} {...x} />)}
                 </div>
               </nav>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
         <SheetHost />
         <Toasts />
       </div>
     </MotionConfig>
+    </LazyMotion>
   );
 }
 
@@ -88,10 +91,10 @@ function TabBtn({ id, label, Icon }: (typeof TABS)[number]) {
   const setTab = useUI((s) => s.setTab);
   const on = tab === id;
   return (
-    <motion.button whileTap={{ scale: 0.9 }} className={`tab ${on ? 'on' : ''}`} onClick={() => setTab(id)}>
-      {on && <motion.span layoutId="tab-pill" className="tab-pill" transition={spring} />}
+    <m.button whileTap={{ scale: 0.9 }} className={`tab ${on ? 'on' : ''}`} onClick={() => setTab(id)}>
+      {on && <m.span layoutId="tab-pill" className="tab-pill" transition={spring} />}
       <span className="tab-ic"><Icon /></span>
       <span className="tab-l">{label}</span>
-    </motion.button>
+    </m.button>
   );
 }

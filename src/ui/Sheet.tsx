@@ -1,4 +1,4 @@
-import { animate, AnimatePresence, motion, useMotionValue, useTransform } from 'motion/react';
+import { animate, AnimatePresence, m, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { closeSheet, useUI } from '../store';
 import { ITrash } from './Icons';
@@ -82,17 +82,17 @@ function SheetFrame({ children }: { children: ReactNode }) {
   }, [offset]);
 
   return (
-    <motion.div className="sheet-layer" initial="hidden" animate="shown" exit="hidden">
-      <motion.div className="veil-wrap" variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }} transition={{ duration: 0.25 }}>
-        <motion.div className="veil" style={{ opacity: veil }} onClick={closeSheet} />
-      </motion.div>
-      <motion.div className="sheet-pos" variants={{ hidden: { y: '100%' }, shown: { y: 0 } }} transition={spring}>
-        <motion.div className="sheet" role="dialog" aria-modal="true" style={{ y: offset }}>
+    <m.div className="sheet-layer" initial="hidden" animate="shown" exit="hidden">
+      <m.div className="veil-wrap" variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }} transition={{ duration: 0.25 }}>
+        <m.div className="veil" style={{ opacity: veil }} onClick={closeSheet} />
+      </m.div>
+      <m.div className="sheet-pos" variants={{ hidden: { y: '100%' }, shown: { y: 0 } }} transition={spring}>
+        <m.div className="sheet" role="dialog" aria-modal="true" style={{ y: offset }}>
           <div className="grab-zone" ref={grabRef}><div className="grab" /></div>
           <div className="sheet-body" ref={bodyRef}>{children}</div>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+        </m.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -103,7 +103,7 @@ export function SheetHeader({ title, onDelete }: { title: string; onDelete?: () 
       <button className="sh-btn" onClick={closeSheet}>Cancelar</button>
       <h3>{title}</h3>
       {onDelete ? (
-        <motion.button whileTap={{ scale: 0.88 }} className="sh-btn del" onClick={onDelete} aria-label="Apagar"><ITrash /></motion.button>
+        <m.button whileTap={{ scale: 0.88 }} className="sh-btn del" onClick={onDelete} aria-label="Apagar"><ITrash /></m.button>
       ) : <span className="sh-btn ghost" aria-hidden />}
     </div>
   );
