@@ -186,7 +186,13 @@ html.sheet-open body{overflow:hidden}
 .seg-pill.out{background:var(--out)}.seg-pill.in{background:var(--in)}
 .seg-label{position:relative}
 .daygrid button{position:relative}
-.daygrid button span{position:relative}
+.daygrid button .day-n{position:relative}
+.day-caption{margin-top:12px;font-size:14px;color:var(--mut);min-height:20px;display:flex;align-items:center;gap:6px}
+.day-caption b{color:var(--text)}
+.day-caption.ok .dot{background:var(--in)}
+.day-caption .dot{width:8px;height:8px;border-radius:50%;background:var(--warn)}
+.chip.added::before{content:'✓ ';color:var(--in);font-weight:700}
+.need{color:var(--warn);font-size:13px;text-align:center;margin-top:2px}
 .day-pill{position:absolute;inset:0;border-radius:12px;background:var(--acc);box-shadow:0 6px 18px rgba(139,124,255,.35)}
 
 /* tabbar */

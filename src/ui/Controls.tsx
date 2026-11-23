@@ -1,4 +1,4 @@
-import { motion, type HTMLMotionProps } from 'motion/react';
+import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
 import { useId, type ReactNode } from 'react';
 import { spring, springSnappy } from './motion';
 
@@ -40,17 +40,31 @@ export function Segmented<T extends string | number>({ options, value, onChange 
   );
 }
 
-export function DayGrid({ value, onChange }: { value: number; onChange: (d: number) => void }) {
+export function DayGrid({ value, onChange, caption = (d) => `Todo dia ${d}` }: {
+  value: number | null; onChange: (d: number) => void; caption?: ((d: number) => string) | null;
+}) {
   const id = useId();
   return (
-    <div className="daygrid">
-      {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-        <motion.button key={d} whileTap={{ scale: 0.88 }} transition={springSnappy} className={d === value ? 'on' : ''} onClick={() => onChange(d)}>
-          {d === value && <motion.span layoutId={`day-${id}`} className="day-pill" transition={spring} />}
-          <span>{d}</span>
-        </motion.button>
-      ))}
-    </div>
+    <>
+      <div className="daygrid" role="radiogroup">
+        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+          <motion.button key={d} role="radio" aria-checked={d === value} whileTap={{ scale: 0.88 }} transition={springSnappy} className={d === value ? 'on' : ''} onClick={() => onChange(d)}>
+            {d === value && <motion.span layoutId={`day-${id}`} className="day-pill" transition={spring} />}
+            <span className="day-n">{d}</span>
+          </motion.button>
+        ))}
+      </div>
+      {caption && (
+        <div className={`day-caption ${value ? 'ok' : ''}`}>
+          <span className="dot" />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span key={value ?? 0} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.14 }}>
+              {value ? <>Selecionado: <b>{caption(value)}</b></> : 'Toque em um dia'}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+      )}
+    </>
   );
 }
 

@@ -7,18 +7,18 @@ import { closeSheet, getData, mutate, toast, withUndo } from '../store';
 import { Button, Chip, DayGrid } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 
-type Draft = Omit<Recorrente, 'id' | 'inicio'> & Partial<Pick<Recorrente, 'id' | 'inicio'>>;
+type Draft = Omit<Recorrente, 'id' | 'inicio' | 'dia'> & Partial<Pick<Recorrente, 'id' | 'inicio'>> & { dia: number | null };
 
 export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const novo = !rec?.id;
-  const [r, setR] = useState<Draft>(() => rec ?? { tipo, desc: '', cat: tipo === 'entrada' ? 'salario' : 'contas', valor: 0, dia: 10 });
+  const [r, setR] = useState<Draft>(() => rec ?? { tipo, desc: '', cat: tipo === 'entrada' ? 'salario' : 'contas', valor: 0, dia: null });
   const set = (p: Partial<Draft>) => setR((x) => ({ ...x, ...p }));
   const cats = r.tipo === 'entrada' ? CAT_IN : CAT_OUT;
   const cartoes = getData().cartoes;
 
   const salvar = () => {
-    if (!r.valor) return toast('Coloque um valor');
-    const final: Recorrente = { ...r, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(r.cat) };
+    if (!r.valor || !r.dia) return;
+    const final: Recorrente = { ...r, dia: r.dia, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(r.cat) };
     mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : d.recorrentes.map((x) => (x.id === final.id ? final : x)) }));
     closeSheet();
     toast(novo ? 'Fixo adicionado' : 'Atualizado');
@@ -61,7 +61,8 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
         </>
       )}
       <div className="actions">
-        <Button onClick={salvar}>Salvar</Button>
+        <Button disabled={!r.valor || !r.dia} onClick={salvar}>Salvar</Button>
+        {(!r.valor || !r.dia) && <div className="need">Falta {[!r.valor && 'o valor', !r.dia && 'o dia'].filter(Boolean).join(' e ')}</div>}
         {!novo && <>
           <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês</Button>
           <Button kind="danger" onClick={apagar}>Apagar (inclui meses passados)</Button>

@@ -34,6 +34,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.0.1** — corrige destaque do dia selecionado (não aparecia); dias e valores agora são obrigatórios antes de avançar/salvar, com a seleção escrita abaixo do calendário; gastos fixos já cadastrados ganham ✓.
 - **v2.0** — migração para React + TypeScript + Vite; janelas com mola e arrastar pra fechar, transições entre etapas e abas, números animados, gráfico animado; testes automatizados e deploy via Actions.
 - **v1.2** — digitação de valores pelo teclado do computador.
 - **v1.1** — salário em duas partes (adiantamento + restante / quinzena).

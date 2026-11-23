@@ -17,7 +17,7 @@ import { spring } from '../ui/motion';
 const STEPS = ['welcome', 'nome', 'saldo', 'renda', 'rendaFreq', 'adiantDia', 'adiantValor', 'rendaDia', 'fixos', 'cartoes', 'fim'] as const;
 type Step = (typeof STEPS)[number];
 
-interface Ob { renda: number; freq: 1 | 2; adDia: number; adValor: number | null; rendaDia: number }
+interface Ob { renda: number; freq: 1 | 2; adDia: number | null; adValor: number | null; rendaDia: number | null }
 
 const slide = {
   enter: (dir: number) => ({ x: dir * 48, opacity: 0, filter: 'blur(4px)' }),
@@ -31,7 +31,7 @@ export function Onboarding() {
   const [dir, setDir] = useState(1);
   const [ob, setOb] = useState<Ob>(() => {
     const sal = D.recorrentes.filter((r) => r.onb === 'renda');
-    return { renda: sal.reduce((a, r) => a + r.valor, 0), freq: sal.length > 1 ? 2 : 1, adDia: 20, adValor: null, rendaDia: 5 };
+    return { renda: sal.reduce((a, r) => a + r.valor, 0), freq: sal.length > 1 ? 2 : 1, adDia: null, adValor: null, rendaDia: null };
   });
   const [saldo, setSaldo] = useState(Math.max(0, D.saldo.valor));
   const step: Step = STEPS[i];
@@ -56,10 +56,10 @@ export function Onboarding() {
       const outros = d.recorrentes.filter((r) => r.onb !== 'renda');
       const novos = !o.renda ? [] : o.freq === 2
         ? [
-          { id: uid(), onb: 'renda', tipo: 'entrada' as const, desc: 'Adiantamento', cat: 'salario', valor: o.adValor!, dia: o.adDia, inicio: mk },
-          { id: uid(), onb: 'renda', tipo: 'entrada' as const, desc: 'Salário', cat: 'salario', valor: o.renda - o.adValor!, dia: o.rendaDia, inicio: mk },
+          { id: uid(), onb: 'renda', tipo: 'entrada' as const, desc: 'Adiantamento', cat: 'salario', valor: o.adValor!, dia: o.adDia!, inicio: mk },
+          { id: uid(), onb: 'renda', tipo: 'entrada' as const, desc: 'Salário', cat: 'salario', valor: o.renda - o.adValor!, dia: o.rendaDia!, inicio: mk },
         ]
-        : [{ id: uid(), onb: 'renda', tipo: 'entrada' as const, desc: 'Salário', cat: 'salario', valor: o.renda, dia: o.rendaDia, inicio: mk }];
+        : [{ id: uid(), onb: 'renda', tipo: 'entrada' as const, desc: 'Salário', cat: 'salario', valor: o.renda, dia: o.rendaDia!, inicio: mk }];
       return { ...d, recorrentes: [...outros, ...novos] };
     });
   };
@@ -117,8 +117,8 @@ export function Onboarding() {
       </>;
       break;
     case 'adiantDia':
-      body = <><div className="q">Que dia cai o adiantamento?</div><div className="h">A primeira parte do mês — o "vale" ou a 1ª quinzena.</div><DayGrid value={ob.adDia} onChange={(adDia) => setOb((o) => ({ ...o, adDia }))} /></>;
-      foot = <Button onClick={() => next()}>Continuar</Button>;
+      body = <><div className="q">Que dia cai o adiantamento?</div><div className="h">A primeira parte do mês — o "vale" ou a 1ª quinzena.</div><DayGrid value={ob.adDia} onChange={(adDia) => setOb((o) => ({ ...o, adDia }))} caption={(d) => `adiantamento todo dia ${d}`} /></>;
+      foot = <Button disabled={!ob.adDia} onClick={() => next()}>{ob.adDia ? 'Continuar' : 'Escolha o dia'}</Button>;
       break;
     case 'adiantValor': {
       const v = ob.adValor ?? Math.round(ob.renda * 0.4);
@@ -137,9 +137,9 @@ export function Onboarding() {
       body = <>
         <div className="q">{ob.freq === 2 ? 'E o restante, que dia cai?' : 'Em que dia ela cai?'}</div>
         <div className="h">{ob.freq === 2 ? `${brl(resto)} — s` : 'S'}e cair em dia não útil, escolha o dia mais comum.</div>
-        <DayGrid value={ob.rendaDia} onChange={(rendaDia) => setOb((o) => ({ ...o, rendaDia }))} />
+        <DayGrid value={ob.rendaDia} onChange={(rendaDia) => setOb((o) => ({ ...o, rendaDia }))} caption={(d) => `${ob.freq === 2 ? 'restante' : 'salário'} todo dia ${d}`} />
       </>;
-      foot = <Button onClick={() => { salvarRenda(ob); next(); }}>Continuar</Button>;
+      foot = <Button disabled={!ob.rendaDia} onClick={() => { salvarRenda(ob); next(); }}>{ob.rendaDia ? 'Continuar' : 'Escolha o dia'}</Button>;
       break;
     }
     case 'fixos': {
@@ -151,7 +151,7 @@ export function Onboarding() {
         <div className="chips">
           {PRESETS.map(([n, cat, ico]) => {
             const ex = fix.find((r) => r.desc === n);
-            return <Chip key={n} added={!!ex} onClick={() => openSheet(<EditRec rec={ex ?? { tipo: 'saida', desc: n, cat, ico, valor: 0, dia: 10 }} />)}>{ico} {n}</Chip>;
+            return <Chip key={n} added={!!ex} onClick={() => openSheet(<EditRec rec={ex ?? { tipo: 'saida', desc: n, cat, ico, valor: 0, dia: null }} />)}>{ico} {n}</Chip>;
           })}
           <Chip onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Outro</Chip>
         </div>

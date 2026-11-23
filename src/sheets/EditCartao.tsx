@@ -9,13 +9,16 @@ import { AmountDisplay, Keypad } from '../ui/Money';
 
 export function EditCartao({ cartao }: { cartao?: Cartao }) {
   const novo = !cartao;
-  const [c, setC] = useState<Omit<Cartao, 'id'> & { id?: string }>(() => cartao ?? { nome: '', fechamento: 3, vencimento: 10 });
+  type Draft = Omit<Cartao, 'id' | 'fechamento' | 'vencimento'> & { id?: string; fechamento: number | null; vencimento: number | null };
+  const [c, setC] = useState<Draft>(() => cartao ?? { nome: '', fechamento: null, vencimento: null });
   const [fatura, setFatura] = useState(0);
   const [confirm, setConfirm] = useState(false);
-  const set = (p: Partial<Cartao>) => setC((x) => ({ ...x, ...p }));
+  const set = (p: Partial<Draft>) => setC((x) => ({ ...x, ...p }));
+  const ok = !!c.fechamento && !!c.vencimento;
 
   const salvar = () => {
-    const final: Cartao = { ...c, id: c.id ?? uid(), nome: c.nome.trim() || 'Cartão' };
+    if (!ok) return;
+    const final: Cartao = { ...c, fechamento: c.fechamento!, vencimento: c.vencimento!, id: c.id ?? uid(), nome: c.nome.trim() || 'Cartão' };
     mutate((d) => {
       if (!novo) return { ...d, cartoes: d.cartoes.map((x) => (x.id === final.id ? final : x)) };
       const lancamentos = fatura
@@ -37,16 +40,17 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
       <h3>{novo ? 'Novo cartão' : 'Editar cartão'}</h3>
       <input className="field" placeholder="Nome (ex: Nubank)" value={c.nome} onChange={(e) => set({ nome: e.target.value })} style={{ marginTop: 12 }} />
       <div className="lab">Dia do fechamento</div>
-      <DayGrid value={c.fechamento} onChange={(fechamento) => set({ fechamento })} />
+      <DayGrid value={c.fechamento} onChange={(fechamento) => set({ fechamento })} caption={(d) => `fecha todo dia ${d}`} />
       <div className="lab">Dia do vencimento</div>
-      <DayGrid value={c.vencimento} onChange={(vencimento) => set({ vencimento })} />
+      <DayGrid value={c.vencimento} onChange={(vencimento) => set({ vencimento })} caption={(d) => `vence todo dia ${d}`} />
       {novo && <>
         <div className="lab">Quanto já tem na fatura aberta? <span className="dim">(opcional)</span></div>
         <AmountDisplay value={fatura} />
         <Keypad value={fatura} onChange={setFatura} />
       </>}
       <div className="actions">
-        <Button onClick={salvar}>Salvar</Button>
+        <Button disabled={!ok} onClick={salvar}>Salvar</Button>
+        {!ok && <div className="need">Escolha o dia do fechamento e do vencimento</div>}
         {!novo && <Button kind="danger" onClick={apagar}>{confirm ? 'Toque de novo pra apagar' : 'Apagar cartão'}</Button>}
       </div>
     </>
