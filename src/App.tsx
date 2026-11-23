@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'motion/react';
 import { MontadaVisivel } from './ui/Lista';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Ajustes, Extrato, Fixos } from './screens/Others';
@@ -34,6 +34,7 @@ export default function App() {
   const onboarded = useData().onboarded;
   const tab = useUI((s) => s.tab);
   const sheetOpen = useUI((s) => !!s.sheet);
+  const arrasto = useArrastoAbas();
   const [, tick] = useState(0);
   const [visitadas, setVisitadas] = useState<Set<Tab>>(() => new Set([tab]));
   useEffect(() => { setVisitadas((v) => (v.has(tab) ? v : new Set(v).add(tab))); }, [tab]);
@@ -93,8 +94,8 @@ export default function App() {
                 return <main key={id} className={`screen tab-screen ${id === tab ? 'on' : 'off'}`} aria-hidden={id !== tab} inert={id !== tab}><Tela visivel={id === tab}><S /></Tela></main>;
               })}
               <nav className="tabbar">
-                <div className="tabs" data-tab={tab}>
-                  <span className="tab-pill" aria-hidden />
+                <div className="tabs" data-tab={tab} {...arrasto.handlers}>
+                  <span className="tab-pill" aria-hidden ref={arrasto.pillRef} />
                   {TABS.slice(0, 2).map((x) => <TabBtn key={x.id} {...x} />)}
                   <m.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
                     onClick={() => (sheetOpen ? useUI.getState().closeSheet() : openSheet(<QuickAdd />))}>
@@ -110,6 +111,62 @@ export default function App() {
         <Toasts />
       </div>
   );
+}
+
+/**
+ * Arrastar o dedo pela barra de abas (como a barra nativa do iOS 26): a bolha segue o dedo,
+ * a aba embaixo acende e, ao soltar, abre a aba mais próxima. Toque simples continua igual.
+ */
+function useArrastoAbas() {
+  const pillRef = useRef<HTMLSpanElement>(null);
+  const st = useRef<{ x0: number; ativo: boolean; tabs: { id: Tab; el: HTMLElement; l: number; w: number }[]; base: number; alvo?: Tab; fim: number } | null>(null);
+  const ignorarClique = useRef(0);
+  const marcar = (alvo?: Tab) => st.current?.tabs.forEach((t) => t.el.classList.toggle('alvo', t.id === alvo));
+  const handlers = {
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      if ((e.target as HTMLElement).closest('.fab') || e.button > 0) return;
+      const box = e.currentTarget.getBoundingClientRect();
+      const els = [...e.currentTarget.querySelectorAll<HTMLElement>('.tab')];
+      st.current = { x0: e.clientX, ativo: false, base: box.left, fim: 0, tabs: els.map((el, k) => { const r = el.getBoundingClientRect(); return { id: TABS[k].id, el, l: r.left - box.left, w: r.width }; }) };
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      const s = st.current, pill = pillRef.current;
+      if (!s || !pill) return;
+      if (!s.ativo) {
+        if (Math.abs(e.clientX - s.x0) < 8) return;
+        s.ativo = true;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        e.currentTarget.classList.add('arrastando');
+      }
+      const x = e.clientX - s.base;
+      const w = s.tabs[0].w;
+      const pos = Math.max(s.tabs[0].l, Math.min(s.tabs[s.tabs.length - 1].l, x - w / 2));
+      pill.style.transform = `translateX(${pos - 6}px)`; // 6px = padding da barra (left da bolha)
+      // aba mais perto do dedo
+      let alvo = s.tabs[0], d = Infinity;
+      for (const t of s.tabs) { const dd = Math.abs(t.l + t.w / 2 - x); if (dd < d) { d = dd; alvo = t; } }
+      if (alvo.id !== s.alvo) { s.alvo = alvo.id; marcar(alvo.id); }
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+      const s = st.current; st.current = null;
+      if (!s?.ativo) return;
+      ignorarClique.current = performance.now();
+      e.currentTarget.classList.remove('arrastando');
+      marcar(undefined);
+      if (pillRef.current) pillRef.current.style.transform = ''; // a regra do CSS leva a bolha pro lugar com a mola
+      if (s.alvo) useUI.getState().setTab(s.alvo);
+    },
+    onPointerCancel: (e: React.PointerEvent<HTMLDivElement>) => {
+      const s = st.current; st.current = null;
+      if (!s?.ativo) return;
+      e.currentTarget.classList.remove('arrastando');
+      marcar(undefined);
+      if (pillRef.current) pillRef.current.style.transform = '';
+    },
+    // o clique que o navegador dispara ao soltar o arrasto não deve trocar de aba de novo
+    onClickCapture: (e: React.MouseEvent) => { if (performance.now() - ignorarClique.current < 400) { e.stopPropagation(); e.preventDefault(); } },
+  };
+  return { pillRef, handlers };
 }
 
 function TabBtn({ id, label, Icon }: (typeof TABS)[number]) {
