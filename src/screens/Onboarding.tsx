@@ -147,7 +147,7 @@ export function Onboarding() {
       const tot = fix.reduce((a, r) => a + r.valor, 0);
       body = <>
         <div className="q">Quais são seus gastos fixos?</div>
-        <div className="h">Toque nos que você tem. Cada um vira automático todo mês.</div>
+        <div className="h">Toque nos que você tem. Cada um vira automático todo mês. Pra apagar ou editar, deslize o item pro lado.</div>
         <div className="chips">
           {PRESETS.map(([n, cat, ico]) => {
             const ex = fix.find((r) => r.desc === n);
@@ -156,7 +156,7 @@ export function Onboarding() {
           <Chip onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Outro</Chip>
         </div>
         {fix.length > 0 && <>
-          <motion.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown">{fix.map((r) => <RecItem key={r.id} r={r} />)}</motion.div>
+          <motion.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown"><AnimatePresence initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></motion.div>
           <div className="row" style={{ padding: '12px 4px' }}><span className="mut">Total fixo</span><span className="sp" /><b className="num"><AnimatedBRL value={-tot} /></b></div>
         </>}
       </>;

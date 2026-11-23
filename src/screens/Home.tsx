@@ -90,7 +90,7 @@ export function Home() {
       <h2>Vem aí</h2>
       {m.prox.length ? (
         <motion.div className="list" variants={listVariants} initial="hidden" animate="shown">
-          {m.prox.map((e, i) => <EvItem key={`${e.ref}-${e.data}-${i}`} e={e} />)}
+          <AnimatePresence initial={false}>{m.prox.map((e) => <EvItem key={`${e.ref}-${e.data}-${e.desc}`} e={e} />)}</AnimatePresence>
         </motion.div>
       ) : (
         <div className="card empty">Nada programado. Cadastre seus fixos em <b>Fixos</b>.</div>

@@ -9,6 +9,7 @@ import { closeSheet, getData, mutate, restore, toast, withUndo } from '../store'
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 import { spring } from '../ui/motion';
+import { SheetHeader } from '../ui/Sheet';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const novo = !lanc;
@@ -50,6 +51,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
 
   return (
     <>
+      <SheetHeader title={novo ? 'Novo lançamento' : 'Editar lançamento'} onDelete={novo ? undefined : apagar} />
       <Segmented
         value={l.tipo}
         onChange={(tipo) => set({ tipo, cat: '', ...(tipo === 'entrada' ? { cartaoId: null, parcelas: 1 } : {}) })}
@@ -96,7 +98,6 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       <Keypad small value={l.valor} onChange={(valor) => set({ valor })} />
       <div className="actions tight">
         <Button disabled={!l.valor} onClick={salvar}>{novo ? 'Lançar' : 'Salvar'}</Button>
-        {!novo && <Button kind="danger" onClick={apagar}>Apagar lançamento</Button>}
       </div>
     </>
   );

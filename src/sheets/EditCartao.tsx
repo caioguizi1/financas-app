@@ -3,7 +3,8 @@ import { today } from '../lib/dates';
 import { pagamentoCartao } from '../lib/engine';
 import { uid } from '../lib/money';
 import type { Cartao } from '../lib/types';
-import { closeSheet, mutate, toast } from '../store';
+import { closeSheet, mutate, withUndo } from '../store';
+import { SheetHeader } from '../ui/Sheet';
 import { Button, DayGrid } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 
@@ -12,7 +13,6 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
   type Draft = Omit<Cartao, 'id' | 'fechamento' | 'vencimento'> & { id?: string; fechamento: number | null; vencimento: number | null };
   const [c, setC] = useState<Draft>(() => cartao ?? { nome: '', fechamento: null, vencimento: null });
   const [fatura, setFatura] = useState(0);
-  const [confirm, setConfirm] = useState(false);
   const set = (p: Partial<Draft>) => setC((x) => ({ ...x, ...p }));
   const ok = !!c.fechamento && !!c.vencimento;
 
@@ -29,16 +29,14 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
     closeSheet();
   };
   const apagar = () => {
-    if (!confirm) return setConfirm(true);
-    mutate((d) => ({ ...d, cartoes: d.cartoes.filter((x) => x.id !== c.id) }));
     closeSheet();
-    toast('Cartão apagado');
+    withUndo(`Cartão ${c.nome} apagado`, (d) => ({ ...d, cartoes: d.cartoes.filter((x) => x.id !== c.id) }));
   };
 
   return (
     <>
-      <h3>{novo ? 'Novo cartão' : 'Editar cartão'}</h3>
-      <input className="field" placeholder="Nome (ex: Nubank)" value={c.nome} onChange={(e) => set({ nome: e.target.value })} style={{ marginTop: 12 }} />
+      <SheetHeader title={novo ? 'Novo cartão' : 'Editar cartão'} onDelete={novo ? undefined : apagar} />
+      <input className="field" placeholder="Nome (ex: Nubank)" value={c.nome} onChange={(e) => set({ nome: e.target.value })} />
       <div className="lab">Dia do fechamento</div>
       <DayGrid value={c.fechamento} onChange={(fechamento) => set({ fechamento })} caption={(d) => `fecha todo dia ${d}`} />
       <div className="lab">Dia do vencimento</div>
@@ -51,7 +49,6 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
       <div className="actions">
         <Button disabled={!ok} onClick={salvar}>Salvar</Button>
         {!ok && <div className="need">Escolha o dia do fechamento e do vencimento</div>}
-        {!novo && <Button kind="danger" onClick={apagar}>{confirm ? 'Toque de novo pra apagar' : 'Apagar cartão'}</Button>}
       </div>
     </>
   );

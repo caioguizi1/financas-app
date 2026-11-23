@@ -5,6 +5,7 @@ import { brl } from '../lib/money';
 import { closeSheet, getData, mutate, withUndo } from '../store';
 import { Button, Segmented } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
+import { SheetHeader } from '../ui/Sheet';
 
 export function AjustarSaldo() {
   const atual = projecao(getData(), 0).saldoEm(today()) ?? 0;
@@ -17,7 +18,7 @@ export function AjustarSaldo() {
   };
   return (
     <>
-      <h3>Qual o saldo real agora?</h3>
+      <SheetHeader title="Saldo real agora" />
       <p className="mut small">O app calcula {brl(atual)}. Informe o que aparece no banco e eu corrijo a diferença, sem precisar lembrar gasto por gasto.</p>
       <AmountDisplay value={v} />
       <Segmented value={sg} onChange={setSg} options={[{ v: 1, label: 'Positivo', tone: 'in' }, { v: -1, label: 'Negativo', tone: 'out' }]} />
@@ -32,7 +33,7 @@ export function EditNome() {
   const salvar = () => { mutate((d) => ({ ...d, perfil: { nome: nome.trim() } })); closeSheet(); };
   return (
     <>
-      <h3>Seu nome</h3>
+      <SheetHeader title="Seu nome" />
       <input className="field" value={nome} autoFocus onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && salvar()} style={{ margin: '12px 0 4px' }} />
       <div className="actions"><Button onClick={salvar}>Salvar</Button></div>
     </>

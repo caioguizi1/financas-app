@@ -50,7 +50,7 @@ export function Extrato() {
           return (
             <motion.div key={d} variants={itemVariants}>
               <div className="day"><span>{diaLabel(d)}{d > t ? ' · previsto' : ''}</span><span className="num">{brl(tot, true)}</span></div>
-              <div className="list">{byDay.get(d)!.map((e, i) => <EvItem key={`${e.ref}-${i}`} e={e} showDate={false} />)}</div>
+              <div className="list"><AnimatePresence initial={false}>{byDay.get(d)!.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}</AnimatePresence></div>
             </motion.div>
           );
         }) : <div className="card empty" style={{ marginTop: 14 }}>Nenhuma movimentação neste mês.</div>}
@@ -77,6 +77,7 @@ export function Fixos() {
         <div className="stat"><div className="k">Sai por mês</div><div className="v num"><AnimatedBRL value={-ts} /></div></div>
       </div>
       <div className={`alert ${te - ts < 0 ? '' : 'ok'}`}><span>{te - ts < 0 ? '⚠️' : '💡'}</span><div>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</div></div>
+      <div className="mut small" style={{ margin: '14px 2px -6px' }}>Deslize um item pro lado pra editar ou apagar.</div>
       <h2>Entradas</h2>
       {ent.length > 0 && <motion.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{ent.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></motion.div>}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Recebimento fixo</Button>

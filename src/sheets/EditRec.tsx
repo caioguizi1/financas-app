@@ -4,6 +4,7 @@ import { dateOf, monthKey, today } from '../lib/dates';
 import { uid } from '../lib/money';
 import type { Recorrente, Tipo } from '../lib/types';
 import { closeSheet, getData, mutate, toast, withUndo } from '../store';
+import { SheetHeader } from '../ui/Sheet';
 import { Button, Chip, DayGrid } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 
@@ -25,7 +26,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   };
   const apagar = () => {
     closeSheet();
-    withUndo('Apagado', (d) => ({ ...d, recorrentes: d.recorrentes.filter((x) => x.id !== r.id) }));
+    withUndo(`"${r.desc}" apagado`, (d) => ({ ...d, recorrentes: d.recorrentes.filter((x) => x.id !== r.id) }));
   };
   const encerrar = () => {
     const n = new Date();
@@ -41,8 +42,8 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
 
   return (
     <>
-      <h3>{novo ? 'Novo' : 'Editar'} {r.tipo === 'entrada' ? 'recebimento fixo' : 'gasto fixo'}</h3>
-      <input className="field" placeholder="Nome (ex: Internet)" value={r.desc} onChange={(e) => set({ desc: e.target.value })} style={{ marginTop: 12 }} />
+      <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
+      <input className="field" placeholder="Nome (ex: Internet)" value={r.desc} onChange={(e) => set({ desc: e.target.value })} />
       <AmountDisplay value={r.valor} />
       <Keypad value={r.valor} onChange={(valor) => set({ valor })} />
       <div className="lab">Todo dia</div>
@@ -63,10 +64,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <div className="actions">
         <Button disabled={!r.valor || !r.dia} onClick={salvar}>Salvar</Button>
         {(!r.valor || !r.dia) && <div className="need">Falta {[!r.valor && 'o valor', !r.dia && 'o dia'].filter(Boolean).join(' e ')}</div>}
-        {!novo && <>
-          <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês</Button>
-          <Button kind="danger" onClick={apagar}>Apagar (inclui meses passados)</Button>
-        </>}
+        {!novo && <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês (mantém o histórico)</Button>}
       </div>
     </>
   );
