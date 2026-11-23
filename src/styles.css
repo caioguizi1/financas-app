@@ -605,3 +605,11 @@ html { touch-action: manipulation }
 .tabs.arrastando .tab.alvo { color: var(--text) }
 .tabs.arrastando .tab.on:not(.alvo) { color: var(--dim) }
 [data-theme='light'] .tabs.arrastando .tab-pill { background: rgba(91, 71, 240, 0.16) }
+
+/* próximas faturas tocáveis */
+.fat-meses button { flex: none; display: flex; flex-direction: column; gap: 2px; background: var(--card3); border-radius: 12px; padding: 8px 10px; font-size: 13px; text-align: left; color: inherit; border: 1.5px solid transparent; transition: border-color 0.2s, background 0.2s }
+.fat-meses button:active { transform: scale(0.97) }
+.fat-meses button.on { border-color: var(--acc); background: rgba(110, 91, 255, 0.14) }
+.fat-meses button.on .mut { color: var(--acc-hi) }
+.fat-foco { display: flex; justify-content: space-between; align-items: baseline; gap: 10px }
+.fat-prev { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--mut); padding: 6px 0; border-top: 1px dashed var(--line) }

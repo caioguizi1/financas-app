@@ -132,6 +132,8 @@ function Detalhes({ c }: { c: Cartao }) {
   const t = today();
   const [imgAberta, setImgAberta] = useState(false);
   const [catSel, setCatSel] = useState<string | null>(null);
+  const [vencSel, setVencSel] = useState<string | null>(null);
+  const escolherFatura = (venc: string | null) => { setVencSel(venc); setCatSel(null); };
   const [fonte, setFonte] = useState<(FonteRecorte & { canvas: HTMLCanvasElement }) | null>(null);
   const [caixa, setCaixa] = useState<Caixa | null>(null);
   const abrir = async (f: File | HTMLCanvasElement, girar = false) => { const x = await abrirImagem(f, girar); setFonte(x); setCaixa(x.caixa); };
@@ -140,13 +142,24 @@ function Detalhes({ c }: { c: Cartao }) {
     const fats = faturasAtuais(D, c, t);
     const fechada = fats.find((f) => f.status === 'fechada');
     const aberta = fats.find((f) => f.status === 'aberta')!;
-    const futuras = agruparFaturas(projecao(D, 220, t).evs.filter((e) => e.cartaoId === c.id && (e.venc ?? e.data) > aberta.vencimento), D.cartoes).slice(0, 4);
+    const futuras = agruparFaturas(projecao(D, 220, t).evs.filter((e) => e.cartaoId === c.id && (e.venc ?? e.data) > aberta.vencimento), D.cartoes).slice(0, 6);
     const parcelas = parcelasAbertas(D, t).filter((p) => p.lanc.cartaoId === c.id);
-    const cats = new Map<string, number>();
-    for (const e of aberta.itens) if (e.valor < 0 && e.cat !== 'fatura') cats.set(e.cat, (cats.get(e.cat) ?? 0) - e.valor);
-    const totCat = [...cats.values()].reduce((a, b) => a + b, 0);
-    return { fechada, aberta, futuras, parcelas, cats: [...cats.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5), totCat };
+    return { fechada, aberta, futuras, parcelas };
   }, [D, c, t]);
+
+  // fatura em foco: a aberta (padrão) ou um mês das próximas — recalculado a cada lançamento/importação
+  const sel = (vencSel && v.futuras.find((f) => (f.venc ?? f.data) === vencSel)) || null;
+  const foco = useMemo(() => {
+    const itens = sel ? sel.itens ?? [] : v.aberta.itens;
+    const compras = itens.filter((e) => e.valor < 0 && e.cat !== 'fatura' && !e.estimativa);
+    const cats = new Map<string, number>();
+    for (const e of compras) cats.set(e.cat, (cats.get(e.cat) ?? 0) - e.valor);
+    const totCat = [...cats.values()].reduce((a, b) => a + b, 0);
+    const estimado = -itens.filter((e) => e.estimativa).reduce((a, e) => a + e.valor, 0);
+    const manual = -itens.filter((e) => e.cat === 'fatura' && !e.estimativa).reduce((a, e) => a + e.valor, 0);
+    const total = -itens.reduce((a, e) => a + e.valor, 0);
+    return { compras, cats: [...cats.entries()].sort((a, b) => b[1] - a[1]), totCat, estimado, manual, total, venc: sel ? sel.venc ?? sel.data : v.aberta.vencimento };
+  }, [sel, v]);
 
   const { fechada, aberta } = v;
   const meta = c.estimativa ?? 0;
@@ -198,26 +211,38 @@ function Detalhes({ c }: { c: Cartao }) {
 
       {v.futuras.length > 0 && (
         <>
-          <div className="lab">Próximas faturas</div>
-          <div className="imp-meses">
-            {v.futuras.map((f) => (
-              <div key={f.ref}><span className="mut">{mesCurto(monthKey(f.venc ?? f.data))}{f.estimativa ? ' · est.' : ''}</span><b className="num">{brl(-f.valor)}</b></div>
-            ))}
+          <div className="lab">Próximas faturas <span className="dim">· toque pra ver as compras</span></div>
+          <div className="imp-meses fat-meses">
+            <button className={!sel ? 'on' : ''} onClick={() => escolherFatura(null)} aria-pressed={!sel}>
+              <span className="mut">Atual · {mesCurto(monthKey(aberta.vencimento))}</span><b className="num">{brl(aberta.total)}</b>
+            </button>
+            {v.futuras.map((f) => {
+              const vv = f.venc ?? f.data;
+              return (
+                <button key={f.ref} className={sel && (sel.venc ?? sel.data) === vv ? 'on' : ''} onClick={() => escolherFatura(vv)} aria-pressed={!!sel && (sel.venc ?? sel.data) === vv}>
+                  <span className="mut">{mesCurto(monthKey(vv))}{f.estimativa ? ' · est.' : ''}</span><b className="num">{brl(-f.valor)}</b>
+                </button>
+              );
+            })}
           </div>
         </>
       )}
 
-      {v.cats.length > 0 && (
+      {(foco.cats.length > 0 || foco.estimado > 0 || foco.manual > 0) && (
         <>
-          <div className="lab">Nesta fatura <span className="dim">· toque pra ver as compras</span></div>
-          {v.cats.map(([cat, val]) => {
+          <div className="lab fat-foco">
+            <span>{sel ? `Fatura de ${mesCurto(monthKey(foco.venc))}` : 'Nesta fatura'} <span className="dim">· {brl(foco.total)}</span></span>
+            {sel && <button className="inline-link" onClick={() => escolherFatura(null)}>← atual</button>}
+          </div>
+          {foco.cats.length === 0 && <div className="dim small" style={{ padding: '2px 0 6px' }}>Ainda sem compras lançadas nesta fatura.</div>}
+          {foco.cats.map(([cat, val]) => {
             const aberto = catSel === cat;
-            const itens = aberto ? aberta.itens.filter((e) => e.cat === cat && e.valor < 0).sort((a, b) => a.valor - b.valor) : [];
+            const itens = aberto ? foco.compras.filter((e) => e.cat === cat).sort((a, b) => a.valor - b.valor) : [];
             return (
               <div key={cat} className={`wcat ${aberto ? 'on' : ''} ${catSel && !aberto ? 'off' : ''}`}>
                 <button className="imp-cat" onClick={() => setCatSel(aberto ? null : cat)} aria-expanded={aberto}>
                   <span>{catE(cat)} {catN(cat)}</span>
-                  <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, (val / v.totCat) * 100)}%` }} transition={spring} /></div>
+                  <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, (val / foco.totCat) * 100)}%` }} transition={spring} /></div>
                   <span className="num">{brl(val)}</span>
                 </button>
                 <AnimatePresence initial={false}>
@@ -229,13 +254,15 @@ function Detalhes({ c }: { c: Cartao }) {
                           <span className="num">{brl(-e.valor)}</span>
                         </div>
                       ))}
-                      <div className="dim small" style={{ padding: '4px 0 2px' }}>{itens.length} {itens.length === 1 ? 'compra' : 'compras'} · {Math.round((val / v.totCat) * 100)}% da fatura</div>
+                      <div className="dim small" style={{ padding: '4px 0 2px' }}>{itens.length} {itens.length === 1 ? 'compra' : 'compras'} · {Math.round((val / (foco.total || 1)) * 100)}% da fatura</div>
                     </Expande>
                   )}
                 </AnimatePresence>
               </div>
             );
           })}
+          {foco.manual > 0 && <div className="fat-prev"><span>✍️ Valor informado à mão (sem detalhe)</span><span className="num">{brl(foco.manual)}</span></div>}
+          {foco.estimado > 0 && <div className="fat-prev"><span>🔮 Previsto pelo gasto típico (ainda não lançado)</span><span className="num">{brl(foco.estimado)}</span></div>}
         </>
       )}
 

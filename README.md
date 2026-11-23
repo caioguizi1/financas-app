@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.16** — carteira: os meses de "Próximas faturas" são tocáveis e mostram as compras daquela fatura por categoria (com parcela x/n), mais o que é previsão (gasto típico ainda não lançado e valor informado à mão); atualiza a cada lançamento/importação.
 - **v2.15.3** — painéis que se expandem (categorias da carteira, imagem, parcelas, holerite…) abrem e fecham com curva suave em vez de mola: sem ultrapassar e sem a demora no fim; categorias não selecionadas apagam com transição.
 - **v2.15.2** — cartões de dica no padrão de carrossel: mesma altura na faixa, ícone e título na mesma linha, texto até 3 linhas (toque mostra inteiro), ação presa na base.
 - **v2.15.1** — faixas "Pra você" e "Próximos meses": ao deslizar, o cartão assenta na margem (antes colava na borda da tela); cartões de dica com a altura do próprio conteúdo.
