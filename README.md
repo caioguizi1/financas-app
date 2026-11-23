@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.15.1** — faixas "Pra você" e "Próximos meses": ao deslizar, o cartão assenta na margem (antes colava na borda da tela); cartões de dica com a altura do próprio conteúdo.
 - **v2.15** — arrastar o dedo pela barra de abas (como no iOS 26): a bolha segue o dedo, a aba embaixo acende e, ao soltar, abre; toque simples e o ＋ continuam iguais.
 - **v2.14.1** — correção: listas das abas pré-montadas (Fixos, Extrato, Ajustes) apareciam em branco; agora nascem prontas e só animam quando a tela está à vista.
 - **v2.14** — desempenho: abas pré-montadas no tempo ocioso (1ª visita ~3x mais rápida); cálculos do motor compartilhados por versão dos dados; gestos de deslizar e carrossel sem o sistema de medição de layout; carteira sem medição forçada a cada redesenho; ＋ sem rolagem forçada na abertura; painéis rolam junto com a abertura; janelas fecham em 0,26 s.
