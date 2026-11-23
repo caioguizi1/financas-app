@@ -7,6 +7,7 @@ Ideias e ajustes registrados para as próximas versões. Ao implementar, mover p
 ### Altura da janela de lançamento oscila (registrado em 23/11/2026)
 Prints: `design/backlog/2026-11-23-lancamento-saida.png` e `...-entrada.png`.
 **Problema:** a janela "Novo lançamento" muda de altura conforme o conteúdo, e o topo dela sobe e desce:
+- ✅ v2.7: trocar a forma de pagamento já não muda a altura (linha de altura fixa). Falta: Saída × Entrada e o bloco de parcelas.
 - **Saída** tem "Como pagou" e "À vista / Parcelado"; **Entrada** não tem → ao alternar, a janela encolhe ~400px e o topo "pula".
 - Também mexem na altura: a linha "✨ Categoria/Sugestão" (aparece/some ao digitar), o bloco de parcelas e o cronograma do cartão.
 - Resultado: botões mudam de lugar sob o dedo e a tela parece instável.

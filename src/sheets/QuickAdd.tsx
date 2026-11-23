@@ -6,7 +6,7 @@ import { SmartDesc, SmartHint } from '../ui/Smart';
 import { addDays, dateOf, diaLabel, dm, parse, today } from '../lib/dates';
 import { pagamentoCartao } from '../lib/engine';
 import { brl, uid } from '../lib/money';
-import type { Lancamento } from '../lib/types';
+import type { Lancamento, Meio } from '../lib/types';
 import { closeSheet, getData, mutate, restore, toast, withUndo } from '../store';
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
@@ -35,16 +35,23 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
     chipsRef.current?.querySelector('.chip.on')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [cat]);
   const cartao = l.cartaoId ? D.cartoes.find((c) => c.id === l.cartaoId) : undefined;
-  const [parcelado, setParcelado] = useState((lanc?.parcelas ?? 1) > 1);
+  // forma de pagamento: Pix/débito sai na hora (sem parcelar); boleto e crédito podem parcelar; Pix parcelado sempre parcela
+  const [meio, setMeio] = useState<Meio>(() => (lanc?.cartaoId ? 'credito' : lanc?.meio ?? 'pix'));
+  const [parcEscolha, setParcEscolha] = useState((lanc?.parcelas ?? 1) > 1);
   const [nParc, setNParc] = useState(Math.max(2, lanc?.parcelas ?? 2));
+  const [adiar, setAdiar] = useState(lanc?.adiar ?? 1);
   const [modoValor, setModoValor] = useState<'total' | 'parcela'>('total');
+  const podeParcelar = meio === 'boleto' || meio === 'credito';
+  const parcelado = meio === 'pixparc' || (podeParcelar && parcEscolha);
   const parcelas = l.tipo === 'saida' && parcelado ? nParc : 1;
+  const escolherMeio = (m: Meio, cartaoId: string | null = null) => { setMeio(m); set({ cartaoId }); };
   const total = parcelas > 1 && modoValor === 'parcela' ? l.valor * parcelas : l.valor;
   const valorParcela = Math.floor(total / parcelas);
 
   // cronograma: quando cada parcela sai da conta (cartão = vencimento da fatura; boleto/Pix = mês a mês)
   const pd = parse(l.data);
-  const compraN = (i: number) => dateOf(pd.getFullYear(), pd.getMonth() + i, pd.getDate());
+  const desloc = !cartao && parcelado ? adiar : 0;
+  const compraN = (i: number) => dateOf(pd.getFullYear(), pd.getMonth() + i + (cartao ? 0 : desloc), pd.getDate());
   const saida = (i: number) => (cartao ? pagamentoCartao(cartao, compraN(i)) : compraN(i));
   const fmtData = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
@@ -54,7 +61,8 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
 
   const salvar = () => {
     if (!l.valor) return;
-    const final: Lancamento = { ...l, valor: total, cat, ico: ico !== catE(cat) ? ico : undefined, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' ? l.cartaoId : null, parcelas };
+    const final: Lancamento = { ...l, valor: total, cat, ico: ico !== catE(cat) ? ico : undefined, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' && meio === 'credito' ? l.cartaoId : null, parcelas,
+      meio: l.tipo === 'saida' ? meio : undefined, adiar: !cartao && parcelas > 1 ? desloc : undefined };
     closeSheet();
     if (novo) {
       const before = getData();
@@ -93,11 +101,18 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         <>
           <div className="lab">Como pagou</div>
           <div className="chips scroll">
-            <Chip on={!l.cartaoId} onClick={() => set({ cartaoId: null })}>🏦 Pix / débito / boleto</Chip>
-            {D.cartoes.map((c) => <Chip key={c.id} on={l.cartaoId === c.id} onClick={() => set({ cartaoId: c.id })}>💳 {c.nome}</Chip>)}
+            <Chip on={meio === 'pix'} onClick={() => escolherMeio('pix')}>⚡ Pix / débito</Chip>
+            {D.cartoes.map((c) => <Chip key={c.id} on={meio === 'credito' && l.cartaoId === c.id} onClick={() => escolherMeio('credito', c.id)}>💳 {c.nome}</Chip>)}
+            <Chip on={meio === 'boleto'} onClick={() => escolherMeio('boleto')}>📄 Boleto</Chip>
+            <Chip on={meio === 'pixparc'} onClick={() => escolherMeio('pixparc')}>🔁 Pix parcelado</Chip>
           </div>
-          <div style={{ marginTop: 10 }}>
-            <Segmented value={parcelado ? 'p' : 'v'} onChange={(v) => setParcelado(v === 'p')} options={[{ v: 'v', label: 'À vista' }, { v: 'p', label: 'Parcelado' }]} />
+          {/* linha de altura fixa: troca de forma de pagamento não faz a janela pular */}
+          <div className="pay-row">
+            {podeParcelar ? (
+              <Segmented value={parcEscolha ? 'p' : 'v'} onChange={(v) => setParcEscolha(v === 'p')} options={[{ v: 'v', label: 'À vista' }, { v: 'p', label: 'Parcelado' }]} />
+            ) : (
+              <div className="pay-info">{meio === 'pix' ? '⚡ Sai na hora da sua conta · sem parcelas' : '🔁 Cobrado mês a mês, fora do cartão'}</div>
+            )}
           </div>
           <AnimatePresence initial={false}>
             {parcelado && (
@@ -109,6 +124,11 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
                 <div style={{ marginTop: 10 }}>
                   <Segmented value={modoValor} onChange={setModoValor} options={[{ v: 'total', label: 'Digitei o total' }, { v: 'parcela', label: 'Digitei a parcela' }]} />
                 </div>
+                {!cartao && (
+                  <div style={{ marginTop: 10 }}>
+                    <Segmented value={adiar} onChange={setAdiar} options={[{ v: 0, label: '1ª na data da compra' }, { v: 1, label: '1ª daqui 1 mês' }]} />
+                  </div>
+                )}
               </m.div>
             )}
           </AnimatePresence>

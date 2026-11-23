@@ -17,9 +17,9 @@ export function Button({ kind = 'primary', className = '', ...p }: HTMLMotionPro
 
 export function Chip({ on, added, onClick, children }: { on?: boolean; added?: boolean; onClick?: () => void; children: ReactNode }) {
   return (
-    <m.button whileTap={{ scale: 0.94 }} transition={springSnappy} className={`chip ${on ? 'on' : ''} ${added ? 'added' : ''}`} onClick={onClick}>
+    <button className={`chip ${on ? 'on' : ''} ${added ? 'added' : ''}`} onClick={onClick}>
       {children}
-    </m.button>
+    </button>
   );
 }
 
@@ -48,10 +48,10 @@ export function DayGrid({ value, onChange, caption = (d) => `Todo dia ${d}` }: {
     <>
       <div className="daygrid" role="radiogroup">
         {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-          <m.button key={d} role="radio" aria-checked={d === value} whileTap={{ scale: 0.88 }} transition={springSnappy} className={d === value ? 'on' : ''} onClick={() => onChange(d)}>
+          <button key={d} role="radio" aria-checked={d === value} className={d === value ? 'on' : ''} onClick={() => onChange(d)}>
             {d === value && <m.span className="day-pill" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={springSnappy} />}
             <span className="day-n">{d}</span>
-          </m.button>
+          </button>
         ))}
       </div>
       {caption && (
@@ -71,9 +71,9 @@ export function DayGrid({ value, onChange, caption = (d) => `Todo dia ${d}` }: {
 export function Stepper({ value, min, max, onChange, fmt }: { value: number; min: number; max: number; onChange: (v: number) => void; fmt: (v: number) => string }) {
   return (
     <div className="stepper">
-      <m.button whileTap={{ scale: 0.85 }} onClick={() => onChange(Math.max(min, value - 1))} aria-label="Menos">−</m.button>
+      <button onClick={() => onChange(Math.max(min, value - 1))} aria-label="Menos">−</button>
       <m.span key={value} initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={springSnappy}>{fmt(value)}</m.span>
-      <m.button whileTap={{ scale: 0.85 }} onClick={() => onChange(Math.min(max, value + 1))} aria-label="Mais">＋</m.button>
+      <button onClick={() => onChange(Math.min(max, value + 1))} aria-label="Mais">＋</button>
     </div>
   );
 }

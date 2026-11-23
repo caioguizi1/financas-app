@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.7** — formas de pagamento separadas: Pix/débito (sai na hora, sem parcelar), crédito por cartão e boleto (à vista ou parcelado), Pix parcelado (sempre parcelado; 1ª parcela na data ou no mês seguinte); linha de pagamento com altura fixa; ＋ mais rápido (toques por CSS em vez de dezenas de componentes animados, mola de abertura mais firme, sem atraso de toque do iOS).
 - **v2.6** — troca de abas instantânea (telas mantidas prontas, sem esperar animação de saída, provedores de animação fora do App, pílulas por CSS); compra à vista/parcelada (cartão com ciclo de fatura explicado, ou Pix/boleto mês a mês; total ou valor da parcela; até 48x); parcelas em aberto; insights locais (gasto por dia até a próxima entrada, dia apertado, categoria acima da média, virar fixo, fatura prevista, parcelas, assinaturas); dicionário ampliado (99, 99Food, Uber Eats, transporte público, centenas de marcas).
 - **v2.5** — salário bruto → líquido com INSS e IRRF 2026 (redução da Lei 15.270, dependentes, desconto simplificado, outros descontos); 13º calculado (1ª sem descontos, 2ª com INSS/IR do 13º inteiro, avos, prazo antecipado em fim de semana); PLR pelo bruto com a tabela exclusiva anual (acumula no ano).
 - **v2.4** — alterações com vigência ("vale a partir de"), histórico de valores por fixo; tela Minha renda (1x/2x, dias, vigência); recebimentos extras com modelos de 13º (2 parcelas, datas da CLT), PLR, férias (1/3), bônus e restituição do IR; aviso do 13º em nov/dez.

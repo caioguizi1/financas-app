@@ -2,7 +2,7 @@ import { animate, AnimatePresence, m, useMotionValue, useTransform } from 'motio
 import { useEffect, useRef, type ReactNode } from 'react';
 import { closeSheet, useUI } from '../store';
 import { ITrash } from './Icons';
-import { spring } from './motion';
+import { spring, springSheet } from './motion';
 
 /** Janela que sobe de baixo, no padrão iOS. */
 export function SheetHost() {
@@ -83,10 +83,10 @@ function SheetFrame({ children }: { children: ReactNode }) {
 
   return (
     <m.div className="sheet-layer" initial="hidden" animate="shown" exit="hidden">
-      <m.div className="veil-wrap" variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }} transition={{ duration: 0.25 }}>
+      <m.div className="veil-wrap" variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }} transition={{ duration: 0.18 }}>
         <m.div className="veil" style={{ opacity: veil }} onClick={closeSheet} />
       </m.div>
-      <m.div className="sheet-pos" variants={{ hidden: { y: '100%' }, shown: { y: 0 } }} transition={spring}>
+      <m.div className="sheet-pos" variants={{ hidden: { y: '100%' }, shown: { y: 0 } }} transition={springSheet}>
         <m.div className="sheet" role="dialog" aria-modal="true" style={{ y: offset }}>
           <div className="grab-zone" ref={grabRef}><div className="grab" /></div>
           <div className="sheet-body" ref={bodyRef}>{children}</div>

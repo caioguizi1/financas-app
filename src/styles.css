@@ -382,3 +382,14 @@ html.sheet-open .toast-host { bottom: auto; top: calc(var(--sat) + 12px) }
 .vrow { transition: border-color 0.2s, background 0.2s }
 .vrow.on { border-color: var(--acc); background: rgba(110, 91, 255, 0.12) }
 @media (prefers-reduced-motion: reduce) { .tabs .tab-pill, .seg .seg-pill { transition: none } }
+
+/* toque instantâneo (sem atraso do iOS) e feedback por CSS */
+html { touch-action: manipulation }
+.key, .chip, .daygrid button, .stepper button, .nb, .btn { transition: transform 0.12s cubic-bezier(0.3, 1.4, 0.5, 1), background 0.15s, border-color 0.15s }
+.key:active { transform: scale(0.92) }
+.chip:active { transform: scale(0.95) }
+.daygrid button:active { transform: scale(0.88) }
+.stepper button:active { transform: scale(0.85) }
+
+.pay-row { margin-top: 10px; min-height: 44px; display: flex; flex-direction: column; justify-content: center }
+.pay-info { font-size: 13.5px; color: var(--mut); background: var(--card2); border: 1px dashed var(--line); border-radius: 14px; padding: 0 14px; height: 44px; display: flex; align-items: center }

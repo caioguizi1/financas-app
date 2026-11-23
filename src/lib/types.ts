@@ -3,6 +3,8 @@ export type ISODate = string;
 /** Mês no formato YYYY-MM. */
 export type MonthKey = string;
 export type Tipo = 'entrada' | 'saida';
+/** Forma de pagamento. pix = Pix/débito (sai na hora); credito usa cartaoId. */
+export type Meio = 'pix' | 'boleto' | 'pixparc' | 'credito';
 
 /** Valores sempre em centavos (inteiros). */
 export interface Recorrente {
@@ -38,6 +40,9 @@ export interface Lancamento {
   data: ISODate;
   cartaoId?: string | null;
   parcelas?: number;
+  meio?: Meio;
+  /** Parcelado fora do cartão: meses até a 1ª parcela (0 = na data da compra, 1 = mês seguinte). */
+  adiar?: number;
   /** Valor bruto (ex.: PLR), quando o lançamento guarda o líquido. */
   bruto?: number;
   /** Ícone sugerido pelo dicionário (ex.: 🐾); se ausente, usa o da categoria. */

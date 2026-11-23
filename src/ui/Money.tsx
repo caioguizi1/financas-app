@@ -70,9 +70,9 @@ export function Keypad({ value, onChange, small }: { value: number; onChange: (v
   return (
     <div className={`keys ${small ? 'small' : ''}`}>
       {KEYS.map((k) => (
-        <m.button key={k} className="key" whileTap={{ scale: 0.92 }} transition={springSnappy} onClick={() => press(k)} aria-label={k === '⌫' ? 'Apagar' : k}>
+        <button key={k} className="key" onClick={() => press(k)} aria-label={k === '⌫' ? 'Apagar' : k}>
           {k}
-        </m.button>
+        </button>
       ))}
     </div>
   );

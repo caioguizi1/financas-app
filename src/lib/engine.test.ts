@@ -64,6 +64,10 @@ describe('parcelado fora do cartão (boleto/Pix)', () => {
       ['2026-11-30', -10000, 'Sofá 1/3'], ['2026-12-30', -10000, 'Sofá 2/3'], ['2027-01-30', -10000, 'Sofá 3/3'],
     ]);
   });
+  it('boleto/Pix parcelado com 1ª parcela no mês seguinte', () => {
+    const D = base({ lancamentos: [{ id: 'b', tipo: 'saida', valor: 30000, cat: 'compras', desc: 'Curso', data: '2026-11-23', parcelas: 3, adiar: 1, meio: 'pixparc', criado: 2000 }] });
+    expect(eventosEntre(D, '2026-11-01', '2027-03-31').map((e) => e.data)).toEqual(['2026-12-23', '2027-01-23', '2027-02-23']);
+  });
   it('dia 31 vira fim do mês nas parcelas', () => {
     const D = base({ lancamentos: [{ id: 'b', tipo: 'saida', valor: 20000, cat: 'compras', desc: 'X', data: '2027-01-31', parcelas: 2, criado: 2000 }] });
     expect(eventosEntre(D, '2027-01-01', '2027-03-31').map((e) => e.data)).toEqual(['2027-01-31', '2027-02-28']);

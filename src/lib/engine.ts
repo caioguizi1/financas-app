@@ -47,7 +47,8 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
     const resto = l.valor - base * n;
     const pd = parse(l.data);
     for (let i = 0; i < n; i++) {
-      const compra = dateOf(pd.getFullYear(), pd.getMonth() + i, pd.getDate());
+      const adiar = c ? 0 : l.adiar ?? 0;
+      const compra = dateOf(pd.getFullYear(), pd.getMonth() + i + adiar, pd.getDate());
       const cash = c ? pagamentoCartao(c, compra) : compra;
       if (cash >= de && cash <= ate) {
         const v = base + (i === 0 ? resto : 0);
