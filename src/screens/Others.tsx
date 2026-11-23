@@ -2,6 +2,10 @@ import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
 import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
+import { ativaEm, serieDe } from '../lib/versions';
+import type { Recorrente } from '../lib/types';
+import { ExtraSheet } from '../sheets/Extras';
+import { RendaSheet, resumoRenda } from '../sheets/Renda';
 import { brl } from '../lib/money';
 import type { Evento } from '../lib/types';
 import { openSheet, resetData, useData, useUI } from '../store';
@@ -64,11 +68,22 @@ export function Extrato() {
 export function Fixos() {
   const D = useData();
   const mk = monthKey(today());
-  const ativos = D.recorrentes.filter((r) => !r.fim || r.fim >= mk);
-  const ent = ativos.filter((r) => r.tipo === 'entrada').sort((a, b) => a.dia - b.dia);
-  const sai = ativos.filter((r) => r.tipo === 'saida').sort((a, b) => a.dia - b.dia);
-  const te = ent.reduce((a, r) => a + r.valor, 0);
-  const ts = sai.reduce((a, r) => a + r.valor, 0);
+  // uma linha por série: a versão de agora (ou a próxima, se ainda vai começar) + a mudança agendada
+  const series = new Map<string, Recorrente[]>();
+  D.recorrentes.forEach((r) => series.set(serieDe(r), [...(series.get(serieDe(r)) ?? []), r]));
+  const linhas = [...series.values()].flatMap((vs) => {
+    vs.sort((a, b) => (a.inicio < b.inicio ? -1 : 1));
+    const atual = vs.find((v) => ativaEm(v, mk)) ?? vs.find((v) => v.inicio > mk);
+    if (!atual) return [];
+    return [{ r: atual, prox: vs.find((v) => v.inicio > atual.inicio && v.inicio > mk) }];
+  });
+  const ent = linhas.filter((x) => x.r.tipo === 'entrada').sort((a, b) => a.r.dia - b.r.dia);
+  const sai = linhas.filter((x) => x.r.tipo === 'saida').sort((a, b) => a.r.dia - b.r.dia);
+  const soma = (xs: typeof linhas) => xs.reduce((a, x) => a + (ativaEm(x.r, mk) ? x.r.valor : 0), 0);
+  const te = soma(ent);
+  const ts = soma(sai);
+  const t = today();
+  const extras = D.lancamentos.filter((l) => l.tipo === 'entrada' && l.data >= t).sort((a, b) => (a.data < b.data ? -1 : 1));
   return (
     <>
       <h1>Fixos</h1><div className="mut" style={{ marginTop: 4 }}>Tudo que se repete todo mês, automático.</div>
@@ -79,10 +94,23 @@ export function Fixos() {
       <div className={`alert ${te - ts < 0 ? '' : 'ok'}`}><span>{te - ts < 0 ? '⚠️' : '💡'}</span><div>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</div></div>
       <div className="mut small" style={{ margin: '14px 2px -6px' }}>Deslize um item pro lado pra editar ou apagar.</div>
       <h2>Entradas</h2>
-      {ent.length > 0 && <m.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{ent.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>}
-      <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Recebimento fixo</Button>
+      {ent.length > 0 && <m.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></m.div>}
+      <div className="btn-row">
+        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}>💼 Minha renda</Button>
+        <Button kind="ghost" onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Outro fixo</Button>
+      </div>
+      <h2>Extras previstos</h2>
+      <div className="mut small" style={{ margin: '-6px 2px 10px' }}>13º, PLR, férias, bônus… entram na projeção na data prevista.</div>
+      {extras.length > 0 && (
+        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+          <AnimatePresence initial={false}>
+            {extras.map((l) => <EvItem key={l.id} e={{ data: l.data, valor: l.valor, desc: l.desc, cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: null, criado: l.criado }} />)}
+          </AnimatePresence>
+        </m.div>
+      )}
+      <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<ExtraSheet />)}>＋ 13º, PLR, férias, bônus…</Button>
       <h2>Saídas</h2>
-      {sai.length > 0 && <m.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{sai.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>}
+      {sai.length > 0 && <m.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{sai.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></m.div>}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Gasto fixo</Button>
     </>
   );
@@ -104,6 +132,8 @@ export function Ajustes() {
       <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
         <Row ico="🙂" t="Nome" s={D.perfil.nome} onClick={() => openSheet(<EditNome />)} />
         <Row ico="🏦" t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
+        <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
+        <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
       </m.div>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (

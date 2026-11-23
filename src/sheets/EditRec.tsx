@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { aprender, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
-import { dateOf, monthKey, today } from '../lib/dates';
+import { mesCurto, monthKey, today } from '../lib/dates';
+import { brl } from '../lib/money';
+import { aplicarAlteracao, encerrar as encerrarRec, serieDe, versoes, type Vigencia } from '../lib/versions';
+import { VigenciaPicker } from './Renda';
 import { uid } from '../lib/money';
 import type { Recorrente, Tipo } from '../lib/types';
 import { closeSheet, getData, mutate, toast, withUndo } from '../store';
@@ -26,27 +29,27 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const cat = usaSug ? sug!.cat : r.cat;
   const ico = usaSug ? sug!.ico || catE(cat) : r.ico || catE(cat);
 
+  const mk = monthKey(today());
+  const mudouValor = !novo && !!rec && (r.valor !== rec.valor || r.dia !== rec.dia);
+  const [vig, setVig] = useState<Vigencia>(mk);
+  const historico = !novo && r.id ? versoes(D.recorrentes, serieDe(r as Recorrente)) : [];
+
   const salvar = () => {
     if (!r.valor || !r.dia) return;
     const final: Recorrente = { ...r, cat, ico: ico !== catE(cat) ? ico : undefined, dia: r.dia, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(cat) };
-    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : d.recorrentes.map((x) => (x.id === final.id ? final : x)), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
+    const { id: _id, inicio: _ini, fim: _fim, serie: _s, ...mudancas } = final;
+    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouValor ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
     closeSheet();
-    toast(novo ? 'Fixo adicionado' : 'Atualizado');
+    toast(novo ? 'Fixo adicionado' : mudouValor && vig !== 'sempre' ? `Atualizado a partir de ${mesCurto(vig)}` : 'Atualizado');
   };
   const apagar = () => {
     closeSheet();
-    withUndo(`"${r.desc}" apagado`, (d) => ({ ...d, recorrentes: d.recorrentes.filter((x) => x.id !== r.id) }));
+    const serie = serieDe(r as Recorrente);
+    withUndo(`"${r.desc}" apagado`, (d) => ({ ...d, recorrentes: d.recorrentes.filter((x) => serieDe(x) !== serie) }));
   };
   const encerrar = () => {
-    const n = new Date();
-    const fim = monthKey(dateOf(n.getFullYear(), n.getMonth() - 1, 1));
     closeSheet();
-    withUndo('Encerrado a partir deste mês', (d) => ({
-      ...d,
-      recorrentes: d.recorrentes
-        .map((x) => (x.id === r.id ? { ...x, fim } : x))
-        .filter((x) => !(x.id === r.id && x.fim! < x.inicio)),
-    }));
+    withUndo(`Encerrado a partir de ${mesCurto(mk)}`, (d) => ({ ...d, recorrentes: encerrarRec(d.recorrentes, r.id!, mk) }));
   };
 
   return (
@@ -68,6 +71,19 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
           <div className="chips scroll">
             <Chip on={!r.cartaoId} onClick={() => set({ cartaoId: null })}>🏦 Conta</Chip>
             {cartoes.map((c) => <Chip key={c.id} on={r.cartaoId === c.id} onClick={() => set({ cartaoId: c.id })}>💳 {c.nome}</Chip>)}
+          </div>
+        </>
+      )}
+      {mudouValor && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor} />}
+      {historico.length > 1 && (
+        <>
+          <div className="lab">Histórico</div>
+          <div className="hist">
+            {historico.map((v) => (
+              <div key={v.id} className={`hist-row ${v.id === r.id ? 'on' : ''}`}>
+                <span>{mesCurto(v.inicio)} → {v.fim ? mesCurto(v.fim) : 'hoje'}</span><span className="sp" /><b className="num">{brl(v.valor)}</b><span className="dim"> · dia {v.dia}</span>
+              </div>
+            ))}
           </div>
         </>
       )}

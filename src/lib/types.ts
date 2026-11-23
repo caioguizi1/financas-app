@@ -18,6 +18,8 @@ export interface Recorrente {
   cartaoId?: string | null;
   /** Marca recorrentes criados pelo cadastro inicial (ex.: 'renda'). */
   onb?: string;
+  /** Versões do mesmo fixo compartilham a série (histórico de valores). Padrão: o próprio id. */
+  serie?: string;
 }
 
 export interface Cartao {
@@ -60,6 +62,8 @@ export interface Data {
   uso: Record<string, number>;
   /** O que o app aprendeu com as escolhas do usuário: 'tipo|termo' → categoria/ícone. */
   aprendido?: Record<string, { cat: string; ico?: string; n: number }>;
+  /** Avisos que o usuário dispensou (ex.: '13-2026'). */
+  dispensados?: string[];
 }
 
 /** Movimento de caixa já resolvido (data em que o dinheiro entra/sai da conta). */

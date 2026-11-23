@@ -44,3 +44,12 @@ export function diaLabel(s: ISODate, hoje: ISODate = today()) {
 export function saudacao(h = new Date().getHours()) {
   return h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 }
+
+/** Soma meses a um YYYY-MM. */
+export const addMonths = (mk: MonthKey, n: number): MonthKey => {
+  const [y, m] = mk.split('-').map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+};
+/** "dez/26" */
+export const mesCurto = (mk: MonthKey) => `${MES[+mk.slice(5) - 1]}/${mk.slice(2, 4)}`;

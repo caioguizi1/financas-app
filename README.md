@@ -17,6 +17,7 @@ App pessoal de finanças (PWA): controle de gastos e projeção do saldo futuro,
 src/
   lib/        motor financeiro puro (tipos, datas, dinheiro, engine + testes)
               smart.ts = dicionário inteligente + aprendizado local (com testes)
+              versions.ts = histórico/vigência dos fixos · extras.ts = 13º, PLR, férias…
   store.ts    dados persistidos + estado de interface (abas, janelas, toasts)
   ui/         componentes base (Sheet, teclado numérico, controles, gráfico)
   sheets/     janelas: lançamento rápido, fixos, cartões, ajuste de saldo
@@ -36,6 +37,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.4** — alterações com vigência ("vale a partir de"), histórico de valores por fixo; tela Minha renda (1x/2x, dias, vigência); recebimentos extras com modelos de 13º (2 parcelas, datas da CLT), PLR, férias (1/3), bônus e restituição do IR; aviso do 13º em nov/dez.
 - **v2.3** — identidade *Ametista noturna*: fundo quase preto com aurora índigo/bordeaux e granulado, violeta-índigo como marca, bordeaux nas saídas, menta nas entradas; vidro (Liquid Glass) na barra, janelas e avisos; fonte Geist; novo ícone escuro. Desempenho: motor de animação carregado sob demanda (JS inicial −14%), fonte só com subconjunto latino, sem blur animado.
 - **v2.2.1** — novo ícone vetorial (seta de tendência + selo de check), nítido em todos os tamanhos; fonte em `design/icon.svg`.
 - **v2.2** — dicionário inteligente: ícone e categoria sugeridos enquanto digita (sinônimos, marcas, plural, erro de digitação), aprendendo com as escolhas do usuário; novas categorias Pets, Beleza e Viagem.

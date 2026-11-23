@@ -5,6 +5,10 @@ import { projecao, resumoMes } from '../lib/engine';
 import { brl } from '../lib/money';
 import { openSheet, useData } from '../store';
 import { AjustarSaldo } from '../sheets/Misc';
+import { ExtraSheet } from '../sheets/Extras';
+import { rendaAtual } from '../sheets/Renda';
+import { ano13 } from '../lib/extras';
+import { mutate } from '../store';
 import { BalanceChart } from '../ui/Chart';
 import { Button, itemVariants, listVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
@@ -33,6 +37,11 @@ export function Home() {
     return { p, fut, hoje, fimMes, min, months, prox };
   }, [D, t]);
 
+  // nov/dez: lembrar do 13º se ainda não está na previsão
+  const a13 = ano13(t);
+  const chave13 = `13-${a13}`;
+  const mostra13 = (now.getMonth() >= 10 || a13 > now.getFullYear()) && t <= `${a13}-12-20` && rendaAtual().length > 0
+    && !D.lancamentos.some((l) => l.desc.startsWith('13º') && l.data.startsWith(String(a13))) && !(D.dispensados ?? []).includes(chave13);
   const sp = scrubI != null ? vm.fut[scrubI] : null;
   const spEvs = sp ? vm.p.evs.filter((e) => e.data === sp.d) : [];
   const shown = sp ? sp.v : vm.hoje;
@@ -65,6 +74,22 @@ export function Home() {
       ) : (
         <div className="alert ok"><span>✅</span><div>Sem saldo negativo nos próximos 30 dias. Menor saldo: <b>{brl(vm.min.v)}</b> em {dm(vm.min.d)}.</div></div>
       )}
+
+      <AnimatePresence initial={false}>
+        {mostra13 && (
+          <m.div className="nudge" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+            <div className="nudge-ico">🎄</div>
+            <div className="m">
+              <div className="t">O 13º está chegando</div>
+              <div className="s">1ª parcela até 30/nov, 2ª até 20/dez. Quer colocar na previsão?</div>
+              <div className="nudge-btns">
+                <button className="nb on" onClick={() => openSheet(<ExtraSheet k="13" />)}>Adicionar</button>
+                <button className="nb" onClick={() => mutate((d) => ({ ...d, dispensados: [...(d.dispensados ?? []), chave13] }))}>Agora não</button>
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
 
       <h2>Próximos meses</h2>
       <m.div className="months" variants={listVariants} initial="hidden" animate="shown">
