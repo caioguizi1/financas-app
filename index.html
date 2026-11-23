@@ -342,8 +342,27 @@ function moneyPad(root, initial, onChange){
     paint();
   });
   paint();
-  return { get:()=>cents, set:v=>{cents=v;paint();} };
+  const api={ get:()=>cents, set:v=>{cents=v;paint();}, root, press:k=>{ const b=root.querySelector(`.key[data-k="${k}"]`); if(b){ b.click(); b.animate([{background:'#2C2C38'},{background:''}],{duration:150}); } } };
+  activePad=api;
+  return api;
 }
+/* teclado físico (computador): números, Backspace, Enter */
+let activePad=null;
+document.addEventListener('keydown',e=>{
+  const t=e.target, typing=t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA');
+  if(e.key==='Enter'){
+    if(typing&&t.type!=='date'){ return; }
+    const scope=$('#layer .sheet')||$('.ob .foot');
+    const btn=scope&&[...scope.querySelectorAll('.btn')].find(b=>!b.classList.contains('ghost')&&!b.classList.contains('link')&&!b.classList.contains('danger')&&!b.disabled);
+    if(btn){ e.preventDefault(); btn.click(); }
+    return;
+  }
+  if(typing||e.metaKey||e.ctrlKey||e.altKey) return;
+  if(!activePad||!document.body.contains(activePad.root.querySelector('.keys'))) return;
+  if(/^[0-9]$/.test(e.key)){ e.preventDefault(); activePad.press(e.key); }
+  else if(e.key==='Backspace'||e.key==='Delete'){ e.preventDefault(); activePad.press('⌫'); }
+  else if(e.key==='Escape'&&$('#layer').innerHTML){ closeSheet(); }
+});
 const padHTML = '<div class="amount zero"><div class="v num"></div></div><div class="keys"></div>';
 function dayGrid(sel){ let h='<div class="daygrid">'; for(let d=1;d<=31;d++) h+=`<button data-d="${d}" class="${d===sel?'on':''}">${d}</button>`; return h+'</div>'; }
 function bindDayGrid(root, onPick){ root.querySelectorAll('.daygrid button').forEach(b=>b.onclick=()=>{ root.querySelectorAll('.daygrid button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); onPick(Number(b.dataset.d)); }); }
@@ -781,7 +800,7 @@ function renderAjustes(){
       <button class="item" id="sImp"><div class="ico">⬇️</div><div class="m"><div class="t">Restaurar backup</div><div class="s">Substitui os dados atuais</div></div></button>
     </div>
     <button class="btn danger" id="sReset" style="margin-top:22px">Apagar tudo e recomeçar</button>
-    <div class="dim" style="text-align:center;font-size:12px;margin-top:18px">Fluxo · v1.1</div>
+    <div class="dim" style="text-align:center;font-size:12px;margin-top:18px">Fluxo · v1.2</div>
   `);
   $('#sNome').onclick=()=>{ const sh=openSheet(`<h3>Seu nome</h3><input class="field" id="nm" value="${esc(S.perfil.nome)}" style="margin:12px 0 16px"><button class="btn" id="nmS">Salvar</button>`); sh.querySelector('#nmS').onclick=()=>{ S.perfil.nome=sh.querySelector('#nm').value.trim(); save(); closeSheet(); route('ajustes'); }; };
   $('#sSaldo').onclick=ajustarSaldo;
