@@ -18,8 +18,29 @@ export function pagamentoFatura(D: Data, c: Cartao, venc: ISODate) {
   return { data: p?.data ?? venc, ts: p?.ts };
 }
 
-/** Todos os movimentos de caixa com data em [de, ate], ordenados. */
+/**
+ * Cache por versão dos dados: o estado é imutável (toda mudança cria um novo objeto), então o mesmo
+ * cálculo pedido por várias telas (Início, sugestões, carteira…) é feito uma vez só por versão.
+ */
+function memo<T>(cache: WeakMap<Data, Map<string, T>>, D: Data, chave: string, calc: () => T): T {
+  let m = cache.get(D);
+  if (!m) cache.set(D, (m = new Map()));
+  const hit = m.get(chave);
+  if (hit !== undefined) return hit;
+  const r = calc();
+  if (m.size > 48) m.clear();
+  m.set(chave, r);
+  return r;
+}
+const cacheEventos = new WeakMap<Data, Map<string, Evento[]>>();
+const cacheProjecao = new WeakMap<Data, Map<string, Projecao>>();
+
+/** Todos os movimentos de caixa com data em [de, ate], ordenados. (Resultado compartilhado: não altere a lista.) */
 export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
+  return memo(cacheEventos, D, `${de}|${ate}`, () => calcularEventos(D, de, ate));
+}
+
+function calcularEventos(D: Data, de: ISODate, ate: ISODate): Evento[] {
   const out: Evento[] = [];
   const cartao = (id?: string | null) => (id ? D.cartoes.find((c) => c.id === id) : undefined);
   const d0 = parse(de);
@@ -115,6 +136,10 @@ export function estimativas(D: Data, reais: Evento[], hoje: ISODate, fim: ISODat
 
 /** Saldo dia a dia desde o último saldo informado até `dias` à frente de hoje. */
 export function projecao(D: Data, dias: number, hoje: ISODate = today()): Projecao {
+  return memo(cacheProjecao, D, `${dias}|${hoje}`, () => calcularProjecao(D, dias, hoje));
+}
+
+function calcularProjecao(D: Data, dias: number, hoje: ISODate): Projecao {
   const ini = D.saldo.data < hoje ? D.saldo.data : hoje;
   const fim = addDays(hoje, dias);
   const reais = eventosEntre(D, ini, fim);

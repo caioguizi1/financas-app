@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.14** — desempenho: abas pré-montadas no tempo ocioso (1ª visita ~3x mais rápida); cálculos do motor compartilhados por versão dos dados; gestos de deslizar e carrossel sem o sistema de medição de layout; carteira sem medição forçada a cada redesenho; ＋ sem rolagem forçada na abertura; painéis rolam junto com a abertura; janelas fecham em 0,26 s.
 - **v2.13.4** — o que se abre aparece sozinho: painéis que expandem (imagem e categorias da carteira, editor de recorte, parcelas e cronograma do lançamento, holerite da renda, troca de categoria na importação) rolam a tela até ficarem inteiros à vista.
 - **v2.13.3** — botão "↺ Padrão" na imagem do cartão: volta pro visual gerado (cores do banco + nome), com Desfazer.
 - **v2.13.2** — regras fixas de categoria: 99Pay (Pix pelo cartão) → Outros, sem confundir com corrida de 99; Love Suites/motel → Lazer; hospital veterinário → Pets; correção única nos lançamentos já salvos e no que foi aprendido.

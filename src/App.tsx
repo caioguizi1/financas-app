@@ -26,6 +26,22 @@ export default function App() {
   const [, tick] = useState(0);
   const [visitadas, setVisitadas] = useState<Set<Tab>>(() => new Set([tab]));
   useEffect(() => { setVisitadas((v) => (v.has(tab) ? v : new Set(v).add(tab))); }, [tab]);
+  // Pré-monta as outras abas nos momentos ociosos logo após abrir: a 1ª visita fica tão rápida quanto as seguintes.
+  useEffect(() => {
+    if (!onboarded) return;
+    const ocioso = (f: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 2500 }) : setTimeout(f, 1200)) as number;
+    const cancelar = (id: number) => ('cancelIdleCallback' in window ? cancelIdleCallback(id) : clearTimeout(id));
+    const fila = TABS.map((t) => t.id);
+    let id = 0;
+    const proxima = () => {
+      const t = fila.shift();
+      if (!t) return;
+      setVisitadas((v) => (v.has(t) ? v : new Set(v).add(t)));
+      id = ocioso(proxima); // uma tela por vez, sem competir com o que o usuário está fazendo
+    };
+    id = ocioso(proxima);
+    return () => cancelar(id);
+  }, [onboarded]);
 
   // Ao voltar pro app (ex.: no dia seguinte), recalcula "hoje".
   useEffect(() => {

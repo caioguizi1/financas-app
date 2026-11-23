@@ -1,16 +1,18 @@
 import { m, type HTMLMotionProps } from 'motion/react';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { spring } from './motion';
+import { springSnappy } from './motion';
 
 /**
  * Traz um elemento recém-aberto pra dentro da tela, rolando o necessário (e só o necessário).
  * Funciona dentro das janelas (área rolável [data-scroll]) e nas telas principais (página),
  * descontando a barra de abas. Se o painel for maior que a tela, alinha o começo dele.
  */
-export function revelar(el: HTMLElement | null, folga = 16) {
+export function revelar(el: HTMLElement | null, folga = 16, alturaFinal?: number) {
   if (!el || !el.isConnected) return;
   const box = el.closest<HTMLElement>('[data-scroll]');
-  const r = el.getBoundingClientRect();
+  const b0 = el.getBoundingClientRect();
+  // abrindo: usa a altura FINAL (rola junto com a animação, sem esperar ela terminar)
+  const r = { top: b0.top, height: alturaFinal ?? b0.height, bottom: b0.top + (alturaFinal ?? b0.height) };
   const topo = box ? box.getBoundingClientRect().top : 0;
   const base = box ? box.getBoundingClientRect().bottom : window.innerHeight - (document.querySelector('.tabbar')?.getBoundingClientRect().height ?? 0);
   const visivel = base - topo - folga * 2;
@@ -23,13 +25,27 @@ export function revelar(el: HTMLElement | null, folga = 16) {
   (box ?? window).scrollBy({ top: delta, behavior: reduz ? 'auto' : 'smooth' });
 }
 
-/** Painel que abre/fecha com altura animada e aparece inteiro na tela ao abrir. `chave`: revela de novo quando o conteúdo muda. */
+/** Mantém o fim do painel à vista enquanto ele cresce (chamado a cada quadro da animação). */
+function acompanhar(el: HTMLElement, folga = 16) {
+  const box = el.closest<HTMLElement>('[data-scroll]');
+  const r = el.getBoundingClientRect();
+  const topo = box ? box.getBoundingClientRect().top : 0;
+  const base = box ? box.getBoundingClientRect().bottom : window.innerHeight - (document.querySelector('.tabbar')?.getBoundingClientRect().height ?? 0);
+  const passou = r.bottom - (base - folga);
+  if (passou <= 0) return;
+  const limite = r.top - (topo + folga + 56); // não esconde o começo do painel (nem o botão logo acima)
+  const d = Math.min(passou, Math.max(0, limite));
+  if (d > 0.5) { if (box) box.scrollTop += d; else window.scrollBy(0, d); }
+}
+
+/** Painel que abre/fecha com altura animada; a tela acompanha enquanto ele abre. `chave`: revela de novo quando o conteúdo muda. */
 export function Expande({ children, chave, ...p }: HTMLMotionProps<'div'> & { children: ReactNode; chave?: unknown }) {
   const ref = useRef<HTMLDivElement>(null);
-  const aberto = useRef(false);
+  const abrindo = useRef(true);
+  const montado = useRef(false);
   useEffect(() => {
-    if (!aberto.current) return; // a 1ª revelação acontece no fim da animação de abrir
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => revelar(ref.current)));
+    if (!montado.current) { montado.current = true; return; }
+    const id = requestAnimationFrame(() => revelar(ref.current));
     return () => cancelAnimationFrame(id);
   }, [chave]);
   return (
@@ -38,13 +54,11 @@ export function Expande({ children, chave, ...p }: HTMLMotionProps<'div'> & { ch
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 'auto', opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
-      transition={spring}
+      transition={springSnappy}
       {...p}
       style={{ overflow: 'hidden', ...p.style }}
-      onAnimationComplete={(def) => {
-        if ((def as { opacity?: number }).opacity === 1) { aberto.current = true; revelar(ref.current); }
-        p.onAnimationComplete?.(def);
-      }}
+      onUpdate={(v) => { if (abrindo.current && ref.current && v.height !== undefined) acompanhar(ref.current); p.onUpdate?.(v); }}
+      onAnimationComplete={(def) => { if ((def as { opacity?: number }).opacity === 1) { abrindo.current = false; if (ref.current) acompanhar(ref.current); } p.onAnimationComplete?.(def); }}
     >
       {children}
     </m.div>

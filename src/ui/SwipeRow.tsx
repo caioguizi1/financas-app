@@ -22,6 +22,8 @@ export function SwipeRow({ id, onTap, onEdit, onDelete, children }: {
   const openId = useOpenRow((s) => s.id);
   const setOpen = useOpenRow((s) => s.set);
   const moved = useRef(false);
+  const base = useRef(0);
+  const ativo = useRef(false);
   const W = BTN * ((onEdit ? 1 : 0) + (onDelete ? 1 : 0));
   const delW = useTransform(x, (v) => (onDelete ? Math.max(BTN, -v - (onEdit ? BTN : 0)) : 0));
 
@@ -53,14 +55,24 @@ export function SwipeRow({ id, onTap, onEdit, onDelete, children }: {
         className="swipe-front"
         role="button"
         tabIndex={0}
-        style={{ x }}
-        drag={W ? 'x' : false}
-        dragDirectionLock
-        dragConstraints={{ left: -W * 3, right: 0 }}
-        dragElastic={{ left: 0.12, right: 0.04 }}
-        dragMomentum={false}
-        onDragStart={() => { moved.current = true; if (openId && openId !== id) setOpen(null); }}
-        onDragEnd={onDragEnd}
+        style={{ x, touchAction: 'pan-y' }}
+        // gesto de "pan" em vez de drag: mesmo efeito, sem o sistema de medição de layout do motion
+        // (com dezenas de linhas montadas, ele media a página inteira a cada atualização e travava as janelas)
+        onPanStart={(_, i) => {
+          ativo.current = !!W && Math.abs(i.offset.x) > Math.abs(i.offset.y);
+          if (!ativo.current) return;
+          moved.current = true; base.current = x.get();
+          if (openId && openId !== id) setOpen(null);
+        }}
+        onPan={(_, i) => {
+          if (!ativo.current) return;
+          let v = base.current + i.offset.x;
+          if (v > 0) v *= 0.04; // resistência à direita
+          const min = -W * 3;
+          if (v < min) v = min + (v - min) * 0.12;
+          x.set(v);
+        }}
+        onPanEnd={(e, i) => { if (!ativo.current) return; ativo.current = false; onDragEnd(e, i); }}
         onClick={() => {
           if (moved.current) return;
           if (useOpenRow.getState().id === id) { setOpen(null); return; }

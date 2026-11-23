@@ -44,6 +44,25 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
   const x = useMotionValue(0);
   const arrastou = useRef(false);
   const inicioX = useRef(0);
+  const panAtivo = useRef(false);
+  // largura da faixa: o navegador avisa (ResizeObserver) — ler clientWidth a cada redesenho forçava o layout da janela inteira
+  const walletRef = useRef<HTMLDivElement>(null);
+  const iRef = useRef(i);
+  iRef.current = i;
+  useEffect(() => {
+    const el = walletRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = e.contentRect.width;
+      setCw((antes) => {
+        if (!antes) x.jump((w - w * 0.8) / 2 - iRef.current * (w * 0.8 + GAP)); // posição inicial sem animar
+        return w;
+      });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const panBase = useRef(0);
   const slot = cw * 0.8, GAP = 12;
   const pos = (n: number) => (cw - slot) / 2 - n * (slot + GAP);
   useEffect(() => { if (cw) animate(x, pos(i), springSnappy); }, [i, cw]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -72,20 +91,22 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
     <div className="sl">
       <SheetHeader title="Carteira" />
       <div className="sl-mid" data-scroll>
-        <div className="wallet" ref={(el) => { if (el && el.clientWidth !== cw) { setCw(el.clientWidth); const w = el.clientWidth; x.jump((w - w * 0.8) / 2 - i * (w * 0.8 + GAP)); /* posição inicial sem animar */ } }}>
+        <div className="wallet" ref={walletRef}>
           <m.div
             className="wtrack"
             style={{ x, gap: GAP }}
-            drag={D.cartoes.length > 1 ? 'x' : false}
-            dragDirectionLock
-            dragElastic={0.18}
-            dragMomentum={false}
-            dragConstraints={{ left: pos(D.cartoes.length - 1) - 40, right: pos(0) + 40 }}
+            onPanStart={(_, info) => { panAtivo.current = D.cartoes.length > 1 && Math.abs(info.offset.x) > Math.abs(info.offset.y); panBase.current = x.get(); if (panAtivo.current) arrastou.current = true; }}
+            onPan={(_, info) => {
+              if (!panAtivo.current) return;
+              let v = panBase.current + info.offset.x;
+              const min = pos(D.cartoes.length - 1), max = pos(0);
+              if (v > max) v = max + (v - max) * 0.18; else if (v < min) v = min + (v - min) * 0.18; // borda elástica
+              x.set(v);
+            }}
             // bolha (não captura): o arrasto do próprio carrossel precisa receber o toque; só a janela não
             onPointerDown={(e) => { e.stopPropagation(); arrastou.current = false; inicioX.current = e.clientX; }}
             onPointerMove={(e) => { if (Math.abs(e.clientX - inicioX.current) > 6) arrastou.current = true; }}
-            onDragStart={() => { arrastou.current = true; }}
-            onDragEnd={soltar}
+            onPanEnd={(e, info) => { if (panAtivo.current) { panAtivo.current = false; soltar(e, info); } }}
           >
             {D.cartoes.map((cc, k) => (
               <button key={cc.id} className={`wslot ${k === i ? 'on' : ''}`} style={{ width: slot || '80%' }} aria-label={cc.nome}

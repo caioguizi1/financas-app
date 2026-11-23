@@ -33,9 +33,23 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const cat = usaSug ? sug!.cat : catEscolhida || cats[0][0];
   const ico = sug && sug.cat === cat ? sug.ico || catE(cat) : manual && lanc?.ico && lanc.cat === cat ? lanc.ico : catE(cat);
   const chipsRef = useRef<HTMLDivElement>(null);
+  const primeiraVez = useRef(true);
   useEffect(() => {
-    chipsRef.current?.querySelector('.chip.on')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }, [cat]);
+    // centraliza o chip escolhido só na faixa de chips. Na abertura, só se ele não estiver entre os primeiros
+    // (que já aparecem) e depois da animação — ler a posição antes forçava o layout da janela inteira e travava.
+    const idx = cats.findIndex((c) => c[0] === cat);
+    const centralizar = () => {
+      const box = chipsRef.current, chip = box?.querySelector<HTMLElement>('.chip.on');
+      if (box && chip) box.scrollTo({ left: chip.offsetLeft - (box.clientWidth - chip.offsetWidth) / 2, behavior: primeiraVez.current ? 'auto' : 'smooth' });
+      primeiraVez.current = false;
+    };
+    if (primeiraVez.current) {
+      if (idx < 3) { primeiraVez.current = false; return; }
+      const t = setTimeout(centralizar, 380);
+      return () => clearTimeout(t);
+    }
+    centralizar();
+  }, [cat]); // eslint-disable-line react-hooks/exhaustive-deps
   const cartao = l.cartaoId ? D.cartoes.find((c) => c.id === l.cartaoId) : undefined;
   // forma de pagamento: Pix/débito sai na hora (sem parcelar); boleto e crédito podem parcelar; Pix parcelado sempre parcela
   const [meio, setMeio] = useState<Meio>(() => (lanc?.cartaoId ? 'credito' : lanc?.meio ?? 'pix'));

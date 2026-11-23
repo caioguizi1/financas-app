@@ -84,10 +84,10 @@ function SheetFrame({ children }: { children: ReactNode }) {
 
   return (
     <m.div className="sheet-layer" initial="hidden" animate="shown" exit="hidden">
-      <m.div className="veil-wrap" variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }} transition={{ duration: 0.18 }}>
+      <m.div className="veil-wrap" variants={{ hidden: { opacity: 0, transition: { duration: 0.2 } }, shown: { opacity: 1 } }} transition={{ duration: 0.18 }}>
         <m.div className="veil" style={{ opacity: veil }} onClick={closeSheet} />
       </m.div>
-      <m.div className="sheet-pos" variants={{ hidden: { y: '100%' }, shown: { y: 0 } }} transition={springSheet}>
+      <m.div className="sheet-pos" variants={{ hidden: { y: '100%', transition: { duration: 0.26, ease: [0.32, 0, 0.67, 0] } }, shown: { y: 0 } }} transition={springSheet}>
         <m.div className="sheet" role="dialog" aria-modal="true" style={{ y: offset }}>
           <div className="grab-zone" ref={grabRef}><div className="grab" /></div>
           <div className="sheet-body" ref={bodyRef}>{children}</div>
