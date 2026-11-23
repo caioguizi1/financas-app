@@ -136,3 +136,26 @@ export function resumoMes(D: Data, y: number, m: number, hoje?: ISODate): Resumo
   for (const e of evs) (e.valor > 0 ? (ent += e.valor) : (sai -= e.valor));
   return { de, ate, ent, sai, evs };
 }
+
+export interface MesFluxo { de: ISODate; ate: ISODate; atual: boolean; inicio: number; ent: number; sai: number; fim: number }
+/**
+ * Resumo de caixa por mês que FECHA a conta: começa com + entra − sai = termina com.
+ * Mês atual: começa no saldo de hoje e conta só o que ainda vai acontecer (o passado já está no saldo).
+ * Usa os mesmos eventos da projeção (inclui estimativas de cartão).
+ */
+export function fluxoMeses(D: Data, hoje: ISODate, n: number): MesFluxo[] {
+  const h = parse(hoje);
+  const fimHorizonte = dateOf(h.getFullYear(), h.getMonth() + n - 1, 31);
+  const dias = Math.round((parse(fimHorizonte).getTime() - h.getTime()) / 86400000);
+  const p = projecao(D, dias, hoje);
+  return Array.from({ length: n }, (_, k) => {
+    const de = dateOf(h.getFullYear(), h.getMonth() + k, 1);
+    const ate = dateOf(h.getFullYear(), h.getMonth() + k, 31);
+    const atual = k === 0;
+    const desde = atual ? hoje : addDays(de, -1); // eventos estritamente depois deste dia
+    const inicio = p.saldoEm(desde) ?? D.saldo.valor;
+    let ent = 0, sai = 0;
+    for (const e of p.evs) if (e.data > desde && e.data <= ate) (e.valor > 0 ? (ent += e.valor) : (sai -= e.valor));
+    return { de, ate, atual, inicio, ent, sai, fim: p.saldoEm(ate) ?? inicio + ent - sai };
+  });
+}

@@ -1,7 +1,7 @@
 import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
-import { dateOf, diaLabel, dm, MESL, saudacao, today } from '../lib/dates';
-import { projecao, resumoMes } from '../lib/engine';
+import { dateOf, diaLabel, dm, MESL, parse, saudacao, today } from '../lib/dates';
+import { fluxoMeses, projecao } from '../lib/engine';
 import { brl } from '../lib/money';
 import { openSheet, useData } from '../store';
 import { AjustarSaldo } from '../sheets/Misc';
@@ -31,10 +31,9 @@ export function Home() {
     const fimMes = p.saldoEm(dateOf(now.getFullYear(), now.getMonth(), 31)) ?? hoje;
     const prox30 = fut.slice(0, 31);
     const min = prox30.reduce((a, b) => (b.v < a.v ? b : a), prox30[0]);
-    const months = Array.from({ length: 6 }, (_, k) => {
-      const d = new Date(now.getFullYear(), now.getMonth() + k, 1);
-      const r = resumoMes(D, d.getFullYear(), d.getMonth(), t);
-      return { ...r, fim: p.saldoEm(r.ate), nome: MESL[d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : '') };
+    const months = fluxoMeses(D, t, 6).map((r) => {
+      const d = parse(r.de);
+      return { ...r, nome: MESL[d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : '') };
     });
     const tn = trechoNegativo(fut);
     const voltaPor = tn?.volta ? p.evs.filter((e) => e.data === tn.volta!.d && e.valor > 0).sort((a, b) => b.valor - a.valor)[0]?.desc : undefined;
@@ -106,18 +105,21 @@ export function Home() {
       <m.div className="months" variants={listVariants} initial="hidden" animate="shown">
         {vm.months.map((r) => {
           const tot = Math.max(r.ent + r.sai, 1);
-          const sob = r.ent - r.sai;
+          const res = r.ent - r.sai;
           return (
             <m.div key={r.de} variants={itemVariants} whileTap={{ scale: 0.98 }} transition={springSnappy} className="month">
-              <div className="t">{r.nome}</div>
+              <div className="mt">
+                <span className="t">{r.nome}</span>
+                <span className={`res ${res < 0 ? 'neg' : 'pos'}`}>{res < 0 ? '▼' : '▲'} {brl(res, true)}</span>
+              </div>
               <div className="bar">
                 <m.i initial={{ width: 0 }} animate={{ width: `${(r.ent / tot) * 100}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.2 }} style={{ background: 'var(--in)' }} />
                 <m.i initial={{ width: 0 }} animate={{ width: `${(r.sai / tot) * 100}%` }} transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.3 }} style={{ background: 'var(--bdx-grad)' }} />
               </div>
-              <div className="l"><span className="mut">Entra</span><span className="num">{brl(r.ent)}</span></div>
-              <div className="l"><span className="mut">Sai</span><span className="num">{brl(-r.sai)}</span></div>
-              <div className="l"><span className="mut">Sobra do mês</span><b className={`num ${sob < 0 ? 'neg' : 'pos'}`}>{brl(sob, true)}</b></div>
-              <div className="l end"><span className="mut">Saldo no fim</span><b className={`num ${(r.fim ?? 0) < 0 ? 'neg' : ''}`}>{r.fim == null ? '—' : brl(r.fim)}</b></div>
+              <div className="l"><span className="mut">{r.atual ? 'Saldo hoje' : 'Começa com'}</span><span className="num">{brl(r.inicio)}</span></div>
+              <div className="l"><span className="mut"><i className="op">＋</i>{r.atual ? 'Ainda entra' : 'Entra'}</span><span className="num pos">{brl(r.ent)}</span></div>
+              <div className="l"><span className="mut"><i className="op">−</i>{r.atual ? 'Ainda sai' : 'Sai'}</span><span className="num">{brl(r.sai)}</span></div>
+              <div className="l end"><span><i className="op">=</i>Termina com</span><span className={`num fim ${r.fim < 0 ? 'neg' : ''}`}>{brl(r.fim)}</span></div>
             </m.div>
           );
         })}

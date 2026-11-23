@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.10** — resumo dos meses que fecha a conta (começa com + entra − sai = termina com, encadeado; mês atual a partir do saldo de hoje, só o que ainda falta), resultado do mês em destaque; números com desenho e largura uniformes.
 - **v2.9.2** — "Fatura atual" em destaque no formulário do cartão, na criação e na edição (fechada a vencer + aberta, já com o que o app somou; ajusta a diferença ao salvar); gasto típico separado como opcional.
 - **v2.9.1** — alerta de saldo negativo calibrado: mostra o primeiro dia negativo, o pior ponto e quando volta ao positivo, no mesmo horizonte de 90 dias do gráfico.
 - **v2.9** — forma de pagamento nos fixos (Pix/débito, boleto ou cartão; cartões antes dos fixos no cadastro); pagar fatura em outra data ("Paguei hoje", adiantar/agendar, voltar pro vencimento) mantendo a fatura pelo vencimento original; gasto típico por fatura preenche faturas futuras com estimativa (gráfico, meses e listas, marcada como estimada).

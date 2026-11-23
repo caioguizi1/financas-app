@@ -422,3 +422,19 @@ html { touch-action: manipulation }
 .fat-pag b { color: var(--text) }
 
 .lab-big { font-size: 16px; font-weight: 650; margin: 22px 2px 8px }
+
+/* ===== card do mês: começa + entra − sai = termina ===== */
+.month .mt { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px }
+.month .mt .t { margin: 0 }
+.month .res { font-size: 12.5px; font-weight: 650; font-variant-numeric: tabular-nums; padding: 3px 8px; border-radius: 8px; white-space: nowrap }
+.month .res.pos { color: var(--in); background: rgba(95, 227, 179, 0.1) }
+.month .res.neg { color: var(--out); background: rgba(168, 51, 88, 0.16) }
+.month .l { font-size: 14px; align-items: baseline }
+.month .l .num { font-weight: 600; font-size: 14px }
+.month .l .num.pos { color: var(--text) }
+.month .end { font-weight: 650 }
+.month .end .num.fim { font-size: 15px; font-weight: 700 }
+.month .op { font-style: normal; display: inline-block; width: 16px; color: var(--dim); font-weight: 600 }
+/* números sempre com o mesmo desenho e largura */
+.num, .ico, .vr-v, .amount .v, .stat .v, .tot .v, .hero .big { font-variant-numeric: tabular-nums lining-nums }
+.ob .ico { font-size: 17px; font-weight: 650; letter-spacing: -0.02em }

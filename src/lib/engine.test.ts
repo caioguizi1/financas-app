@@ -109,3 +109,20 @@ describe('projecao', () => {
     expect(p.saldoEm('2026-12-10')).toBe(400_000);
   });
 });
+
+import { fluxoMeses } from './engine';
+describe('resumo dos meses (fecha a conta)', () => {
+  const D = base({ saldo: { valor: 100_000, data: '2026-11-23', ts: 1 }, recorrentes: [
+    { id: 's', tipo: 'entrada', desc: 'Salário', cat: 'salario', valor: 500_000, dia: 5, inicio: '2026-01' },
+    { id: 'a', tipo: 'saida', desc: 'Aluguel', cat: 'casa', valor: 300_000, dia: 28, inicio: '2026-01' },
+  ] });
+  it('começa com + entra − sai = termina com, encadeado mês a mês', () => {
+    const ms = fluxoMeses(D, '2026-11-23', 4);
+    for (const m of ms) expect(m.inicio + m.ent - m.sai).toBe(m.fim);
+    for (let i = 1; i < ms.length; i++) expect(ms[i].inicio).toBe(ms[i - 1].fim);
+  });
+  it('mês atual ignora o que já passou (salário do dia 5 já está no saldo)', () => {
+    const [nov] = fluxoMeses(D, '2026-11-23', 1);
+    expect([nov.inicio, nov.ent, nov.sai, nov.fim]).toEqual([100_000, 0, 300_000, -200_000]);
+  });
+});
