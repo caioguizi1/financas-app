@@ -3,7 +3,7 @@
  * Regra: compra ANTES do dia de fechamento entra na fatura do ciclo; no dia ou depois, vai pra próxima.
  */
 import { addDays, dateOf, parse } from './dates';
-import { eventosEntre, pagamentoCartao } from './engine';
+import { eventosEntre, pagamentoCartao, pagamentoFatura } from './engine';
 import { uid } from './money';
 import type { Cartao, Data, Evento, ISODate, Lancamento } from './types';
 
@@ -15,6 +15,9 @@ export interface Fatura {
   status: 'fechada' | 'aberta';
   total: number;
   itens: Evento[];
+  /** Data em que sai da conta (vencimento ou pagamento antecipado/agendado). */
+  pagaEm: ISODate;
+  antecipada: boolean;
 }
 
 /** Data de fechamento do ciclo que vence em `venc`. */
@@ -26,8 +29,19 @@ export function fechamentoDe(c: Cartao, venc: ISODate): ISODate {
 export const diaDoCiclo = (c: Cartao, venc: ISODate) => addDays(fechamentoDe(c, venc), -1);
 
 function fatura(D: Data, c: Cartao, venc: ISODate, status: Fatura['status']): Fatura {
-  const itens = eventosEntre(D, venc, venc).filter((e) => e.cartaoId === c.id);
-  return { cartao: c, vencimento: venc, fecha: fechamentoDe(c, venc), status, total: -itens.reduce((a, e) => a + e.valor, 0), itens };
+  // a fatura é identificada pelo vencimento original, mesmo que paga em outra data
+  const itens = eventosEntre(D, addDays(venc, -62), addDays(venc, 45)).filter((e) => e.cartaoId === c.id && e.venc === venc);
+  const pg = pagamentoFatura(D, c, venc);
+  return { cartao: c, vencimento: venc, fecha: fechamentoDe(c, venc), status, total: -itens.reduce((a, e) => a + e.valor, 0), itens, pagaEm: pg.data, antecipada: pg.data !== venc };
+}
+
+/** Marca a fatura como paga (ou agendada) numa data diferente do vencimento. `null` volta pro vencimento. */
+export function pagarFatura(D: Data, c: Cartao, venc: ISODate, data: ISODate | null): Data {
+  const pag = { ...(D.pagFaturas ?? {}) };
+  const k = `${c.id}|${venc}`;
+  if (!data || data === venc) delete pag[k];
+  else pag[k] = { data, ts: Date.now() };
+  return { ...D, pagFaturas: pag };
 }
 
 /**
@@ -61,13 +75,14 @@ export function agruparFaturas(evs: Evento[], cartoes: Cartao[]): Evento[] {
   const grupos = new Map<string, Evento>();
   for (const e of evs) {
     if (!e.cartaoId) { out.push(e); continue; }
-    const k = `${e.cartaoId}|${e.data}`;
+    const k = `${e.cartaoId}|${e.venc ?? e.data}`;
     const g = grupos.get(k);
     if (g) { g.valor += e.valor; g.itens!.push(e); continue; }
     const nome = cartoes.find((c) => c.id === e.cartaoId)?.nome ?? e.cartao ?? 'Cartão';
-    const novo: Evento = { data: e.data, valor: e.valor, desc: `Fatura ${nome}`, cat: 'fatura', ico: '💳', ref: `fat:${e.cartaoId}:${e.data}`, cartao: nome, cartaoId: e.cartaoId, criado: 0, itens: [e] };
+    const novo: Evento = { data: e.data, venc: e.venc, valor: e.valor, desc: `Fatura ${nome}`, cat: 'fatura', ico: '💳', ref: `fat:${e.cartaoId}:${e.venc ?? e.data}`, cartao: nome, cartaoId: e.cartaoId, criado: 0, itens: [e] };
     grupos.set(k, novo);
     out.push(novo);
   }
+  for (const g of grupos.values()) if (g.itens!.every((x) => x.estimativa)) { g.desc += ' (estimada)'; g.estimativa = true; }
   return out;
 }

@@ -67,3 +67,39 @@ describe('agrupar', () => {
     expect(g.map((e) => [e.data, e.desc, e.valor, e.itens?.length ?? 0])).toEqual([['2026-11-30', 'Pix', -2_000, 0], ['2026-12-28', 'Fatura Itaú', -15_000, 2]]);
   });
 });
+
+import { estimativas } from './engine';
+import { pagarFatura } from './faturas';
+
+describe('pagar em outra data', () => {
+  const comCompra = () => base({ lancamentos: [{ id: 'c', tipo: 'saida', valor: 50_000, cat: 'compras', desc: 'X', data: '2026-11-23', cartaoId: 'it', criado: 2 }] });
+  it('adiantar a fatura (28/12 → 20/12) move a saída e mantém a fatura', () => {
+    const D = pagarFatura(comCompra(), itau, '2026-12-28', '2026-12-20');
+    const p = projecao(D, 60, HOJE);
+    expect(p.saldoEm('2026-12-19')).toBe(500_000);
+    expect(p.saldoEm('2026-12-20')).toBe(450_000);
+    const aberta = faturasAtuais(D, itau, HOJE)[1];
+    expect([aberta.total, aberta.pagaEm, aberta.antecipada]).toEqual([50_000, '2026-12-20', true]);
+  });
+  it('"paguei hoje" desconta hoje mesmo com saldo informado hoje', () => {
+    const D = pagarFatura(comCompra(), itau, '2026-12-28', HOJE);
+    expect(projecao(D, 10, HOJE).saldoEm(HOJE)).toBe(450_000);
+  });
+  it('voltar pro vencimento', () => {
+    const D = pagarFatura(pagarFatura(comCompra(), itau, '2026-12-28', '2026-12-20'), itau, '2026-12-28', null);
+    expect(faturasAtuais(D, itau, HOJE)[1].pagaEm).toBe('2026-12-28');
+  });
+});
+
+describe('gasto típico por fatura (estimativa)', () => {
+  it('completa faturas abertas e futuras com a diferença; não mexe na fechada', () => {
+    const it2 = { ...itau, estimativa: 150_000 };
+    const D = base({ cartoes: [it2], lancamentos: [{ id: 'c', tipo: 'saida', valor: 50_000, cat: 'compras', desc: 'X', data: '2026-11-23', cartaoId: 'it', criado: 2 }] });
+    const est = estimativas(D, [], HOJE, '2027-02-28');
+    expect(est.map((e) => [e.data, e.valor])).toEqual([['2026-12-28', -150_000], ['2027-01-28', -150_000], ['2027-02-28', -150_000]]);
+    const p = projecao(D, 100, HOJE);
+    expect(p.saldoEm('2026-11-28')).toBe(500_000); // fechada: sem estimativa
+    expect(p.saldoEm('2026-12-28')).toBe(350_000); // 50 lançado + 100 estimado = típico 150
+    expect(p.saldoEm('2027-01-28')).toBe(200_000);
+  });
+});

@@ -28,7 +28,7 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
         <div className="ico">{r.ico || catE(r.cat)}</div>
         <div className="m">
           <div className="t">{r.desc}</div>
-          <div className="s">Todo dia {r.dia}{c ? ` · ${c.nome}` : ''}{ate}</div>
+          <div className="s">Todo dia {r.dia}{c ? ` · 💳 ${c.nome}` : r.meio === 'boleto' ? ' · 📄 boleto' : r.tipo === 'saida' ? ' · ⚡ Pix/débito' : ''}{ate}</div>
         </div>
         <div className={`v num ${r.tipo === 'entrada' ? 'pos' : ''}`}>{brl(r.tipo === 'entrada' ? r.valor : -r.valor)}</div>
       </div>
@@ -55,7 +55,7 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
       <div className="item">
         <div className="ico">{e.ico || catE(e.cat)}</div>
         <div className="m">
-          <div className="t">{e.desc}{e.fixo && <span className="tag">FIXO</span>}</div>
+          <div className="t">{e.desc}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
           {sub && <div className="s">{sub}</div>}
         </div>
         <div className={`v num ${e.valor > 0 ? 'pos' : ''}`}>{brl(e.valor, true)}</div>

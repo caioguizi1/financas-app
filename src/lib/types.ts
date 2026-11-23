@@ -18,6 +18,8 @@ export interface Recorrente {
   inicio: MonthKey;
   fim?: MonthKey;
   cartaoId?: string | null;
+  /** Forma de pagamento (saídas). Cartão = cartaoId. */
+  meio?: Meio;
   /** Marca recorrentes criados pelo cadastro inicial (ex.: 'renda'). */
   onb?: string;
   /** Versões do mesmo fixo compartilham a série (histórico de valores). Padrão: o próprio id. */
@@ -29,6 +31,8 @@ export interface Cartao {
   nome: string;
   fechamento: number;
   vencimento: number;
+  /** Gasto típico por fatura (centavos). Preenche faturas futuras com uma estimativa. */
+  estimativa?: number;
 }
 
 export interface Lancamento {
@@ -71,6 +75,8 @@ export interface Data {
   aprendido?: Record<string, { cat: string; ico?: string; n: number }>;
   /** Salário bruto informado em Minha renda (para calcular INSS, IR, 13º). */
   folha?: { bruto: number; dependentes: number; outros: number };
+  /** Fatura paga/agendada fora do vencimento: 'cartaoId|vencimento' → data e momento. */
+  pagFaturas?: Record<string, { data: ISODate; ts: number }>;
   /** Avisos que o usuário dispensou (ex.: '13-2026'). */
   dispensados?: string[];
 }
@@ -87,6 +93,10 @@ export interface Evento {
   lanc?: boolean;
   cartao: string | null;
   cartaoId?: string;
+  /** Vencimento original da fatura (compras de cartão), mesmo se paga em outra data. */
+  venc?: ISODate;
+  /** Estimativa de gasto típico (não é um lançamento real). */
+  estimativa?: boolean;
   /** Item agrupado (fatura): as compras que o compõem. */
   itens?: Evento[];
   criado: number;

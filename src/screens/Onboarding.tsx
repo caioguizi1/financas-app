@@ -14,7 +14,7 @@ import { AmountDisplay, AnimatedBRL, Keypad } from '../ui/Money';
 import { importar } from './backup';
 import { spring } from '../ui/motion';
 
-const STEPS = ['welcome', 'nome', 'saldo', 'renda', 'rendaFreq', 'adiantDia', 'adiantValor', 'rendaDia', 'fixos', 'cartoes', 'fim'] as const;
+const STEPS = ['welcome', 'nome', 'saldo', 'renda', 'rendaFreq', 'adiantDia', 'adiantValor', 'rendaDia', 'cartoes', 'fixos', 'fim'] as const;
 type Step = (typeof STEPS)[number];
 
 interface Ob { renda: number; freq: 1 | 2; adDia: number | null; adValor: number | null; rendaDia: number | null }
@@ -147,7 +147,7 @@ export function Onboarding() {
       const tot = fix.reduce((a, r) => a + r.valor, 0);
       body = <>
         <div className="q">Quais são seus gastos fixos?</div>
-        <div className="h">Toque nos que você tem. Cada um vira automático todo mês. Pra apagar ou editar, deslize o item pro lado.</div>
+        <div className="h">Toque nos que você tem e diga como paga (Pix, boleto ou cartão). Cada um vira automático todo mês. Pra apagar ou editar, deslize o item pro lado.</div>
         <div className="chips">
           {PRESETS.map(([n, cat, ico]) => {
             const ex = fix.find((r) => r.desc === n);

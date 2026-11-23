@@ -15,6 +15,7 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
   const novo = !cartao;
   type Draft = Omit<Cartao, 'id' | 'fechamento' | 'vencimento'> & { id?: string; fechamento: number | null; vencimento: number | null };
   const [c, setC] = useState<Draft>(() => cartao ?? { nome: '', fechamento: null, vencimento: null });
+  const [estimativa, setEstimativa] = useState(cartao?.estimativa ?? 0);
   const set = (p: Partial<Draft>) => setC((x) => ({ ...x, ...p }));
   const ok = !!c.fechamento && !!c.vencimento;
   const [id] = useState(() => cartao?.id ?? uid());
@@ -30,7 +31,7 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
 
   const salvar = () => {
     if (!ok) return;
-    const final: Cartao = { ...c, fechamento: c.fechamento!, vencimento: c.vencimento!, id, nome: c.nome.trim() || 'Cartão' };
+    const final: Cartao = { ...c, fechamento: c.fechamento!, vencimento: c.vencimento!, id, nome: c.nome.trim() || 'Cartão', estimativa: estimativa || undefined };
     const ajustes = fats.map((f) => ajusteFatura({ ...f, cartao: final }, valores[f.vencimento] ?? 0)).filter(Boolean) as Lancamento[];
     mutate((d) => (novo
       ? { ...d, cartoes: [...d.cartoes, final], lancamentos: [...d.lancamentos, ...ajustes] }
@@ -54,14 +55,17 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
         <DayGrid value={c.fechamento} onChange={(fechamento) => set({ fechamento })} caption={(d) => `fecha todo dia ${d} (compras a partir dele vão pra próxima)`} />
         <div className="lab">Dia do vencimento</div>
         <DayGrid value={c.vencimento} onChange={(vencimento) => set({ vencimento })} caption={(d) => `vence todo dia ${d}`} />
-        {novo && fats.length > 0 && (
+        {ok && (
           <>
-            <div className="lab">Quanto já tem {fats.length > 1 ? 'em cada fatura' : 'na fatura'}? <span className="dim">(veja no app do banco)</span></div>
-            {fats.length > 1 && <div className="dim hint" style={{ marginTop: -4, marginBottom: 8 }}>Hoje existem duas: a que já fechou e ainda vai vencer, e a aberta.</div>}
+            <div className="lab">{novo && fats.length ? `Quanto já tem ${fats.length > 1 ? 'em cada fatura' : 'na fatura'}? ` : 'Valores'}{novo && fats.length > 0 && <span className="dim">(veja no app do banco)</span>}</div>
+            {novo && fats.length > 1 && <div className="dim hint" style={{ marginTop: -4, marginBottom: 8 }}>Hoje existem duas: a que já fechou e ainda vai vencer, e a aberta.</div>}
             <ValueRows
-              linhas={fats.map((f) => ({ id: f.vencimento, label: `${f.status === 'fechada' ? 'Fechada' : 'Aberta'} · vence ${fmt(f.vencimento)}`, valor: valores[f.vencimento] ?? 0 }))}
-              ativa={Math.min(ativa, fats.length - 1)} onAtiva={setAtiva}
-              onValor={(i, v) => setValores((x) => ({ ...x, [fats[i].vencimento]: v }))}
+              linhas={[
+                ...fats.map((f) => ({ id: f.vencimento, label: `${f.status === 'fechada' ? 'Fechada' : 'Aberta'} · vence ${fmt(f.vencimento)}`, valor: valores[f.vencimento] ?? 0 })),
+                { id: 'est', label: 'Gasto típico por fatura', valor: estimativa, nota: 'Opcional: completa as faturas futuras no gráfico com essa média' },
+              ]}
+              ativa={Math.min(ativa, fats.length)} onAtiva={setAtiva}
+              onValor={(i, v) => (i < fats.length ? setValores((x) => ({ ...x, [fats[i].vencimento]: v })) : setEstimativa(v))}
             />
           </>
         )}

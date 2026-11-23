@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { catE } from '../lib/categories';
 import { dm, today } from '../lib/dates';
-import { ajusteFatura, faturasAtuais } from '../lib/faturas';
+import { ajusteFatura, faturasAtuais, pagarFatura } from '../lib/faturas';
 import { brl } from '../lib/money';
 import type { Lancamento } from '../lib/types';
-import { closeSheet, getData, openSheet, withUndo } from '../store';
+import { closeSheet, openSheet, useData, withUndo } from '../store';
 import { Button, Chip } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { ValueRows } from '../ui/ValueRows';
@@ -14,7 +14,7 @@ const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
 /** Faturas de um cartão: o que o app somou + conferência com o valor do app do banco. */
 export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
-  const D = getData();
+  const D = useData(); // reativo: 'paguei hoje' atualiza na hora
   const [sel, setSel] = useState(cartaoId);
   const c = D.cartoes.find((x) => x.id === sel);
   const hoje = today();
@@ -68,6 +68,21 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
               </div>
             ) : <div className="dim small" style={{ padding: '6px 0' }}>Nada lançado nesta fatura ainda.</div>}
             <div className="fat-tot"><span className="mut">Somado no app</span><b className="num">{brl(f.total)}</b></div>
+            {c.estimativa && f.status === 'aberta' && c.estimativa > f.total && (
+              <div className="fat-tot"><span className="mut">📊 Previsto com gasto típico</span><span className="num">{brl(c.estimativa)}</span></div>
+            )}
+            <div className="fat-pag">
+              <span className="mut small">{f.antecipada ? <>Sai da conta em <b>{fmt(f.pagaEm)}</b> {f.pagaEm < f.vencimento ? '(adiantada)' : '(agendada)'}</> : <>Sai da conta no vencimento, <b>{fmt(f.vencimento)}</b></>}</span>
+              <div className="chips" style={{ marginTop: 8 }}>
+                {f.pagaEm !== hoje && <Chip onClick={() => withUndo(`Fatura ${c.nome} paga hoje`, (d) => pagarFatura(d, c, f.vencimento, hoje))}>✅ Paguei hoje</Chip>}
+                <label className="chip" style={{ position: 'relative' }}>
+                  📅 {f.antecipada ? 'Mudar data' : 'Pagar em outra data'}
+                  <input type="date" className="date-overlay" value={f.pagaEm}
+                    onChange={(e) => e.target.value && withUndo(`Fatura ${c.nome}: pagamento em ${fmt(e.target.value)}`, (d) => pagarFatura(d, c, f.vencimento, e.target.value))} />
+                </label>
+                {f.antecipada && <Chip onClick={() => withUndo('Voltou pro vencimento', (d) => pagarFatura(d, c, f.vencimento, null))}>↩︎ Voltar pro vencimento</Chip>}
+              </div>
+            </div>
           </div>
         ))}
         <div className="lab">Valor no app do banco</div>

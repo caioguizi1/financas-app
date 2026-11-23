@@ -12,6 +12,12 @@ export function pagamentoCartao(c: Cartao, compra: ISODate): ISODate {
   return dateOf(y, m, c.vencimento);
 }
 
+/** Data em que a fatura sai da conta: o vencimento, ou a data em que o usuário pagou/agendou. */
+export function pagamentoFatura(D: Data, c: Cartao, venc: ISODate) {
+  const p = D.pagFaturas?.[`${c.id}|${venc}`];
+  return { data: p?.data ?? venc, ts: p?.ts };
+}
+
 /** Todos os movimentos de caixa com data em [de, ate], ordenados. */
 export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
   const out: Evento[] = [];
@@ -29,9 +35,11 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
       const mk = monthKey(occ);
       if (mk >= r.inicio && (!r.fim || mk <= r.fim)) {
         const c = cartao(r.cartaoId);
-        const cash = c ? pagamentoCartao(c, occ) : occ;
+        const venc = c ? pagamentoCartao(c, occ) : undefined;
+        const pg = c ? pagamentoFatura(D, c, venc!) : undefined;
+        const cash = pg ? pg.data : occ;
         if (cash >= de && cash <= ate) {
-          out.push({ data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: 0 });
+          out.push({ venc, ...(pg?.ts ? { lanc: true, criado: pg.ts } : {}), data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: pg?.ts ?? 0 });
         }
       }
       m++;
@@ -49,18 +57,20 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
     for (let i = 0; i < n; i++) {
       const adiar = c ? 0 : l.adiar ?? 0;
       const compra = dateOf(pd.getFullYear(), pd.getMonth() + i + adiar, pd.getDate());
-      const cash = c ? pagamentoCartao(c, compra) : compra;
+      const venc = c ? pagamentoCartao(c, compra) : undefined;
+      const pg = c ? pagamentoFatura(D, c, venc!) : undefined;
+      const cash = pg ? pg.data : compra;
       if (cash >= de && cash <= ate) {
         const v = base + (i === 0 ? resto : 0);
         out.push({
           data: cash, valor: l.tipo === 'entrada' ? v : -v,
           desc: (l.desc || catN(l.cat)) + (n > 1 ? ` ${i + 1}/${n}` : ''),
-          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: c?.nome ?? null, cartaoId: c?.id, criado: l.criado || 0,
+          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, venc, cartao: c?.nome ?? null, cartaoId: c?.id, criado: Math.max(l.criado || 0, pg?.ts ?? 0),
         });
       }
     }
   }
-  return out.sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : b.valor - a.valor));
+  return out.sort(ordem);
 }
 
 /** O saldo informado já inclui tudo até a data dele; só conta o que vem depois. */
@@ -73,11 +83,37 @@ export function entraNaConta(D: Data, ev: Evento) {
 export interface Ponto { d: ISODate; v: number }
 export interface Projecao { pts: Ponto[]; evs: Evento[]; saldoEm: (d: ISODate) => number | undefined }
 
+const ordem = (a: Evento, b: Evento) => (a.data < b.data ? -1 : a.data > b.data ? 1 : b.valor - a.valor);
+
+/**
+ * Faturas que ainda não fecharam (a aberta e as futuras): se o cartão tem "gasto típico",
+ * completa com a diferença entre o típico e o que já foi lançado — pra projeção não ficar otimista.
+ */
+export function estimativas(D: Data, reais: Evento[], hoje: ISODate, fim: ISODate): Evento[] {
+  const out: Evento[] = [];
+  for (const c of D.cartoes) {
+    if (!c.estimativa) continue;
+    let venc = pagamentoCartao(c, hoje); // fatura aberta
+    for (let k = 0; k < 24 && venc <= fim; k++) {
+      const lancado = -reais.filter((e) => e.cartaoId === c.id && e.venc === venc).reduce((a, e) => a + e.valor, 0);
+      const falta = c.estimativa - lancado;
+      const pg = pagamentoFatura(D, c, venc);
+      if (falta > 0 && pg.data >= hoje) {
+        out.push({ data: pg.data, venc, valor: -falta, desc: `Estimativa · ${c.nome}`, cat: 'fatura', ico: '📊', ref: `est:${c.id}:${venc}`, cartao: c.nome, cartaoId: c.id, estimativa: true, criado: 0 });
+      }
+      const v = parse(venc);
+      venc = dateOf(v.getFullYear(), v.getMonth() + 1, c.vencimento);
+    }
+  }
+  return out;
+}
+
 /** Saldo dia a dia desde o último saldo informado até `dias` à frente de hoje. */
 export function projecao(D: Data, dias: number, hoje: ISODate = today()): Projecao {
   const ini = D.saldo.data < hoje ? D.saldo.data : hoje;
   const fim = addDays(hoje, dias);
-  const evs = eventosEntre(D, ini, fim).filter((e) => entraNaConta(D, e));
+  const reais = eventosEntre(D, ini, fim);
+  const evs = [...reais, ...estimativas(D, reais, hoje, fim)].sort(ordem).filter((e) => entraNaConta(D, e));
   const pts: Ponto[] = [];
   let saldo = D.saldo.valor;
   let i = 0;
@@ -90,10 +126,11 @@ export function projecao(D: Data, dias: number, hoje: ISODate = today()): Projec
 }
 
 export interface ResumoMes { de: ISODate; ate: ISODate; ent: number; sai: number; evs: Evento[] }
-export function resumoMes(D: Data, y: number, m: number): ResumoMes {
+export function resumoMes(D: Data, y: number, m: number, hoje?: ISODate): ResumoMes {
   const de = dateOf(y, m, 1);
   const ate = dateOf(y, m, 31);
-  const evs = eventosEntre(D, de, ate);
+  const reais = eventosEntre(D, de, ate);
+  const evs = hoje ? [...reais, ...estimativas(D, eventosEntre(D, addDays(de, -62), ate), hoje, ate).filter((e) => e.data >= de)].sort(ordem) : reais;
   let ent = 0;
   let sai = 0;
   for (const e of evs) (e.valor > 0 ? (ent += e.valor) : (sai -= e.valor));

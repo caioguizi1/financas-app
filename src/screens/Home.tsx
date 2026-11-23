@@ -32,7 +32,7 @@ export function Home() {
     const min = prox30.reduce((a, b) => (b.v < a.v ? b : a), prox30[0]);
     const months = Array.from({ length: 6 }, (_, k) => {
       const d = new Date(now.getFullYear(), now.getMonth() + k, 1);
-      const r = resumoMes(D, d.getFullYear(), d.getMonth());
+      const r = resumoMes(D, d.getFullYear(), d.getMonth(), t);
       return { ...r, fim: p.saldoEm(r.ate), nome: MESL[d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : '') };
     });
     const prox = agruparFaturas(p.evs.filter((e) => e.data >= t), D.cartoes).slice(0, 8);

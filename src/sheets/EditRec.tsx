@@ -66,13 +66,15 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <div className="chips scroll">
         {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k, ico: undefined }); }}>{e} {n}</Chip>)}
       </div>
-      {r.tipo === 'saida' && cartoes.length > 0 && (
+      {r.tipo === 'saida' && (
         <>
-          <div className="lab">Pago com</div>
+          <div className="lab">Como é pago</div>
           <div className="chips scroll">
-            <Chip on={!r.cartaoId} onClick={() => set({ cartaoId: null })}>🏦 Conta</Chip>
-            {cartoes.map((c) => <Chip key={c.id} on={r.cartaoId === c.id} onClick={() => set({ cartaoId: c.id })}>💳 {c.nome}</Chip>)}
+            <Chip on={!r.cartaoId && (r.meio ?? 'pix') === 'pix'} onClick={() => set({ cartaoId: null, meio: 'pix' })}>⚡ Pix / débito</Chip>
+            {cartoes.map((c) => <Chip key={c.id} on={r.cartaoId === c.id} onClick={() => set({ cartaoId: c.id, meio: 'credito' })}>💳 {c.nome}</Chip>)}
+            <Chip on={!r.cartaoId && r.meio === 'boleto'} onClick={() => set({ cartaoId: null, meio: 'boleto' })}>📄 Boleto</Chip>
           </div>
+          <div className="dim hint">{r.cartaoId ? 'Entra todo mês na fatura do cartão e sai no vencimento dela.' : r.meio === 'boleto' ? 'Sai da conta no dia do boleto.' : 'Sai direto da conta no dia escolhido.'}</div>
         </>
       )}
       {mudouValor && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor} />}

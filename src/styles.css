@@ -417,3 +417,6 @@ html { touch-action: manipulation }
 .fat-it { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--line) }
 .fat-it .m { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .fat-tot { display: flex; justify-content: space-between; padding-top: 6px; font-size: 14px }
+
+.fat-pag { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px }
+.fat-pag b { color: var(--text) }
