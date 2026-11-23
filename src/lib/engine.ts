@@ -57,7 +57,8 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
     for (let i = 0; i < n; i++) {
       const adiar = c ? 0 : l.adiar ?? 0;
       const compra = dateOf(pd.getFullYear(), pd.getMonth() + i + adiar, pd.getDate());
-      const venc = c ? pagamentoCartao(c, compra) : undefined;
+      const fv = l.fatura ? parse(l.fatura) : null;
+      const venc = c ? (fv ? dateOf(fv.getFullYear(), fv.getMonth() + i, c.vencimento) : pagamentoCartao(c, compra)) : undefined;
       const pg = c ? pagamentoFatura(D, c, venc!) : undefined;
       const cash = pg ? pg.data : compra;
       if (cash >= de && cash <= ate) {

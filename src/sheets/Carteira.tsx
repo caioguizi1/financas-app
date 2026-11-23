@@ -4,7 +4,8 @@ import { catE, catN } from '../lib/categories';
 import { dm, mesCurto, monthKey, today } from '../lib/dates';
 import { projecao } from '../lib/engine';
 import { agruparFaturas, faturasAtuais } from '../lib/faturas';
-import { corDoCartao, prepararImagem, salvarImagem, useImagem } from '../lib/imagens';
+import { abrirImagem, corDoCartao, recortar, salvarImagem, useImagem, type Caixa, type FonteRecorte } from '../lib/imagens';
+import { Recorte } from '../ui/Recorte';
 import { parcelasAbertas } from '../lib/insights';
 import type { Cartao } from '../lib/types';
 import { brl } from '../lib/money';
@@ -90,7 +91,9 @@ function Detalhes({ c }: { c: Cartao }) {
   const D = useData();
   const t = today();
   const [imgAberta, setImgAberta] = useState(false);
-  const [previa, setPrevia] = useState<string | null>(null);
+  const [fonte, setFonte] = useState<(FonteRecorte & { canvas: HTMLCanvasElement }) | null>(null);
+  const [caixa, setCaixa] = useState<Caixa | null>(null);
+  const abrir = async (f: File | HTMLCanvasElement, girar = false) => { const x = await abrirImagem(f, girar); setFonte(x); setCaixa(x.caixa); };
   const img = useImagem(c.id);
   const v = useMemo(() => {
     const fats = faturasAtuais(D, c, t);
@@ -116,7 +119,7 @@ function Detalhes({ c }: { c: Cartao }) {
     inp.type = 'file'; inp.accept = 'image/*';
     inp.onchange = async () => {
       const f = inp.files?.[0]; if (!f) return;
-      try { setPrevia(await prepararImagem(f)); } catch { toast('Não consegui abrir essa imagem'); }
+      try { await abrir(f); } catch { toast('Não consegui abrir essa imagem'); }
     };
     inp.click();
   };
@@ -195,14 +198,15 @@ function Detalhes({ c }: { c: Cartao }) {
         {imgAberta && (
           <m.div className="wimg" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
             <div className="alert"><span>🔒</span><div>Use só a <b>arte</b> do cartão (a imagem do site do banco ou uma foto do verso liso). <b>Nunca</b> uma foto com número, nome, validade ou CVV. A imagem fica só neste aparelho.</div></div>
-            {previa ? (
+            {fonte && caixa ? (
               <>
-                <div className="lab">Recortado automaticamente — ficou assim:</div>
-                <div className="wprev"><CardFace c={c} src={previa} /></div>
+                <div className="lab">Recortei sozinho — ajuste se precisar:</div>
+                <Recorte fonte={fonte} caixa={caixa} onChange={setCaixa} />
                 <div className="wacts">
-                  <Button onClick={async () => { await salvarImagem(c.id, previa); setPrevia(null); setImgAberta(false); toast('Imagem do cartão salva'); }}>Usar esta</Button>
-                  <Button kind="ghost" onClick={escolherImg}>Escolher outra</Button>
+                  <Button onClick={async () => { await salvarImagem(c.id, recortar(fonte.canvas, caixa)); setFonte(null); setImgAberta(false); toast('Imagem do cartão salva'); }}>Usar esta</Button>
+                  <Button kind="ghost" onClick={() => abrir(fonte.canvas, true)}>⟲ Girar</Button>
                 </div>
+                <Button kind="link" onClick={escolherImg}>Escolher outra imagem</Button>
               </>
             ) : (
               <div className="wacts">

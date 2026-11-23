@@ -113,33 +113,66 @@ export function acharCartao(px: Uint8ClampedArray, W: number, H: number): Caixa 
     atual = b;
   }
   if (atual === tudo) return tudo;
-  const ins = Math.round(Math.min(atual.w, atual.h) * 0.02); // borda arredondada / antisserrilhado
+  const ins = Math.round(Math.min(atual.w, atual.h) * 0.03); // borda arredondada / antisserrilhado / sombra
   return { x: atual.x + ins, y: atual.y + ins, w: atual.w - 2 * ins, h: atual.h - 2 * ins };
 }
 
-/** Recorta automaticamente o cartão, deita se estiver em pé, ~856×540 em JPEG. */
-export async function prepararImagem(f: File): Promise<string> {
-  const bmp = await createImageBitmap(f);
-  // análise numa cópia pequena
-  const k = Math.min(1, 360 / Math.max(bmp.width, bmp.height));
-  const aw = Math.max(8, Math.round(bmp.width * k)), ah = Math.max(8, Math.round(bmp.height * k));
+export const PROP = 1.586;
+
+/** Fonte do recorte: a imagem já deitada (se o cartão estava em pé) e o enquadramento inicial automático. */
+export interface FonteRecorte { url: string; w: number; h: number; caixa: Caixa }
+
+function detectar(img: CanvasImageSource, W: number, H: number): Caixa {
+  const k = Math.min(1, 360 / Math.max(W, H));
+  const aw = Math.max(8, Math.round(W * k)), ah = Math.max(8, Math.round(H * k));
   const ac = document.createElement('canvas'); ac.width = aw; ac.height = ah;
   const ag = ac.getContext('2d', { willReadFrequently: true })!;
-  ag.drawImage(bmp, 0, 0, aw, ah);
-  const cx = acharCartao(ag.getImageData(0, 0, aw, ah).data, aw, ah);
-  let sx = cx.x / k, sy = cx.y / k, sw = cx.w / k, sh = cx.h / k;
-  const vertical = sh > sw * 1.2;
-  const R = vertical ? 1 / 1.586 : 1.586;
-  // ajusta à proporção de cartão (corta o excesso no centro)
-  if (sw / sh > R) { const n = sh * R; sx += (sw - n) / 2; sw = n; } else { const n = sw / R; sy += (sh - n) / 2; sh = n; }
-  const W = 856, H = 540;
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  ag.drawImage(img, 0, 0, aw, ah);
+  const c = acharCartao(ag.getImageData(0, 0, aw, ah).data, aw, ah);
+  return { x: c.x / k, y: c.y / k, w: c.w / k, h: c.h / k };
+}
+
+/** Na proporção de cartão, dentro da imagem, cobrindo a caixa detectada pelo centro. */
+export function enquadrar(c: Caixa, W: number, H: number): Caixa {
+  let { x, y, w, h } = c;
+  if (w / h > PROP) { const n = h * PROP; x += (w - n) / 2; w = n; } else { const n = w / PROP; y += (h - n) / 2; h = n; }
+  w = Math.min(w, W, H * PROP); h = w / PROP;
+  return { x: Math.max(0, Math.min(W - w, x)), y: Math.max(0, Math.min(H - h, y)), w, h };
+}
+
+async function paraCanvas(src: CanvasImageSource, W: number, H: number, girar: boolean) {
+  const MAX = 2000;
+  const k = Math.min(1, MAX / Math.max(W, H));
+  const w = Math.round(W * k), h = Math.round(H * k);
+  const cv = document.createElement('canvas');
+  cv.width = girar ? h : w; cv.height = girar ? w : h;
   const g = cv.getContext('2d')!;
+  if (girar) { g.translate(cv.width / 2, cv.height / 2); g.rotate(-Math.PI / 2); g.drawImage(src, -w / 2, -h / 2, w, h); }
+  else g.drawImage(src, 0, 0, w, h);
+  return cv;
+}
+
+/** Lê a imagem, deita o cartão se estiver em pé e acha o enquadramento automático. */
+export async function abrirImagem(f: File | HTMLCanvasElement, girar = false): Promise<FonteRecorte & { canvas: HTMLCanvasElement }> {
+  const bmp = f instanceof HTMLCanvasElement ? f : await createImageBitmap(f);
+  let cv = await paraCanvas(bmp, bmp.width, bmp.height, girar);
+  if ('close' in bmp) bmp.close();
+  let caixa = detectar(cv, cv.width, cv.height);
+  if (!girar && caixa.h > caixa.w * 1.2) { // cartão em pé: deita
+    cv = await paraCanvas(cv, cv.width, cv.height, true);
+    caixa = detectar(cv, cv.width, cv.height);
+  }
+  const url = cv.toDataURL('image/jpeg', 0.9);
+  return { url, w: cv.width, h: cv.height, caixa: enquadrar(caixa, cv.width, cv.height), canvas: cv };
+}
+
+/** Gera a imagem final (~856×540, JPEG) a partir do enquadramento escolhido. */
+export function recortar(cv: HTMLCanvasElement, c: Caixa): string {
+  const out = document.createElement('canvas'); out.width = 856; out.height = 540;
+  const g = out.getContext('2d')!;
   g.imageSmoothingQuality = 'high';
-  if (vertical) { g.translate(W / 2, H / 2); g.rotate(-Math.PI / 2); g.drawImage(bmp, sx, sy, sw, sh, -H / 2, -W / 2, H, W); }
-  else g.drawImage(bmp, sx, sy, sw, sh, 0, 0, W, H);
-  bmp.close();
-  return cv.toDataURL('image/jpeg', 0.85);
+  g.drawImage(cv, c.x, c.y, c.w, c.h, 0, 0, 856, 540);
+  return out.toDataURL('image/jpeg', 0.85);
 }
 
 /** Cor da marca pelo nome do cartão (fundo quando não há imagem). */

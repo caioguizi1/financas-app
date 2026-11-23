@@ -560,3 +560,18 @@ html { touch-action: manipulation }
 }
 [data-theme='light'] .hero { box-shadow: 0 18px 44px -10px rgba(40, 25, 110, 0.45) }
 [data-theme='light'] .toast { background: rgba(28, 23, 50, 0.9) }
+
+.imp-venc { display: grid; gap: 4px; padding: 12px 14px; border-radius: 16px; background: rgba(110, 91, 255, 0.1); border: 1px solid rgba(110, 91, 255, 0.22); margin-bottom: 10px; font-size: 13.5px; line-height: 1.4 }
+.imp-venc span { color: var(--mut) }
+.imp-venc.passada { background: var(--card2); border-color: var(--line) }
+.imp-conf { display: grid; gap: 6px; margin-bottom: 10px }
+.imp-c { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.4 }
+.imp-c > span { flex: none; width: 20px; height: 20px; border-radius: 10px; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: rgba(95, 227, 179, 0.16); color: var(--in) }
+.imp-c.warn > span { background: rgba(242, 179, 91, 0.18); color: var(--warn) }
+
+/* ===== ajuste do recorte ===== */
+.rec-vp { position: relative; width: 100%; aspect-ratio: 1.586; border-radius: 18px; overflow: hidden; background: #000; touch-action: none; cursor: grab; box-shadow: 0 0 0 2px var(--acc), 0 12px 30px -12px rgba(0, 0, 0, 0.6) }
+.rec-vp img { position: absolute; left: 0; top: 0; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; pointer-events: none; max-width: none }
+.rec-ctl { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: var(--mut); font-weight: 700 }
+.rec-ctl input { flex: 1; accent-color: var(--acc) }
+.rec-auto { display: block; margin: 6px auto 0; font-size: 13px; color: var(--acc-hi); padding: 6px 10px }

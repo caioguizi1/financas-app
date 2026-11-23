@@ -2,8 +2,8 @@ import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { dm, mesCurto, today } from '../lib/dates';
-import { pagamentoCartao } from '../lib/engine';
-import { analisar, lerArquivo, paraLancamentos, preparar, type Item, type TipoImport } from '../lib/importar';
+import { analisar, encaixar, lerArquivo, paraLancamentos, preparar, type Item, type MetaFatura, type TipoImport } from '../lib/importar';
+import type { Cartao } from '../lib/types';
 import { brl } from '../lib/money';
 import { aprender } from '../lib/smart';
 import { closeSheet, getData, restore, mutate, toast } from '../store';
@@ -11,7 +11,7 @@ import { Button, Chip, Segmented } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { spring } from '../ui/motion';
 
-const MOTIVO: Record<string, string> = { duplicado: 'já lançado', fixo: 'já é fixo', pagamento: 'pagamento da fatura', entrada: 'estorno/crédito' };
+const MOTIVO: Record<string, string> = { duplicado: 'já lançado', parcela: 'parcela de compra já importada', fixo: 'já é fixo', pagamento: 'pagamento da fatura', entrada: 'estorno/crédito' };
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
 /** Importar fatura do cartão ou extrato (opcional). */
@@ -23,7 +23,8 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
   const [erro, setErro] = useState('');
   const [lendo, setLendo] = useState(false);
   const [usarTipico, setUsarTipico] = useState(true);
-  const [trocarAjustes, setTrocarAjustes] = useState(true);
+  const [meta, setMeta] = useState<MetaFatura>({});
+  const [ajustarDias, setAjustarDias] = useState(true);
   const [catAberta, setCatAberta] = useState<string | null>(null);
   const cartao = tipo === 'fatura' ? D.cartoes.find((c) => c.id === cid) : undefined;
 
@@ -39,9 +40,17 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
         const texto = f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf'
           ? await (await import('../lib/pdfTexto')).textoDoPDF(f)
           : await f.text();
-        const linhas = lerArquivo(f.name, texto, today());
-        if (!linhas.length) throw new Error('vazio');
-        setItens(preparar(getData(), linhas, tipo, cartao));
+        const lido = lerArquivo(f.name, texto, today());
+        if (!lido.linhas.length) throw new Error('vazio');
+        // fatura em PDF diz de qual banco é: escolhe o cartão certo sozinho
+        let alvo = cartao;
+        if (tipo === 'fatura' && lido.meta.banco) {
+          const b = normalizarNome(lido.meta.banco);
+          alvo = getData().cartoes.find((c) => normalizarNome(c.nome).includes(b) || b.includes(normalizarNome(c.nome))) ?? cartao;
+          if (alvo) setCid(alvo.id);
+        }
+        setMeta(lido.meta);
+        setItens(preparar(getData(), lido.linhas, tipo, alvo));
       } catch {
         setErro('Não consegui ler esse arquivo. Tente exportar em CSV ou OFX pelo app do banco — ou continue lançando à mão, que funciona igual.');
       } finally { setLendo(false); }
@@ -49,29 +58,38 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
     inp.click();
   };
 
-  const a = useMemo(() => (itens ? analisar(itens, today(), cartao) : null), [itens, cartao]);
+  const a = useMemo(() => (itens ? analisar(itens, today(), cartao, meta) : null), [itens, cartao, meta]);
   const incluidos = itens?.filter((i) => i.incluir) ?? [];
 
-  // ajustes de fatura que este arquivo substitui (pra não contar em dobro)
-  const ajustesAfetados = useMemo(() => {
-    if (!cartao || !itens) return [];
-    const vencs = new Set(incluidos.map((i) => pagamentoCartao(cartao, i.data)));
-    return D.lancamentos.filter((l) => l.cartaoId === cartao.id && l.cat === 'fatura' && l.desc.startsWith('Ajuste fatura') && vencs.has(pagamentoCartao(cartao, l.data)));
-  }, [cartao, itens, incluidos, D.lancamentos]);
+  // dias de fechamento/vencimento que a fatura informa (quando diferem do cadastro)
+  const diaFecha = meta.fechamento ? +meta.fechamento.slice(8) : undefined;
+  const diaVence = meta.vencimento ? +meta.vencimento.slice(8) : undefined;
+  const cartaoFinal: Cartao | undefined = cartao && ajustarDias ? { ...cartao, fechamento: diaFecha ?? cartao.fechamento, vencimento: diaVence ?? cartao.vencimento } : cartao;
+  const difDias = !!cartao && ((diaFecha && diaFecha !== cartao.fechamento) || (diaVence && diaVence !== cartao.vencimento));
+
+  // como a importação se encaixa no que já existe (valores informados à mão nas faturas seguintes)
+  const plano = useMemo(() => {
+    if (!itens) return null;
+    const novos = paraLancamentos(itens, tipo, cartaoFinal, meta.vencimento);
+    const D0 = getData();
+    if (tipo !== 'fatura' || !cartaoFinal || !meta.vencimento) return { novos, lancamentos: [...D0.lancamentos, ...novos], reajustes: [] };
+    const base = { ...D0, cartoes: D0.cartoes.map((c) => (c.id === cartaoFinal.id ? cartaoFinal : c)) };
+    return { novos, ...encaixar(base, novos, cartaoFinal, meta.vencimento) };
+  }, [itens, tipo, cartaoFinal, meta.vencimento]);
 
   const importar = () => {
     if (!itens) return;
+    if (!plano) return;
     const before = getData();
-    const novos = paraLancamentos(itens, tipo, cartao);
-    const remover = new Set(trocarAjustes ? ajustesAfetados.map((l) => l.id) : []);
+    const novos = plano.novos;
     mutate((d) => {
       let mem = d.aprendido ?? {};
       for (const l of novos) if (l.desc) mem = aprender(mem, l.desc, l.tipo, l.cat, l.ico);
       return {
         ...d,
-        lancamentos: [...d.lancamentos.filter((l) => !remover.has(l.id)), ...novos],
+        lancamentos: plano.lancamentos,
         aprendido: mem,
-        cartoes: cartao && usarTipico && a && !cartao.estimativa ? d.cartoes.map((c) => (c.id === cartao.id ? { ...c, estimativa: a.tipicoSugerido } : c)) : d.cartoes,
+        cartoes: cartaoFinal ? d.cartoes.map((c) => (c.id === cartaoFinal.id ? { ...cartaoFinal, estimativa: c.estimativa ?? (usarTipico && a ? a.tipicoSugerido : undefined) } : c)) : d.cartoes,
       };
     });
     closeSheet();
@@ -118,9 +136,36 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
     <div className="sl">
       <SheetHeader title={tipo === 'fatura' ? `Fatura · ${cartao?.nome}` : 'Extrato'} />
       <div className="sl-mid" data-scroll>
+        {tipo === 'fatura' && meta.vencimento && (
+          <div className={`imp-venc ${meta.vencimento < today() ? 'passada' : ''}`}>
+            <b>{meta.vencimento < today() ? `Fatura que venceu em ${fmt(meta.vencimento)}` : `Fatura que vence em ${fmt(meta.vencimento)}`}</b>
+            <span>{meta.fechamento ? `Fechou em ${fmt(meta.fechamento)}. ` : ''}{meta.vencimento < today()
+              ? 'Já foi paga: entra como histórico e não mexe no saldo de hoje. As parcelas que continuam caem sozinhas nas próximas faturas.'
+              : 'Ainda vai sair da conta: entra na previsão no dia do vencimento.'}</span>
+          </div>
+        )}
+        {a && (a.conferencia || a.confProxima || a.confRestante) && (
+          <div className="imp-conf">
+            {a.conferencia && <Conf ok={Math.abs(a.conferencia.lido - a.conferencia.banco) <= 100} t={Math.abs(a.conferencia.lido - a.conferencia.banco) <= 100 ? `Soma das compras confere com o banco (${brl(a.conferencia.banco)})` : `Li ${brl(a.conferencia.lido)}, o banco diz ${brl(a.conferencia.banco)} — algum item pode não ter sido lido`} />}
+            {a.confProxima && <Conf ok={Math.abs(a.confProxima.calc - a.confProxima.banco) <= Math.max(100, a.confProxima.banco * 0.01)} t={`Parcelas na próxima fatura: ${brl(a.confProxima.calc)} (banco: ${brl(a.confProxima.banco)})`} />}
+            {a.confRestante && <Conf ok={Math.abs(a.confRestante.calc - a.confRestante.banco) <= Math.max(100, a.confRestante.banco * 0.02)} t={`Parcelas futuras no total: ${brl(a.confRestante.calc)} (banco: ${brl(a.confRestante.banco)})`} />}
+          </div>
+        )}
+        {difDias && cartao && (
+          <label className="imp-opt"><input type="checkbox" checked={ajustarDias} onChange={(e) => setAjustarDias(e.target.checked)} />
+            <span>Corrigir o {cartao.nome} como na fatura: fecha dia <b>{diaFecha ?? cartao.fechamento}</b>{diaFecha !== cartao.fechamento ? ` (era ${cartao.fechamento})` : ''}, vence dia <b>{diaVence ?? cartao.vencimento}</b>{diaVence !== cartao.vencimento ? ` (era ${cartao.vencimento})` : ''}</span></label>
+        )}
+        {plano && plano.reajustes.length > 0 && (
+          <div className="imp-conf">
+            {plano.reajustes.map((r) => (
+              <Conf key={r.venc} ok t={`Fatura de ${mesCurto(r.venc.slice(0, 7))}: o valor que você informou à mão já incluía ${brl(r.antes - r.depois)} destas parcelas — descontei pra não contar em dobro`} />
+            ))}
+          </div>
+        )}
         {a && (
           <div className="imp-an">
-            <div className="imp-tot"><span className="mut">Total {tipo === 'fatura' ? 'da fatura' : 'de saídas'}</span><b className="num">{brl(a.total)}</b></div>
+            <div className="imp-tot"><span className="mut">{tipo === 'fatura' ? 'Compras na fatura' : 'Total de saídas'}</span><b className="num">{brl(a.total)}</b></div>
+            {a.creditos > 0 && <div className="imp-split"><span>Estornos/créditos <b className="num pos">−{brl(a.creditos)}</b></span></div>}
             <div className="imp-split"><span>À vista <b className="num">{brl(a.avista)}</b></span><span>Parcelas <b className="num">{brl(a.total - a.avista)}</b></span></div>
             <div className="lab">Onde foi o dinheiro</div>
             {a.porCategoria.slice(0, 5).map((c) => (
@@ -132,7 +177,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
             ))}
             {a.parcelados.length > 0 && (
               <>
-                <div className="lab">Já comprometido nos próximos meses</div>
+                <div className="lab">Já comprometido nas próximas faturas</div>
                 <div className="imp-meses">
                   {a.proximosMeses.filter((x) => x.valor > 0).map((x) => <div key={x.mes}><span className="mut">{mesCurto(x.mes)}</span><b className="num">{brl(x.valor)}</b></div>)}
                 </div>
@@ -144,10 +189,6 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               ? <div className="dim hint">Gasto típico do {cartao.nome}: {brl(cartao.estimativa)} (esta fatura: {brl(a.total)}). Ajuste em Editar cartão se mudou.</div>
               : <label className="imp-opt"><input type="checkbox" checked={usarTipico} onChange={(e) => setUsarTipico(e.target.checked)} />
                 <span>Usar <b>{brl(a.tipicoSugerido)}</b> como gasto típico do {cartao.nome} (prevê as próximas faturas)</span></label>
-            )}
-            {ajustesAfetados.length > 0 && (
-              <label className="imp-opt"><input type="checkbox" checked={trocarAjustes} onChange={(e) => setTrocarAjustes(e.target.checked)} />
-                <span>Substituir o valor que você informou à mão nesta fatura ({brl(ajustesAfetados.reduce((s, l) => s + (l.tipo === 'saida' ? l.valor : -l.valor), 0))}) pelos itens importados</span></label>
             )}
           </div>
         )}
@@ -179,4 +220,10 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
       </div>
     </div>
   );
+}
+
+const normalizarNome = (s: string) => s.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+
+function Conf({ ok, t }: { ok: boolean; t: string }) {
+  return <div className={`imp-c ${ok ? 'ok' : 'warn'}`}><span>{ok ? '✓' : '!'}</span><div>{t}</div></div>;
 }

@@ -87,3 +87,88 @@ describe('análise (meses seguintes e padrões)', () => {
     expect(a.tipicoSugerido).toBe(65000);
   });
 });
+
+// ---- faturas em PDF (formato real dos bancos, dados fictícios) ----
+import { linhasDosItens } from './pdfTexto';
+import { encaixar, lerArquivo, lerMeta } from './importar';
+import { faturasAtuais } from './faturas';
+
+const ITAU = `Banco Itaú S.A.
+Total da fatura anterior 1.000,00
+L Lançamentos atuais 1.211,00
+Postagem: 31/10/2026
+Vencimento: 07/11/2026 = Total desta fatura 1.211,00
+Previsão próx. Fechamento: 30/11/2026
+07/11/2026 R$ 16.824,00
+30/09 Pagamento via conta -1.000,00
+21/01 LOJA XPTO 10/12 100,00
+03/10 PADARIA BOA 11,00
+19/10 CLINICA ABC 01/02 100,00
+Próxima fatura 300,00
+Total para próximas faturas 400,00
+19/10 CLINICA ABC 02/02 100,00
+Compras parceladas - próximas faturas
+21/01 LOJA XPTO 11/12 100,00
+19/10 CLINICA ABC 02/02 100,00`;
+
+const PICPAY = `PicPay Mastercard BLACK
+Vencimento: 15/11/2026 | Fechamento: 09/11/2026
+Despesas do mês 238,00
+Total da fatura R$ 200,00
+25/09 IOF DIARIO PARCELADO 0,30 30/09 FIN LOJA YZPARC02/04 111,52
+FIN BAR LONGO NOME
+18/09 . 25,00
+15/10 PAGAMENTO DE FATURA -4.267,44
+15/10 CREDITO PULA COMPRA -38,00
+13/03 SEGURADORA XPARC08/12 101,18
+Total próximas faturas R$ 5.290,06`;
+
+describe('fatura em PDF', () => {
+  it('lê vencimento, fechamento real (não o previsto) e totais', () => {
+    expect(lerMeta(ITAU)).toMatchObject({ banco: 'Itaú', vencimento: '2026-11-07', fechamento: '2026-10-31', proxFechamento: '2026-11-30', totalCompras: 121100, proximaFatura: 30000, totalProximas: 40000 });
+    expect(lerMeta(PICPAY)).toMatchObject({ banco: 'PicPay', vencimento: '2026-11-15', fechamento: '2026-11-09', totalCompras: 23800, totalFatura: 20000 });
+  });
+  it('Itaú: ignora cabeçalho, pagamento entra marcado, lista de próximas faturas não entra', () => {
+    const { linhas } = lerArquivo('f.pdf', ITAU, '2026-11-23');
+    expect(linhas.map((l) => [l.data, l.desc, l.valor, l.parcela ? `${l.parcela.i}/${l.parcela.n}` : ''])).toEqual([
+      ['2026-09-30', 'Pagamento via conta', -100000, ''], ['2026-01-21', 'LOJA XPTO', 10000, '10/12'], ['2026-10-03', 'PADARIA BOA', 1100, ''], ['2026-10-19', 'CLINICA ABC', 10000, '1/2'],
+    ]);
+  });
+  it('PicPay: duas colunas, "PARC02/04" colado, prefixo FIN e descrição quebrada', () => {
+    const { linhas } = lerArquivo('f.pdf', PICPAY, '2026-11-23');
+    expect(linhas.map((l) => [l.desc, l.valor, l.parcela?.n ?? 0])).toEqual([
+      ['IOF DIARIO PARCELADO', 30, 0], ['LOJA YZ', 11152, 4], ['BAR LONGO NOME', 2500, 0], ['PAGAMENTO DE FATURA', -426744, 0], ['CREDITO PULA COMPRA', -3800, 0], ['SEGURADORA X', 10118, 12],
+    ]);
+  });
+  it('separa colunas pela posição (data longe do texto anterior = outra coluna)', () => {
+    const it = (str: string, x: number, w = 30) => ({ str, x, y: 100, w });
+    expect(linhasDosItens([it('18/09', 10), it('BAR', 45), it('74,14', 150), it('31/10', 300), it('PAGAMENTO', 335), it('-50,00', 450), it('Lan', 10, 12), it('ç', 22, 5), it('amentos', 27)].map((x, i) => (i > 5 ? { ...x, y: 80 } : x))))
+      .toEqual(['18/09 BAR 74,14', '31/10 PAGAMENTO -50,00', 'Lançamentos']);
+  });
+  it('âncora no vencimento: a 10/12 da fatura de 07/11 deixa 11/12 em 07/12 e 12/12 em 07/01 — sem mexer no saldo de hoje', () => {
+    const { linhas, meta } = lerArquivo('f.pdf', ITAU, '2026-11-23');
+    const its = preparar(D(), linhas, 'fatura', itau);
+    const ls = paraLancamentos(its, 'fatura', itau, meta.vencimento);
+    const xpto = ls.find((l) => l.desc === 'LOJA XPTO')!;
+    expect([xpto.data, xpto.fatura, xpto.parcelas, xpto.valor]).toEqual(['2026-01-21', '2026-02-07', 12, 120000]);
+    const evs = eventosEntre(D({ lancamentos: ls }), '2026-11-01', '2027-03-01').filter((e) => e.ref === xpto.id);
+    expect(evs.map((e) => [e.data, e.desc])).toEqual([['2026-11-07', 'LOJA XPTO 10/12'], ['2026-12-07', 'LOJA XPTO 11/12'], ['2027-01-07', 'LOJA XPTO 12/12']]);
+    // a fatura aberta (07/12) já tem as parcelas que continuam: 100 (XPTO) + 100 (clínica 2/2)
+    expect(faturasAtuais(D({ lancamentos: ls }), itau, '2026-11-23').map((f) => [f.vencimento, f.total])).toEqual([['2026-12-07', 20000]]);
+  });
+  it('valor digitado à mão na fatura seguinte é descontado das parcelas importadas (não conta em dobro)', () => {
+    const manual = { id: 'aj', tipo: 'saida' as const, valor: 500000, cat: 'fatura', ico: '💳', desc: 'Ajuste fatura Itaú', data: '2026-11-29', cartaoId: 'it', fatura: '2026-12-07', criado: 1 };
+    const { linhas, meta } = lerArquivo('f.pdf', ITAU, '2026-11-23');
+    const base = D({ lancamentos: [manual] });
+    const novos = paraLancamentos(preparar(base, linhas, 'fatura', itau), 'fatura', itau, meta.vencimento);
+    const r = encaixar(base, novos, itau, meta.vencimento!);
+    expect(r.reajustes).toEqual([{ venc: '2026-12-07', antes: 500000, depois: 480000 }]);
+    expect(faturasAtuais({ ...base, lancamentos: r.lancamentos }, itau, '2026-11-23')[0].total).toBe(500000); // o total informado continua valendo
+  });
+  it('importar a fatura do mês seguinte não duplica a compra parcelada', () => {
+    const { linhas, meta } = lerArquivo('f.pdf', ITAU, '2026-11-23');
+    const ls = paraLancamentos(preparar(D(), linhas, 'fatura', itau), 'fatura', itau, meta.vencimento);
+    const prox = preparar(D({ lancamentos: ls }), [{ data: '2026-01-21', desc: 'LOJA XPTO', valor: 10000, parcela: { i: 11, n: 12 } }], 'fatura', itau);
+    expect([prox[0].incluir, prox[0].motivo]).toEqual([false, 'parcela']);
+  });
+});

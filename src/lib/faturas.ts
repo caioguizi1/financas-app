@@ -65,7 +65,7 @@ export function ajusteFatura(f: Fatura, real: number): Lancamento | null {
   return {
     id: uid(), tipo: diff > 0 ? 'saida' : 'entrada', valor: Math.abs(diff), cat: 'fatura', ico: '💳',
     desc: `Ajuste fatura ${f.cartao.nome}`, data: diaDoCiclo(f.cartao, f.vencimento),
-    cartaoId: f.cartao.id, meio: 'credito', criado: Date.now(),
+    cartaoId: f.cartao.id, meio: 'credito', fatura: f.vencimento, criado: Date.now(),
   };
 }
 

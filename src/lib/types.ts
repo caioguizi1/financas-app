@@ -49,6 +49,8 @@ export interface Lancamento {
   adiar?: number;
   /** Valor bruto (ex.: PLR), quando o lançamento guarda o líquido. */
   bruto?: number;
+  /** Cartão: vencimento da fatura da 1ª parcela, quando conhecido (importação). Tem prioridade sobre a regra de fechamento. */
+  fatura?: ISODate;
   /** Ícone sugerido pelo dicionário (ex.: 🐾); se ausente, usa o da categoria. */
   ico?: string;
   criado: number;

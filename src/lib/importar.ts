@@ -5,7 +5,7 @@
  */
 import { catE } from './categories';
 import { addDays, addMonths, dateOf, monthKey, parse, pad } from './dates';
-import { pagamentoCartao } from './engine';
+import { eventosEntre, pagamentoCartao } from './engine';
 import { uid } from './money';
 import { normalizar, sugerir } from './smart';
 import { ativaEm } from './versions';
@@ -113,38 +113,113 @@ export function lerOFX(texto: string): Linha[] {
   return out;
 }
 
-/** Texto de PDF de fatura/extrato: linhas "dd/mm[/aa] descrição valor". Ano inferido pela data de referência. */
-export function lerTextoPDF(texto: string, ref: ISODate): Linha[] {
+/** O que a própria fatura informa (quando é PDF de banco). */
+export interface MetaFatura {
+  banco?: string;
+  vencimento?: ISODate;
+  fechamento?: ISODate;
+  proxFechamento?: ISODate;
+  /** Soma das compras/despesas do período, como o banco imprime. */
+  totalCompras?: number;
+  totalFatura?: number;
+  /** Parcelas já agendadas: na próxima fatura e no total das próximas. */
+  proximaFatura?: number;
+  totalProximas?: number;
+}
+
+const DATA_CHEIA = '(\\d{2}\\/\\d{2}\\/\\d{4})';
+const DINHEIRO = '(-?\\s?[\\d.]+,\\d{2})';
+const achar = (t: string, re: RegExp) => t.match(re)?.[1];
+const dataBR = (s?: string) => (s ? lerData(s) ?? undefined : undefined);
+
+export function lerMeta(texto: string): MetaFatura {
+  const t = texto.replace(/\s+/g, ' ');
+  const v = (re: RegExp) => { const x = achar(t, re); return x ? lerValor(x) ?? undefined : undefined; };
+  const banco = /picpay/i.test(t) ? 'PicPay' : /ita[uú]/i.test(t) ? 'Itaú' : /nubank|nu pagamentos/i.test(t) ? 'Nubank' : /banco inter\b/i.test(t) ? 'Inter' : /bradesco/i.test(t) ? 'Bradesco' : /santander/i.test(t) ? 'Santander' : /caixa econ/i.test(t) ? 'Caixa' : /mercado ?pago/i.test(t) ? 'Mercado Pago' : /\bC6\b/.test(t) ? 'C6' : undefined;
+  return {
+    banco,
+    vencimento: dataBR(achar(t, new RegExp(`vencimento:?\\s*(?:em\\s*)?${DATA_CHEIA}`, 'i'))),
+    // "Fechamento: 09/11/2026" — mas não "Previsão próx. Fechamento" (esse é o próximo)
+    fechamento: dataBR([...t.matchAll(new RegExp(`(.{0,8})fechamento(?: da fatura)?:?\\s*${DATA_CHEIA}`, 'gi'))].find((m) => !/pr[óo]x/i.test(m[1]))?.[2] ?? achar(t, new RegExp(`(?:postagem|emiss[ãa]o|data do corte|corte):?\\s*${DATA_CHEIA}`, 'i'))),
+    proxFechamento: dataBR(achar(t, new RegExp(`pr[óo]x(?:imo|\\.)?\\s*fechamento:?\\s*${DATA_CHEIA}`, 'i'))),
+    totalCompras: v(new RegExp(`(?:lan[çc]amentos atuais|total geral dos lan[çc]amentos|despesas do m[êe]s)\\s*${DINHEIRO}`, 'i')),
+    totalFatura: v(new RegExp(`total (?:desta|da) fatura(?! anterior)\\s*(?:R\\$)?\\s*${DINHEIRO}`, 'i')),
+    proximaFatura: v(new RegExp(`pr[óo]xima fatura\\s*(?:R\\$)?\\s*${DINHEIRO}`, 'i')),
+    totalProximas: v(new RegExp(`total (?:para )?pr[óo]ximas faturas\\s*(?:R\\$)?\\s*${DINHEIRO}`, 'i')),
+  };
+}
+
+const LINHA_PDF = /^(\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?|\d{1,2} (?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*)\s+(?:(.*?)\s+)?(-?\s?R?\$?\s?-?[\d.]+,\d{2}-?)(?=\s|$)/i;
+/** Seções que listam o FUTURO (parcelas das próximas faturas): o app já projeta isso sozinho. */
+const SECAO_FUTURA = /compras parceladas\s*-?\s*pr[óo]ximas faturas|parcelas futuras|lan[çc]amentos futuros/i;
+const SECAO_ATUAL = /lan[çc]amentos:? compras|transa[çc][õo]es (nacionais|internacionais)|lan[çc]amentos nacionais|lan[çc]amentos internacionais/i;
+
+function limparDesc(d: string) {
+  return d.replace(/^FIN\s+/i, '').replace(/\s+\.$/, '').replace(/\s{2,}/g, ' ').trim();
+}
+
+/** Texto de PDF de fatura/extrato: "dd/mm descrição valor" (até 2 por linha, em faturas de duas colunas). */
+export function lerTextoPDF(texto: string, ref: ISODate, faturaDeBanco = false): Linha[] {
   const out: Linha[] = [];
   const r = parse(ref);
+  let futura = false;
+  let anterior = '';
   for (const bruta of texto.split(/\r?\n/)) {
-    const l = bruta.replace(/\s+/g, ' ').trim();
-    const m = l.match(/^(\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?|\d{1,2} (?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*)\s+(.+?)\s+(-?\s?R?\$?\s?-?[\d.]+,\d{2}-?)$/i);
-    if (!m) continue;
-    let data = lerData(m[1].replace(/(\d+ \w{3})\w*/, '$1'), r.getFullYear());
-    const valor = lerValor(m[3]);
-    if (!data || valor == null) continue;
-    const temAno = /^\d{1,2}[/.]\d{1,2}[/.]\d{2,4}$/.test(m[1]);
-    if (!temAno && data > addDays(ref, 31)) data = `${+data.slice(0, 4) - 1}${data.slice(4)}`; // dez de ano anterior
-    const p = detectarParcela(m[2]);
-    out.push({ data, desc: p.desc, valor, parcela: p.parcela });
+    let l = bruta.replace(/\s+/g, ' ').trim();
+    if (SECAO_FUTURA.test(l)) futura = true;
+    else if (SECAO_ATUAL.test(l)) futura = false;
+    let achou = false;
+    while (!futura && l) {
+      const m = l.match(LINHA_PDF);
+      if (!m) break;
+      achou = true;
+      l = l.slice(m[0].length).trim();
+      let desc = limparDesc(m[2] ?? '');
+      // descrição que quebrou pra linha de cima ("FIN MARINKOVIC COQUETELARI" / "18/09 . 313,01")
+      if (!desc || desc === '.') desc = limparDesc(anterior);
+      const valor = lerValor(m[3]);
+      let data = lerData(m[1].replace(/(\d+ \w{3})\w*/, '$1'), r.getFullYear());
+      if (!data || valor == null || !desc) continue;
+      const temAno = /^\d{1,2}[/.]\d{1,2}[/.]\d{2,4}$/.test(m[1]);
+      if (temAno && faturaDeBanco) continue; // em fatura, lançamento é "dd/mm"; data com ano é cabeçalho/boleto
+      if (!temAno && data > addDays(ref, 5)) data = `${+data.slice(0, 4) - 1}${data.slice(4)}`; // compra de dez numa fatura de jan
+      const p = detectarParcela(desc);
+      out.push({ data, desc: p.desc || desc, valor, parcela: p.parcela });
+      if (!/^\d{1,2}[/.]\d{1,2}\s/.test(l)) break; // o resto da linha não é outro lançamento
+    }
+    if (!achou) anterior = l;
   }
   return out;
 }
 
-export function lerArquivo(nome: string, texto: string, ref: ISODate): Linha[] {
+/**
+ * A mesma compra aparecendo como 1/2 e 2/2 no mesmo arquivo: a de número maior é da lista
+ * "próximas faturas" (às vezes em outra coluna/página). Fica a menor.
+ */
+export function semParcelaFutura(linhas: Linha[]): Linha[] {
+  const chave = (l: Linha) => `${l.data}|${normalizar(l.desc)}|${l.parcela!.n}|${Math.abs(l.valor)}`;
+  const menor = new Map<string, number>();
+  for (const l of linhas) if (l.parcela) menor.set(chave(l), Math.min(menor.get(chave(l)) ?? 99, l.parcela.i));
+  return linhas.filter((l) => !l.parcela || l.parcela.i === menor.get(chave(l)));
+}
+
+export function lerArquivo(nome: string, texto: string, hoje: ISODate): { linhas: Linha[]; meta: MetaFatura } {
   const n = nome.toLowerCase();
-  if (n.endsWith('.ofx') || /<OFX>/i.test(texto)) return lerOFX(texto);
-  if (n.endsWith('.csv')) return lerCSV(texto);
+  if (n.endsWith('.ofx') || /<OFX>/i.test(texto)) return { linhas: lerOFX(texto), meta: {} };
+  if (n.endsWith('.csv')) return { linhas: lerCSV(texto), meta: {} };
   const csv = lerCSV(texto);
-  return csv.length ? csv : lerTextoPDF(texto, ref);
+  if (csv.length) return { linhas: csv, meta: {} };
+  const meta = lerMeta(texto);
+  // o ano das compras "dd/mm" sai do fechamento da própria fatura (não de hoje)
+  const linhas = lerTextoPDF(texto, meta.fechamento ?? meta.vencimento ?? hoje, !!meta.vencimento);
+  return { linhas: semParcelaFutura(linhas), meta };
 }
 
 // ---------------- revisão ----------------
-export type Motivo = 'duplicado' | 'fixo' | 'pagamento' | 'entrada';
+export type Motivo = 'duplicado' | 'parcela' | 'fixo' | 'pagamento' | 'entrada';
 export interface Item extends Linha { id: string; cat: string; ico: string; incluir: boolean; motivo?: Motivo }
 
-const PAGAMENTO = /pagamento (de )?fatura|pagamento recebido|pgto fatura|pag fatura|pagto fatura|pagamento efetuado|credito de pagamento/;
+const PAGAMENTO = /pagamento (de )?fatura|pagamento recebido|pagamento via|pagamento em conta|pgto fatura|pag fatura|pagto fatura|pagamento efetuado|credito de pagamento|pagamento debito automatico/;
 
 export function preparar(D: Data, linhas: Linha[], tipo: TipoImport, cartao?: Cartao): Item[] {
   // fatura: o sinal predominante é o de compra (alguns bancos exportam compras negativas)
@@ -160,6 +235,11 @@ export function preparar(D: Data, linhas: Linha[], tipo: TipoImport, cartao?: Ca
     const n = normalizar(l.desc);
     if (PAGAMENTO.test(n)) return { ...it, cat: 'fatura', ico: '💳', incluir: false, motivo: 'pagamento' };
     if (tipo === 'fatura' && !ehSaida) return { ...it, motivo: 'entrada' }; // estorno: entra como crédito na fatura
+    // parcela de uma compra já importada antes (fatura do mês passado traz a mesma compra como 2/10, 3/10…)
+    if (l.parcela && cartao) {
+      const mesma = D.lancamentos.some((x) => x.cartaoId === cartao.id && x.parcelas === l.parcela!.n && Math.abs(Math.round(x.valor / x.parcelas!) - Math.abs(l.valor)) <= 2 * x.parcelas! && (x.data === l.data || normalizar(x.desc) === normalizar(l.desc)));
+      if (mesma) return { ...it, incluir: false, motivo: 'parcela' };
+    }
     // duplicado: mesmo valor, ±3 dias, mesmo meio
     const dup = D.lancamentos.some((x) => {
       if ((tipo === 'fatura') !== !!x.cartaoId || (cartao && x.cartaoId && x.cartaoId !== cartao.id)) return false;
@@ -175,23 +255,64 @@ export function preparar(D: Data, linhas: Linha[], tipo: TipoImport, cartao?: Ca
   });
 }
 
-/** Converte os itens aprovados em lançamentos. Parcela 3/10 vira a compra inteira, posicionada pra 3ª cair nesta fatura. */
-export function paraLancamentos(itens: Item[], tipo: TipoImport, cartao?: Cartao): Lancamento[] {
+/**
+ * Converte os itens aprovados em lançamentos.
+ * Com o vencimento da fatura (`venc`, lido do PDF): tudo fica preso a ESSA fatura, e a parcela i/n
+ * vira a compra inteira de n vezes cuja 1ª parcela caiu i−1 meses antes — as restantes caem nas seguintes.
+ * Sem vencimento (CSV/OFX): usa a data e a regra de fechamento do cartão.
+ */
+export function paraLancamentos(itens: Item[], tipo: TipoImport, cartao?: Cartao, venc?: ISODate): Lancamento[] {
   const agora = Date.now();
   return itens.filter((i) => i.incluir).map((i) => {
     const saida = i.valor > 0;
     const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, criado: agora };
-    if (tipo === 'fatura' && cartao) {
-      base.cartaoId = cartao.id; base.meio = 'credito';
-      if (i.parcela) {
-        const d = parse(i.data);
-        base.data = dateOf(d.getFullYear(), d.getMonth() - (i.parcela.i - 1), d.getDate());
-        base.parcelas = i.parcela.n;
-        base.valor = Math.abs(i.valor) * i.parcela.n;
-      }
-    } else base.meio = 'pix';
+    if (tipo !== 'fatura' || !cartao) return { ...base, meio: 'pix' };
+    base.cartaoId = cartao.id; base.meio = 'credito';
+    if (i.parcela) {
+      base.parcelas = i.parcela.n;
+      base.valor = Math.abs(i.valor) * i.parcela.n;
+    }
+    if (venc) {
+      const v = parse(venc);
+      base.fatura = dateOf(v.getFullYear(), v.getMonth() - ((i.parcela?.i ?? 1) - 1), cartao.vencimento);
+    } else if (i.parcela) {
+      const d = parse(i.data);
+      base.data = dateOf(d.getFullYear(), d.getMonth() - (i.parcela.i - 1), d.getDate());
+    }
     return base;
   });
+}
+
+export interface Reajuste { venc: ISODate; antes: number; depois: number }
+
+/**
+ * Encaixa a importação no que já existia:
+ * - a fatura importada substitui o valor informado à mão nela (ajuste);
+ * - nas faturas SEGUINTES, o valor informado à mão já incluía as parcelas que agora vêm da importação:
+ *   o ajuste é reduzido por elas, pra não contar em dobro (o total que você informou continua valendo).
+ */
+export function encaixar(D: Data, novos: Lancamento[], cartao: Cartao, venc: ISODate): { lancamentos: Lancamento[]; reajustes: Reajuste[] } {
+  const ehAjuste = (l: Lancamento) => l.cartaoId === cartao.id && l.cat === 'fatura' && l.desc.startsWith('Ajuste fatura');
+  const vencDe = (l: Lancamento) => l.fatura ?? pagamentoCartao(cartao, l.data);
+  // quanto a importação põe em cada fatura futura
+  const porVenc = new Map<ISODate, number>();
+  for (const e of eventosEntre({ ...D, lancamentos: novos, recorrentes: [] }, addDays(venc, 1), addDays(venc, 31 * 50)))
+    if (e.venc && e.venc > venc) porVenc.set(e.venc, (porVenc.get(e.venc) ?? 0) - e.valor);
+  const reajustes: Reajuste[] = [];
+  const lancamentos: Lancamento[] = [];
+  for (const l of D.lancamentos) {
+    if (!ehAjuste(l)) { lancamentos.push(l); continue; }
+    const v = vencDe(l);
+    if (v === venc) continue; // fatura importada: o PDF manda
+    const add = porVenc.get(v) ?? 0;
+    if (v < venc || !add) { lancamentos.push(l); continue; }
+    const antes = l.tipo === 'saida' ? l.valor : -l.valor;
+    const depois = antes - add;
+    porVenc.set(v, 0); // um ajuste por fatura absorve
+    reajustes.push({ venc: v, antes, depois });
+    if (depois) lancamentos.push({ ...l, tipo: depois > 0 ? 'saida' : 'entrada', valor: Math.abs(depois), fatura: v });
+  }
+  return { lancamentos: [...lancamentos, ...novos], reajustes };
 }
 
 // ---------------- análise ----------------
@@ -204,23 +325,31 @@ export interface Analise {
   proximosMeses: { mes: string; valor: number }[];
   assinaturas: Item[];
   avista: number;
-  /** Sugestão de gasto típico pra este cartão (à vista + parcelas desta fatura). */
+  /** Estornos/créditos (abatem a fatura). */
+  creditos: number;
+  /** Soma das parcelas que ainda vão cair. */
+  restante: number;
+  /** Sugestão de gasto típico (total da fatura, arredondado). */
   tipicoSugerido: number;
+  /** Conferências com o que o próprio banco imprimiu. */
+  conferencia?: { banco: number; lido: number };
+  confProxima?: { banco: number; calc: number };
+  confRestante?: { banco: number; calc: number };
 }
 
-export function analisar(itens: Item[], ref: ISODate, cartao?: Cartao): Analise {
-  const ok = itens.filter((i) => i.incluir || i.motivo === 'duplicado' || i.motivo === 'fixo').filter((i) => i.valor > 0 && i.motivo !== 'pagamento');
+export function analisar(itens: Item[], ref: ISODate, cartao?: Cartao, meta: MetaFatura = {}): Analise {
+  const ok = itens.filter((i) => i.motivo !== 'pagamento' && i.valor > 0);
   const total = ok.reduce((a, i) => a + i.valor, 0);
   const cats = new Map<string, number>();
   ok.forEach((i) => cats.set(i.cat, (cats.get(i.cat) ?? 0) + i.valor));
   const porCategoria = [...cats.entries()].map(([cat, valor]) => ({ cat, valor, pct: total ? valor / total : 0 })).sort((a, b) => b.valor - a.valor);
   const parcelados = ok.filter((i) => i.parcela && i.parcela.i < i.parcela.n).map((i) => {
     const faltam = i.parcela!.n - i.parcela!.i;
-    const d = parse(i.data);
+    const d = parse(meta.vencimento ?? i.data);
     const ultimaCompra = dateOf(d.getFullYear(), d.getMonth() + faltam, d.getDate());
-    return { item: i, faltam, valorMes: i.valor, ultima: cartao ? pagamentoCartao(cartao, ultimaCompra) : ultimaCompra };
+    return { item: i, faltam, valorMes: i.valor, ultima: meta.vencimento || !cartao ? ultimaCompra : pagamentoCartao(cartao, ultimaCompra) };
   });
-  const mk0 = monthKey(ref);
+  const mk0 = monthKey(meta.vencimento ?? ref);
   const proximosMeses = Array.from({ length: 6 }, (_, k) => {
     const mes = addMonths(mk0, k + 1);
     const valor = parcelados.filter((p) => p.faltam > k).reduce((a, p) => a + p.valorMes, 0);
@@ -228,5 +357,13 @@ export function analisar(itens: Item[], ref: ISODate, cartao?: Cartao): Analise 
   });
   const assinaturas = ok.filter((i) => i.cat === 'assinaturas');
   const avista = ok.filter((i) => !i.parcela).reduce((a, i) => a + i.valor, 0);
-  return { total, porCategoria, maiores: [...ok].sort((a, b) => b.valor - a.valor).slice(0, 5), parcelados, proximosMeses, assinaturas, avista, tipicoSugerido: Math.round(total / 1000) * 1000 };
+  const creditos = -itens.filter((i) => i.valor < 0 && i.motivo !== 'pagamento').reduce((a, i) => a + i.valor, 0);
+  const restante = parcelados.reduce((a, p) => a + p.faltam * p.valorMes, 0);
+  return {
+    total, porCategoria, maiores: [...ok].sort((a, b) => b.valor - a.valor).slice(0, 5), parcelados, proximosMeses, assinaturas, avista, creditos, restante,
+    tipicoSugerido: Math.round(total / 1000) * 1000,
+    conferencia: meta.totalCompras != null ? { banco: meta.totalCompras, lido: total } : undefined,
+    confProxima: meta.proximaFatura != null ? { banco: meta.proximaFatura, calc: proximosMeses[0]?.valor ?? 0 } : undefined,
+    confRestante: meta.totalProximas != null ? { banco: meta.totalProximas, calc: restante } : undefined,
+  };
 }
