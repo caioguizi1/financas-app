@@ -80,6 +80,8 @@ export interface Data {
   /** Salário bruto informado em Minha renda (para calcular INSS, IR, 13º). */
   folha?: { bruto: number; dependentes: number; outros: number };
   /** Fatura paga/agendada fora do vencimento: 'cartaoId|vencimento' → data e momento. */
+  /** Correções únicas já aplicadas aos dados. */
+  migracoes?: string[];
   pagFaturas?: Record<string, { data: ISODate; ts: number }>;
   /** Avisos que o usuário dispensou (ex.: '13-2026'). */
   dispensados?: string[];

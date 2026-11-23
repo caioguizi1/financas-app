@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.13.2** — regras fixas de categoria: 99Pay (Pix pelo cartão) → Outros, sem confundir com corrida de 99; Love Suites/motel → Lazer; hospital veterinário → Pets; correção única nos lançamentos já salvos e no que foi aprendido.
 - **v2.13.1** — carteira com arrasto próprio: o cartão sempre assenta no centro (distância + impulso do gesto; pontos tocáveis); categorias filtráveis: na carteira, tocar numa categoria abre as compras dela; no Extrato, chips por categoria com total do mês e % do gasto.
 - **v2.13** — auditoria do motor (saldo, gráfico, faturas, parcelas, estimativas e resumo dos meses conferidos por invariantes); ao conferir o saldo, o app pergunta se o que estava previsto pra hoje (salário, aluguel…) já caiu; recalcula sozinho quando o dia vira com o app aberto; procura versão nova ao voltar pro app e avisa "Atualizado para vX".
 - **v2.12.1** — 13º sem bruto cadastrado: bruto estimado a partir do líquido (inverso do holerite 2026), 1ª parcela = metade do bruto, 2ª com INSS e IR do 13º inteiro; primeira caixa das janelas não fica mais cortada no topo.

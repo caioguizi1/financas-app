@@ -139,6 +139,22 @@ for (const t of TERMOS) if (!t.frase) {
   if (!PALAVRA.has(k)) PALAVRA.set(k, t);
 }
 
+/**
+ * Regras fixas: casos em que uma palavra solta engana o dicionário.
+ * - 99Pay é pagamento (Pix pelo cartão), não corrida de 99.
+ * - Love Suites / motel é lazer, não hospedagem de viagem.
+ * - Hospital veterinário é Pets, não Saúde (a palavra "hospital" enganava).
+ */
+export const REGRAS_FIXAS: { re: RegExp; tipo: Tipo; cat: string; ico: string }[] = [
+  { re: /99 ?pay/, tipo: 'saida', cat: 'outros', ico: '💸' },
+  { re: /\bmotel|\blove ?suite|\bdrive in\b/, tipo: 'saida', cat: 'lazer', ico: '🏩' },
+  { re: /\bhospital vet|\bclinica vet|\bhosp vet/, tipo: 'saida', cat: 'pets', ico: '🐾' },
+];
+export const regraFixa = (desc: string, tipo: Tipo) => {
+  const n = normalizar(desc);
+  return REGRAS_FIXAS.find((r) => r.tipo === tipo && r.re.test(n));
+};
+
 export function sugerir(desc: string, tipo: Tipo, mem: Memoria = {}): Sugestao | null {
   const norm = normalizar(desc);
   if (norm.length < 2) return null;
@@ -147,6 +163,8 @@ export function sugerir(desc: string, tipo: Tipo, mem: Memoria = {}): Sugestao |
   // 1) aprendido com você: frase inteira, depois a palavra mais usada
   const frase = mem[`${tipo}|${norm}`];
   if (frase) return { cat: frase.cat, ico: frase.ico ?? '', fonte: 'aprendido', termo: norm };
+  const regra = regraFixa(desc, tipo); // vale acima de palavras soltas aprendidas ("99" → corrida)
+  if (regra) return { cat: regra.cat, ico: regra.ico, fonte: 'dicionario', termo: norm };
   let melhor: { a: Aprendido; t: string } | null = null;
   for (const t of toks) {
     const a = mem[`${tipo}|${t}`];

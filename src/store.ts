@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ReactNode } from 'react';
 import { today } from './lib/dates';
+import { regraFixa } from './lib/smart';
 import { diaDoCiclo } from './lib/faturas';
 import type { Data } from './lib/types';
 
@@ -21,7 +22,19 @@ function migrar(d: Data): Data {
     const c = d.cartoes.find((x) => l.desc === `Fatura ${x.nome} (já gasto)`);
     return c ? { ...l, cartaoId: c.id, meio: 'credito' as const, data: diaDoCiclo(c, l.data), ico: '💳' } : l;
   });
-  return { ...d, lancamentos };
+  return corrigirCategorias({ ...d, lancamentos });
+}
+
+/** Correção única de categorias (v2.13.2): 99Pay → Outros; Love Suites/motel → Lazer; hospital veterinário → Pets — nos lançamentos e no que foi aprendido. */
+function corrigirCategorias(d: Data): Data {
+  const ID = 'cat-99pay-motel-vet';
+  if (d.migracoes?.includes(ID)) return d;
+  const lancamentos = d.lancamentos.map((l) => {
+    const r = regraFixa(l.desc, l.tipo);
+    return r && l.cat !== r.cat ? { ...l, cat: r.cat, ico: r.ico } : l;
+  });
+  const aprendido = Object.fromEntries(Object.entries(d.aprendido ?? {}).filter(([k]) => !regraFixa(k.split('|')[1] ?? '', 'saida') || k.startsWith('entrada|')));
+  return { ...d, lancamentos, aprendido, migracoes: [...(d.migracoes ?? []), ID] };
 }
 
 function load(): Data {
@@ -38,9 +51,9 @@ export const useDataStore = create<DataStore>((set) => ({
   set: (fn) => set((s) => ({ d: fn(s.d) })),
   replace: (d) => set({ d }),
 }));
-useDataStore.subscribe((s) => {
-  try { localStorage.setItem(KEY, JSON.stringify(s.d)); } catch { /* armazenamento cheio/indisponível */ }
-});
+const salvar = (d: Data) => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch { /* armazenamento cheio/indisponível */ } };
+useDataStore.subscribe((s) => salvar(s.d));
+salvar(useDataStore.getState().d); // grava já as correções feitas ao abrir (migrações)
 
 export const useData = () => useDataStore((s) => s.d);
 export const getData = () => useDataStore.getState().d;

@@ -66,3 +66,28 @@ describe('aprendizado', () => {
     expect(mem['saida|feira'].n).toBe(2);
   });
 });
+
+describe('regras fixas: 99Pay e motel', () => {
+  it('99Pay (Pix pelo cartão) é Outros; 99 corrida segue Transporte; 99Food segue Comida', () => {
+    for (const d of ['99 *99PayCAIOG', '99 *99PayCAIOGUIZIBARBS', '99PAY *PIX', '99 *99PAY*CAIO GUIZI B', '99 *99PAYC']) expect(sugerir(d, 'saida')?.cat, d).toBe('outros');
+    for (const d of ['99', 'PG *99 L2L 99 RIDESAO P', '99pop']) expect(sugerir(d, 'saida')?.cat, d).toBe('transporte');
+    expect(sugerir('99food', 'saida')?.cat).toBe('comida');
+  });
+  it('vale mesmo com "99" aprendido como corrida', () => {
+    const mem = aprender({}, '99', 'saida', 'transporte');
+    expect(sugerir('99 *99PayCAIOG', 'saida', mem)?.cat).toBe('outros');
+  });
+  it('Love Suites / motel é Lazer (inclusive com a cidade colada)', () => {
+    for (const d of ['LOVE SUITES LT', 'LOVE SUITESSAO PAULOBR', 'Motel Astúrias']) expect(sugerir(d, 'saida')?.cat, d).toBe('lazer');
+  });
+  it('se você mudar a categoria de uma frase, a sua escolha vale', () => {
+    const mem = aprender({}, '99PAY *PIX', 'saida', 'contas');
+    expect(sugerir('99PAY *PIX', 'saida', mem)?.cat).toBe('contas');
+  });
+});
+describe('hospital veterinário', () => {
+  it('é Pets, não Saúde', () => {
+    for (const d of ['HOSPITAL VET T', 'HOSPITAL VET TPARC01/05', 'Clínica Veterinária']) expect(sugerir(d, 'saida')?.cat, d).toBe('pets');
+    expect(sugerir('Hospital Albert Einstein', 'saida')?.cat).toBe('saude');
+  });
+});
