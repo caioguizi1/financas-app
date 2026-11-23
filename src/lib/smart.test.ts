@@ -29,6 +29,27 @@ describe('dicionário', () => {
   });
 });
 
+describe('dicionário ampliado', () => {
+  const casos: [string, string, string?][] = [
+    ['99', 'transporte', '🚗'], ['99 pop', 'transporte'], ['99Food', 'comida', '🍔'], ['99 food', 'comida'], ['Uber Eats', 'comida'],
+    ['Uber', 'transporte'], ['Bilhete Único', 'transporte', '🚇'], ['recarga do bilhete', 'transporte', '🚇'], ['ônibus', 'transporte', '🚌'],
+    ['metrô', 'transporte', '🚇'], ['CPTM', 'transporte'], ['Zé Delivery', 'comida'], ['Assaí', 'mercado'], ['Drogaria São Paulo', 'saude'],
+    ['Temu', 'compras', '📦'], ['AliExpress', 'compras', '📦'], ['C&A', 'compras', '👕'], ['Wellhub', 'saude', '🏋️'], ['Sabesp', 'contas', '🚿'],
+    ['DARF', 'contas', '🏛️'], ['Air fryer', 'compras'], ['Petz', 'pets'], ['iFood mercado', 'mercado'], ['Kinoplex', 'lazer'],
+    ['Alura', 'educacao'], ['Boticário', 'beleza'], ['Airbnb', 'viagem'], ['Localiza', 'transporte'],
+  ];
+  it.each(casos)('%s → %s', (txt, cat, ico) => {
+    const s = sugerir(txt, 'saida');
+    expect(s?.cat).toBe(cat);
+    if (ico) expect(s?.ico).toBe(ico);
+  });
+  it('entradas: 13º, PLR, dividendos', () => {
+    expect(sugerir('13º salário', 'entrada')?.cat).toBe('salario');
+    expect(sugerir('PLR', 'entrada')?.cat).toBe('salario');
+    expect(sugerir('dividendos', 'entrada')?.ico).toBe('📈');
+  });
+});
+
 describe('aprendizado', () => {
   it('o que o usuário ensinou vence o dicionário', () => {
     let mem = {};

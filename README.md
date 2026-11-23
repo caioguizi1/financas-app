@@ -18,7 +18,7 @@ src/
   lib/        motor financeiro puro (tipos, datas, dinheiro, engine + testes)
               smart.ts = dicionário inteligente + aprendizado local (com testes)
               versions.ts = histórico/vigência dos fixos · extras.ts = 13º, PLR, férias…
-              folha.ts = INSS, IRRF (Lei 15.270), 13º e PLR — tabelas 2026, com testes dos exemplos da Receita
+              insights.ts = insights locais · folha.ts = INSS, IRRF (Lei 15.270), 13º e PLR — tabelas 2026, com testes dos exemplos da Receita
   store.ts    dados persistidos + estado de interface (abas, janelas, toasts)
   ui/         componentes base (Sheet, teclado numérico, controles, gráfico)
   sheets/     janelas: lançamento rápido, fixos, cartões, ajuste de saldo
@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.6** — troca de abas instantânea (telas mantidas prontas, sem esperar animação de saída, provedores de animação fora do App, pílulas por CSS); compra à vista/parcelada (cartão com ciclo de fatura explicado, ou Pix/boleto mês a mês; total ou valor da parcela; até 48x); parcelas em aberto; insights locais (gasto por dia até a próxima entrada, dia apertado, categoria acima da média, virar fixo, fatura prevista, parcelas, assinaturas); dicionário ampliado (99, 99Food, Uber Eats, transporte público, centenas de marcas).
 - **v2.5** — salário bruto → líquido com INSS e IRRF 2026 (redução da Lei 15.270, dependentes, desconto simplificado, outros descontos); 13º calculado (1ª sem descontos, 2ª com INSS/IR do 13º inteiro, avos, prazo antecipado em fim de semana); PLR pelo bruto com a tabela exclusiva anual (acumula no ano).
 - **v2.4** — alterações com vigência ("vale a partir de"), histórico de valores por fixo; tela Minha renda (1x/2x, dias, vigência); recebimentos extras com modelos de 13º (2 parcelas, datas da CLT), PLR, férias (1/3), bônus e restituição do IR; aviso do 13º em nov/dez.
 - **v2.3** — identidade *Ametista noturna*: fundo quase preto com aurora índigo/bordeaux e granulado, violeta-índigo como marca, bordeaux nas saídas, menta nas entradas; vidro (Liquid Glass) na barra, janelas e avisos; fonte Geist; novo ícone escuro. Desempenho: motor de animação carregado sob demanda (JS inicial −14%), fonte só com subconjunto latino, sem blur animado.

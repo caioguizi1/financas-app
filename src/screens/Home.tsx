@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
-import { dateOf, diaLabel, dm, MESL, saudacao, today } from '../lib/dates';
+import { dateOf, diaLabel, MESL, saudacao, today } from '../lib/dates';
 import { projecao, resumoMes } from '../lib/engine';
 import { brl } from '../lib/money';
 import { openSheet, useData } from '../store';
@@ -9,6 +9,7 @@ import { ExtraSheet } from '../sheets/Extras';
 import { rendaAtual } from '../sheets/Renda';
 import { ano13 } from '../lib/extras';
 import { mutate } from '../store';
+import { InsightsStrip } from '../ui/Insights';
 import { BalanceChart } from '../ui/Chart';
 import { Button, itemVariants, listVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
@@ -69,10 +70,8 @@ export function Home() {
         <m.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
       </m.div>
 
-      {vm.min.v < 0 ? (
+      {vm.min.v < 0 && (
         <div className="alert"><span>⚠️</span><div>Seu saldo fica <b>negativo em {diaLabel(vm.min.d).toLowerCase()}</b> ({brl(vm.min.v)}). Vale segurar gastos até lá.</div></div>
-      ) : (
-        <div className="alert ok"><span>✅</span><div>Sem saldo negativo nos próximos 30 dias. Menor saldo: <b>{brl(vm.min.v)}</b> em {dm(vm.min.d)}.</div></div>
       )}
 
       <AnimatePresence initial={false}>
@@ -90,6 +89,8 @@ export function Home() {
           </m.div>
         )}
       </AnimatePresence>
+
+      <InsightsStrip />
 
       <h2>Próximos meses</h2>
       <m.div className="months" variants={listVariants} initial="hidden" animate="shown">

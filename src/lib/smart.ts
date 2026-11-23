@@ -18,65 +18,90 @@ type Regra = [tipo: Tipo, cat: string, ico: string, termos: string];
 
 // termos separados por vírgula; podem ter várias palavras ("banho e tosa")
 const REGRAS: Regra[] = [
-  // ---- saídas ----
-  ['saida', 'pets', '🐾', 'pet,pets,petshop,pet shop,petz,cobasi,petlove,racao,veterinario,veterinaria,vet,banho e tosa,tosa,areia do gato,cachorro,gato,coleira,vermifugo'],
-  ['saida', 'mercado', '🛒', 'mercado,supermercado,carrefour,pao de acucar,assai,atacadao,atacado,dia,oxxo,minuto pa,feira,hortifruti,sacolao,quitanda,compras do mes,mercadinho,st marche,zona sul,sonda,hirota'],
-  ['saida', 'comida', '🥐', 'padaria,pao,cafe da manha'],
-  ['saida', 'comida', '🍕', 'pizza,pizzaria'],
-  ['saida', 'comida', '🍣', 'sushi,japones,temaki'],
-  ['saida', 'comida', '🍦', 'sorvete,acai,doceria,doce,bolo'],
-  ['saida', 'comida', '🍺', 'bar,cerveja,chopp,boteco,happy hour,drinks,drink'],
-  ['saida', 'comida', '☕', 'cafe,cafeteria,starbucks,coffee'],
-  ['saida', 'comida', '🍔', 'ifood,rappi,lanche,lanchonete,hamburguer,burger,mcdonalds,mc donalds,bk,burger king,habibs,restaurante,almoco,jantar,marmita,delivery,comida,refeicao,quentinha,esfiha,pastel,churrasco'],
-  ['saida', 'transporte', '⛽', 'gasolina,combustivel,etanol,alcool,posto,shell,ipiranga,abastecer,abastecimento'],
-  ['saida', 'transporte', '🅿️', 'estacionamento,zona azul,valet'],
-  ['saida', 'transporte', '🚇', 'metro,cptm,trem,bilhete unico,top,recarga bilhete'],
-  ['saida', 'transporte', '🚌', 'onibus,brt'],
-  ['saida', 'transporte', '🔧', 'oficina,mecanico,revisao,pneu,troca de oleo,funilaria'],
-  ['saida', 'transporte', '🚗', 'uber,99,99pop,cabify,taxi,pedagio,sem parar,conectcar,veloe,ipva,licenciamento,multa,seguro do carro,lavagem,lava rapido,carro'],
-  ['saida', 'casa', '🏢', 'condominio'],
-  ['saida', 'casa', '🔨', 'reforma,pedreiro,eletricista,encanador,material de construcao,leroy,leroy merlin,telhanorte,obra'],
-  ['saida', 'casa', '🛋️', 'moveis,movel,sofa,ikea,tok stok,tokstok,etna,decoracao,colchao'],
-  ['saida', 'casa', '🧹', 'faxina,diarista,limpeza,produtos de limpeza,lavanderia'],
-  ['saida', 'casa', '🏠', 'aluguel,financiamento,prestacao do apartamento,iptu,casa,apartamento,caixa habitacao'],
-  ['saida', 'contas', '🔥', 'gas,comgas,botijao,ultragaz'],
-  ['saida', 'contas', '🚿', 'agua,sabesp,conta de agua'],
-  ['saida', 'contas', '📶', 'internet,wifi,fibra,net,vivo fibra,claro net'],
-  ['saida', 'contas', '📱', 'celular,telefone,vivo,claro,tim,oi,recarga,plano de celular'],
-  ['saida', 'contas', '💡', 'luz,energia,enel,eletropaulo,cemig,conta de luz,light,copel'],
-  ['saida', 'contas', '🏦', 'tarifa,anuidade,juros,iof,taxa bancaria,cesta de servicos,emprestimo,parcela emprestimo'],
-  ['saida', 'saude', '🦷', 'dentista,ortodontista,aparelho dental,odonto'],
-  ['saida', 'saude', '🏋️', 'academia,smartfit,smart fit,bluefit,bodytech,gympass,wellhub,totalpass,crossfit,personal,pilates,musculacao'],
-  ['saida', 'saude', '🩺', 'medico,consulta,exame,hospital,plano de saude,unimed,amil,sulamerica,bradesco saude,laboratorio,fleury,clinica'],
-  ['saida', 'saude', '🧠', 'terapia,psicologo,psicologa,psiquiatra'],
-  ['saida', 'saude', '💊', 'farmacia,drogasil,droga raia,raia,pague menos,drogaria,remedio,remedios,vitamina,suplemento,whey'],
-  ['saida', 'beleza', '💈', 'barbeiro,barbearia,corte de cabelo,barba'],
-  ['saida', 'beleza', '💅', 'manicure,unha,pedicure,esmalte'],
-  ['saida', 'beleza', '💇', 'cabelo,salao,cabeleireiro,estetica,depilacao,sobrancelha,perfume,cosmeticos,maquiagem,boticario,natura,sephora,skincare'],
-  ['saida', 'viagem', '🏨', 'hotel,pousada,airbnb,hospedagem,booking,hostel'],
-  ['saida', 'viagem', '✈️', 'viagem,passagem,aviao,voo,latam,gol,azul,decolar,123milhas,aeroporto,rodoviaria,mala'],
-  ['saida', 'lazer', '🎬', 'cinema,filme,cinemark,uci'],
-  ['saida', 'lazer', '🎤', 'show,festival,ingresso,ingressos,sympla,eventim,teatro,balada,festa'],
-  ['saida', 'lazer', '🎮', 'jogo,game,games,steam,playstation,psn,xbox,nintendo'],
-  ['saida', 'lazer', '⚽', 'futebol,quadra,ingresso jogo,estadio,socio torcedor'],
-  ['saida', 'lazer', '🎉', 'lazer,passeio,parque,museu,role'],
-  ['saida', 'assinaturas', '🎵', 'spotify,deezer,apple music,youtube music,tidal'],
-  ['saida', 'assinaturas', '☁️', 'icloud,google one,dropbox,onedrive'],
-  ['saida', 'assinaturas', '🤖', 'chatgpt,claude,openai,anthropic,copilot,midjourney,gemini'],
-  ['saida', 'assinaturas', '📺', 'netflix,prime video,amazon prime,disney,disney plus,hbo,max,globoplay,paramount,youtube premium,apple tv,crunchyroll,streaming,assinatura'],
-  ['saida', 'educacao', '📚', 'faculdade,curso,escola,livro,livros,udemy,alura,coursera,ingles,idiomas,mensalidade,material escolar,certificacao,cisa,cissp,pos graduacao,mba'],
-  ['saida', 'compras', '🎁', 'presente,presentes,aniversario,amigo secreto,natal'],
-  ['saida', 'compras', '👟', 'tenis,sapato,sandalia,chinelo,nike,adidas,centauro,netshoes'],
-  ['saida', 'compras', '👕', 'roupa,roupas,camisa,camiseta,calca,jaqueta,renner,riachuelo,cea,zara,hering,shein,reserva'],
-  ['saida', 'compras', '📦', 'amazon,mercado livre,mercadolivre,shopee,aliexpress,magalu,magazine luiza,americanas,casas bahia,kabum,encomenda'],
-  ['saida', 'compras', '💻', 'notebook,computador,eletronico,eletronicos,fone,headset,teclado,mouse,monitor,iphone,carregador'],
-  ['saida', 'compras', '🛍️', 'shopping,compras,loja'],
-  // ---- entradas ----
-  ['entrada', 'salario', '💼', 'salario,adiantamento,vale,pagamento,holerite,plr,decimo terceiro,13o,ferias,bonus'],
-  ['entrada', 'extra', '💻', 'freela,freelance,job,projeto,consultoria,bico'],
-  ['entrada', 'extra', '🏷️', 'venda,vendi,olx,enjoei,mercado livre venda'],
-  ['entrada', 'extra', '📈', 'rendimento,rendimentos,dividendos,juros recebidos,cdb,tesouro,investimento,cashback'],
-  ['entrada', 'reembolso', '↩️', 'reembolso,estorno,devolucao,me pagou,acerto,pix de volta'],
+  // ======================= SAÍDAS =======================
+  // ---- pets ----
+  ['saida', 'pets', '🐾', 'pet,pets,petshop,pet shop,petz,cobasi,petlove,petland,racao,racoes,veterinario,veterinaria,vet,clinica veterinaria,banho e tosa,tosa,areia do gato,areia,granulado,cachorro,cao,gato,coleira,vermifugo,antipulgas,petisco,arranhador,hotel pet,creche pet,adestrador'],
+  // ---- mercado ----
+  ['saida', 'mercado', '🛒', 'mercado,supermercado,mercadinho,minimercado,hipermercado,carrefour,carrefour express,pao de acucar,minuto pao de acucar,extra mercado,mercado extra,assai,atacadao,atacado,makro,sams club,sam s club,oxxo,st marche,mambo,hirota,sonda,dia supermercado,zona sul,guanabara,prezunic,mundial,bh supermercados,condor,angeloni,savegnago,tenda atacado,roldao,spani,compras do mes,feira,feira livre,hortifruti,oba hortifruti,natural da terra,sacolao,quitanda,acougue,peixaria,emporio,daki,shopper,rappi turbo,ifood mercado'],
+  // ---- comida ----
+  ['saida', 'comida', '🥐', 'padaria,pao,paes,cafe da manha,confeitaria'],
+  ['saida', 'comida', '🍕', 'pizza,pizzaria,dominos,pizza hut'],
+  ['saida', 'comida', '🍣', 'sushi,japones,temaki,yakisoba,china in box,china'],
+  ['saida', 'comida', '🍦', 'sorvete,sorveteria,acai,doceria,doce,doces,bolo,brigadeiro,chocolate,cacau show,kopenhagen,brasil cacau'],
+  ['saida', 'comida', '🍺', 'bar,cerveja,chopp,chope,boteco,happy hour,drinks,drink,balada bar,adega,ze delivery,vinho'],
+  ['saida', 'comida', '☕', 'cafe,cafeteria,starbucks,coffee,the coffee,cafe expresso,nespresso'],
+  ['saida', 'comida', '🍔', 'ifood,99food,99 food,uber eats,ubereats,keeta,aiqfome,rappi,james delivery,lanche,lanchonete,hamburguer,hamburgueria,burger,mcdonalds,mc donalds,mequi,bk,burger king,habibs,giraffas,subway,kfc,popeyes,jeronimo,madero,outback,coco bambu,spoleto,bobs,restaurante,almoco,jantar,janta,marmita,marmitex,delivery,comida,refeicao,quentinha,esfiha,pastel,churrasco,churrascaria,rodizio,self service,por quilo,lanche da tarde,salgado,coxinha,food truck'],
+  // ---- transporte ----
+  ['saida', 'transporte', '⛽', 'gasolina,combustivel,etanol,alcool,diesel,gnv,posto,posto de gasolina,shell,ipiranga,petrobras,br mania,ale,abastecer,abastecimento,abasteci'],
+  ['saida', 'transporte', '🅿️', 'estacionamento,zona azul,valet,estapar,multipark,parking'],
+  ['saida', 'transporte', '🚇', 'metro,metro sp,cptm,trem,viamobilidade,viaquatro,linha 4,linha amarela,vlt,supervia,metrorio,bilhete unico,bilhete,recarga bilhete,recarga do bilhete,cartao top,top sp,riocard,bom,cartao bom,transporte publico,integracao'],
+  ['saida', 'transporte', '🚌', 'onibus,busao,sptrans,brt,emtu,van,lotacao,fretado,buser,clickbus,rodoviaria'],
+  ['saida', 'transporte', '🛴', 'patinete,bike,bicicleta,tembici,bike itau,yellow'],
+  ['saida', 'transporte', '🔧', 'oficina,mecanico,revisao,pneu,pneus,troca de oleo,oleo,funilaria,borracharia,alinhamento,balanceamento,bateria do carro,auto center,autopecas'],
+  ['saida', 'transporte', '🚗', 'uber,uber x,uber black,99,99pop,99 pop,99taxi,99 taxi,cabify,indriver,in driver,taxi,corrida,pedagio,sem parar,conectcar,veloe,taggy,ipva,licenciamento,detran,multa de transito,multa,seguro do carro,seguro auto,lavagem,lava rapido,lava jato,carro,moto,aluguel de carro,localiza,movida,unidas,blablacar'],
+  // ---- casa ----
+  ['saida', 'casa', '🏢', 'condominio,taxa condominial'],
+  ['saida', 'casa', '🔨', 'reforma,pedreiro,eletricista,encanador,pintor,marceneiro,material de construcao,leroy,leroy merlin,telhanorte,c c,cec,obra,ferragem,ferramenta,tinta'],
+  ['saida', 'casa', '🛋️', 'moveis,movel,sofa,cama,mesa,cadeira,armario,ikea,tok stok,tokstok,tok e stok,etna,mobly,westwing,madeira madeira,decoracao,colchao,cortina,tapete,luminaria'],
+  ['saida', 'casa', '🧹', 'faxina,diarista,faxineira,limpeza,produtos de limpeza,lavanderia,lava e leva,detergente,sabao'],
+  ['saida', 'casa', '🔑', 'chaveiro,mudanca,frete mudanca,cofre'],
+  ['saida', 'casa', '🏠', 'aluguel,financiamento,prestacao do apartamento,prestacao da casa,parcela do apartamento,iptu,casa,apartamento,caixa habitacao,habitacao,quintoandar,quinto andar,imobiliaria,seguro residencial,seguro fianca'],
+  // ---- contas ----
+  ['saida', 'contas', '🔥', 'gas,comgas,naturgy,botijao,ultragaz,liquigas,supergasbras,gas encanado'],
+  ['saida', 'contas', '🚿', 'agua,sabesp,copasa,cedae,aguas do rio,sanepar,embasa,compesa,conta de agua'],
+  ['saida', 'contas', '📶', 'internet,wifi,wi fi,fibra,banda larga,net,vivo fibra,claro net,oi fibra,tim live,desktop internet,brisanet'],
+  ['saida', 'contas', '📱', 'celular,telefone,vivo,claro,tim,recarga,recarga celular,plano de celular,conta de celular,chip'],
+  ['saida', 'contas', '💡', 'luz,energia,enel,eletropaulo,cemig,conta de luz,light energia,copel,cpfl,celesc,energisa,coelba,neoenergia,equatorial,elektro'],
+  ['saida', 'contas', '🏛️', 'imposto,impostos,darf,mei,irpf,imposto de renda,gnre,taxa,taxas,cartorio,documento,passaporte,rg,cnh,renovacao cnh'],
+  ['saida', 'contas', '🛡️', 'seguro,seguro de vida,previdencia privada,pgbl,vgbl,porto seguro,sulamerica seguro,bradesco seguros'],
+  ['saida', 'contas', '🏦', 'tarifa,tarifa bancaria,anuidade,juros,iof,mora,multa atraso,taxa bancaria,cesta de servicos,emprestimo,parcela emprestimo,consignado,cheque especial,rotativo,fatura atrasada,ted,doc'],
+  // ---- saúde ----
+  ['saida', 'saude', '🦷', 'dentista,ortodontista,aparelho dental,odonto,odontoprev,limpeza dental,clareamento'],
+  ['saida', 'saude', '🏋️', 'academia,smartfit,smart fit,bluefit,bodytech,selfit,gympass,wellhub,totalpass,total pass,crossfit,personal,personal trainer,pilates,musculacao,natacao,yoga,funcional,luta,jiu jitsu,muay thai'],
+  ['saida', 'saude', '👓', 'oculos,lente,lentes de contato,otica,oftalmologista'],
+  ['saida', 'saude', '🩺', 'medico,medica,consulta,exame,exames,hospital,pronto socorro,plano de saude,convenio,unimed,amil,sulamerica saude,bradesco saude,hapvida,notredame,notre dame,porto saude,prevent senior,laboratorio,fleury,delboni,lavoisier,dasa,a mais,sabin,hermes pardini,clinica,dermatologista,ginecologista,fisioterapia,fisio,nutricionista,vacina'],
+  ['saida', 'saude', '🧠', 'terapia,psicologo,psicologa,psiquiatra,psicanalista'],
+  ['saida', 'saude', '💊', 'farmacia,drogasil,droga raia,raia,drogaria sao paulo,drogaria,pague menos,pacheco,panvel,onofre,ultrafarma,drogao,nissei,remedio,remedios,medicamento,vitamina,suplemento,whey,creatina'],
+  // ---- beleza ----
+  ['saida', 'beleza', '💈', 'barbeiro,barbearia,corte de cabelo,corte,barba'],
+  ['saida', 'beleza', '💅', 'manicure,unha,unhas,pedicure,esmalte,alongamento de unha'],
+  ['saida', 'beleza', '💇', 'cabelo,salao,salao de beleza,cabeleireiro,escova,progressiva,coloracao,estetica,depilacao,sobrancelha,cilios,perfume,perfumaria,cosmeticos,maquiagem,boticario,o boticario,natura,avon,eudora,sephora,quem disse berenice,skincare,protetor solar,shampoo,creme'],
+  // ---- viagem ----
+  ['saida', 'viagem', '🏨', 'hotel,pousada,airbnb,hospedagem,booking,hostel,resort,hurb'],
+  ['saida', 'viagem', '✈️', 'viagem,passagem,passagem aerea,aviao,voo,latam,gol linhas aereas,voo gol,azul linhas aereas,voo azul,decolar,123milhas,maxmilhas,cvc,aeroporto,mala,seguro viagem,cambio,dolar,euro,milhas,smiles,latam pass,tudoazul'],
+  // ---- lazer ----
+  ['saida', 'lazer', '🎬', 'cinema,filme,cinemark,uci,kinoplex,cinepolis,ingresso com,pipoca'],
+  ['saida', 'lazer', '🎤', 'show,shows,festival,ingresso,ingressos,sympla,eventim,ticketmaster,ticket 360,teatro,stand up,balada,festa,boate,camarote,rock in rio,lollapalooza'],
+  ['saida', 'lazer', '🎮', 'jogo,game,games,steam,epic games,playstation,psn,ps5,xbox,game pass,nintendo,switch,skin,robux,free fire'],
+  ['saida', 'lazer', '⚽', 'futebol,quadra,society,ingresso jogo,estadio,socio torcedor,camisa do time'],
+  ['saida', 'lazer', '🎳', 'boliche,karaoke,parque de diversao,hopi hari,beto carrero,escape room,museu,exposicao,zoologico,aquario'],
+  ['saida', 'lazer', '🎉', 'lazer,passeio,parque,role,rolezinho,diversao,hobby'],
+  // ---- assinaturas ----
+  ['saida', 'assinaturas', '🎵', 'spotify,deezer,apple music,youtube music,tidal,amazon music'],
+  ['saida', 'assinaturas', '☁️', 'icloud,icloud mais,google one,dropbox,onedrive,armazenamento'],
+  ['saida', 'assinaturas', '🤖', 'chatgpt,chat gpt,claude,openai,anthropic,copilot,midjourney,gemini,perplexity,cursor'],
+  ['saida', 'assinaturas', '💻', 'microsoft 365,office 365,office,adobe,canva,notion,figma,linkedin premium,duolingo,kindle unlimited,audible,apple one,vpn,nordvpn,antivirus'],
+  ['saida', 'assinaturas', '📺', 'netflix,prime video,amazon prime,prime,disney,disney plus,star plus,hbo,hbo max,globoplay,paramount,youtube premium,apple tv,crunchyroll,telecine,mubi,pluto,streaming,assinatura,mensalidade app,ps plus,xbox game pass'],
+  // ---- educação ----
+  ['saida', 'educacao', '📚', 'faculdade,universidade,mensalidade faculdade,curso,cursos,escola,colegio,creche,material escolar,livro,livros,apostila,udemy,alura,coursera,dio,rocketseat,fiap,senac,senai,anhanguera,unip,uninove,mackenzie,fgv,insper,estacio,cruzeiro do sul,ingles,idiomas,wizard,ccaa,fisk,open english,cambly,certificacao,prova,cisa,cissp,cisp,isaca,iso 27001,pos graduacao,mba,especializacao'],
+  // ---- compras ----
+  ['saida', 'compras', '🎁', 'presente,presentes,aniversario,amigo secreto,natal,dia das maes,dia dos pais,dia dos namorados,lembrancinha'],
+  ['saida', 'compras', '👟', 'tenis,sapato,sandalia,chinelo,havaianas,bota,nike,adidas,puma,mizuno,olympikus,centauro,netshoes,decathlon,artwalk'],
+  ['saida', 'compras', '👕', 'roupa,roupas,camisa,camiseta,calca,bermuda,jaqueta,casaco,vestido,cueca,meia,renner,riachuelo,cea,c a,zara,hering,marisa,shein,reserva,youcom,levis,lacoste,farm,insider'],
+  ['saida', 'compras', '📦', 'amazon,amazon br,mercado livre,mercadolivre,meli,shopee,aliexpress,ali express,temu,magalu,magazine luiza,americanas,submarino,casas bahia,ponto frio,carrefour online,encomenda,correios,frete,sedex,importacao,taxa importacao,remessa conforme'],
+  ['saida', 'compras', '💻', 'notebook,computador,pc,eletronico,eletronicos,fone,fone de ouvido,airpods,headset,teclado,mouse,monitor,iphone,celular novo,smartphone,samsung,xiaomi,motorola,apple store,carregador,cabo,capinha,pelicula,kabum,pichau,terabyte,terabyteshop,fast shop,tv,televisao,videogame,console,smartwatch,apple watch,tablet,ipad'],
+  ['saida', 'compras', '🧺', 'eletrodomestico,geladeira,fogao,microondas,maquina de lavar,air fryer,airfryer,liquidificador,aspirador,ventilador,ar condicionado,utensilios,panela'],
+  ['saida', 'compras', '🛍️', 'shopping,compras,loja,lojas,comprinhas,miudezas,papelaria,kalunga,daiso,lojas americanas'],
+  // ---- outros comuns ----
+  ['saida', 'outros', '🤝', 'doacao,dizimo,oferta,vaquinha,caridade,ong'],
+  ['saida', 'outros', '💸', 'pix,transferencia,emprestei,emprestimo pra,devolvi,saque,saquei,dinheiro vivo,mesada,pensao'],
+  // ======================= ENTRADAS =======================
+  ['entrada', 'salario', '💼', 'salario,adiantamento,vale,pagamento,holerite,folha,plr,ppr,participacao nos lucros,decimo terceiro,13o,13,13 salario,ferias,bonus,premio,comissao,hora extra,horas extras,rescisao,fgts,seguro desemprego'],
+  ['entrada', 'extra', '💻', 'freela,freelance,job,projeto,consultoria,bico,servico,trampo,aula particular,mentoria'],
+  ['entrada', 'extra', '🏷️', 'venda,vendi,olx,enjoei,mercado livre venda,shopee venda,brecho'],
+  ['entrada', 'extra', '📈', 'rendimento,rendimentos,dividendos,proventos,jcp,juros recebidos,cdb,lci,lca,tesouro,tesouro direto,investimento,resgate,cashback,fii,fiis'],
+  ['entrada', 'extra', '🦁', 'restituicao,restituicao ir,restituicao do ir'],
+  ['entrada', 'reembolso', '↩️', 'reembolso,estorno,devolucao,me pagou,me devolveu,acerto,pix de volta,ressarcimento,rachou,dividiu'],
 ];
 
 const STOP = new Set(['de', 'do', 'da', 'dos', 'das', 'pra', 'pro', 'para', 'com', 'no', 'na', 'nos', 'nas', 'e', 'o', 'a', 'os', 'as', 'em', 'um', 'uma', 'meu', 'minha', 'que', 'por', 'ao', 'mais', 'r', 'rs']);
@@ -85,7 +110,7 @@ const STOP = new Set(['de', 'do', 'da', 'dos', 'das', 'pra', 'pro', 'para', 'com
 export function normalizar(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
-export const tokens = (s: string) => normalizar(s).split(' ').filter((t) => t.length >= 2 && !STOP.has(t) && !/^\d+$/.test(t));
+export const tokens = (s: string) => normalizar(s).split(' ').filter((t) => t.length >= 2 && !STOP.has(t));
 
 /** Distância de edição limitada (para erros de digitação como "netflx"). */
 function dist(a: string, b: string, max: number) {
@@ -137,12 +162,12 @@ export function sugerir(desc: string, tipo: Tipo, mem: Memoria = {}): Sugestao |
   // 3) palavra exata; 4) plural/prefixo; 5) erro de digitação
   for (const t of toks) { const m = PALAVRA.get(`${tipo}|${t}`); if (m) return { cat: m.cat, ico: m.ico, fonte: 'dicionario', termo: t }; }
   for (const t of toks) {
-    if (t.length < 4) continue;
+    if (t.length < 4 || /^\d+$/.test(t)) continue;
     const m = TERMOS.find((x) => x.tipo === tipo && !x.frase && x.termo.length >= 4 && (t.startsWith(x.termo) || (x.termo.startsWith(t) && t.length >= 5)));
     if (m) return { cat: m.cat, ico: m.ico, fonte: 'dicionario', termo: m.termo };
   }
   for (const t of toks) {
-    if (t.length < 5) continue;
+    if (t.length < 5 || /^\d+$/.test(t)) continue;
     const m = TERMOS.find((x) => x.tipo === tipo && !x.frase && x.termo.length >= 5 && dist(t, x.termo, 1) <= 1);
     if (m) return { cat: m.cat, ico: m.ico, fonte: 'dicionario', termo: m.termo };
   }
@@ -158,7 +183,7 @@ export function aprender(mem: Memoria, desc: string, tipo: Tipo, cat: string, ic
     const old = next[k];
     next[k] = old && old.cat === cat ? { cat, ico: ico ?? old.ico, n: old.n + 1 } : { cat, ico, n: 1 };
   };
-  const chaves = new Set([norm, ...tokens(desc).filter((t) => t.length >= 3)]);
+  const chaves = new Set([norm, ...tokens(desc).filter((t) => t.length >= 3 && !/^\d+$/.test(t))]);
   chaves.forEach((k) => put(`${tipo}|${k}`));
   // limite de tamanho: mantém os 600 termos mais usados
   const keys = Object.keys(next);

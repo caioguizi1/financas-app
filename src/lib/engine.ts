@@ -41,13 +41,14 @@ export function eventosEntre(D: Data, de: ISODate, ate: ISODate): Evento[] {
 
   for (const l of D.lancamentos) {
     const c = cartao(l.cartaoId);
-    const n = c ? Math.max(1, l.parcelas ?? 1) : 1;
+    // parcelado no cartão (cai em cada fatura) ou fora dele: boleto/carnê/Pix parcelado (mês a mês, mesmo dia)
+    const n = Math.max(1, l.parcelas ?? 1);
     const base = Math.floor(l.valor / n);
     const resto = l.valor - base * n;
     const pd = parse(l.data);
     for (let i = 0; i < n; i++) {
       const compra = dateOf(pd.getFullYear(), pd.getMonth() + i, pd.getDate());
-      const cash = c ? pagamentoCartao(c, compra) : l.data;
+      const cash = c ? pagamentoCartao(c, compra) : compra;
       if (cash >= de && cash <= ate) {
         const v = base + (i === 0 ? resto : 0);
         out.push({

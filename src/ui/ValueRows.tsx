@@ -17,8 +17,7 @@ export function ValueRows({ linhas, ativa, onAtiva, onValor, onData }: {
     <>
       <div className="vrows">
         {linhas.map((l, i) => (
-          <m.div key={l.id ?? l.label} layout className={`vrow ${i === ativa ? 'on' : ''} ${l.fixo ? 'ro' : ''}`} onClick={() => !l.fixo && onAtiva(i)} transition={springSnappy}>
-            {i === ativa && !l.fixo && <m.span layoutId="vrow-pill" className="vrow-pill" transition={springSnappy} />}
+          <div key={l.id ?? l.label} className={`vrow ${i === ativa && !l.fixo ? 'on' : ''} ${l.fixo ? 'ro' : ''}`} onClick={() => !l.fixo && onAtiva(i)}>
             <div className="vr-l">
               <div className="vr-t">{l.label}</div>
               {l.nota && <div className="vr-n">{l.nota}</div>}
@@ -34,7 +33,7 @@ export function ValueRows({ linhas, ativa, onAtiva, onValor, onData }: {
                 <small>R$</small>{centsToStr(l.valor)}
               </m.div>
             </AnimatePresence>
-          </m.div>
+          </div>
         ))}
       </div>
       <Keypad small value={linhas[ativa]?.valor ?? 0} onChange={(v) => onValor(ativa, v)} />

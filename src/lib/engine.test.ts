@@ -57,6 +57,35 @@ describe('parcelas no cartão', () => {
   });
 });
 
+describe('parcelado fora do cartão (boleto/Pix)', () => {
+  it('uma parcela por mês no mesmo dia, atravessando o ano', () => {
+    const D = base({ lancamentos: [{ id: 'b', tipo: 'saida', valor: 30000, cat: 'compras', desc: 'Sofá', data: '2026-11-30', parcelas: 3, criado: 2000 }] });
+    expect(eventosEntre(D, '2026-11-01', '2027-03-31').map((e) => [e.data, e.valor, e.desc])).toEqual([
+      ['2026-11-30', -10000, 'Sofá 1/3'], ['2026-12-30', -10000, 'Sofá 2/3'], ['2027-01-30', -10000, 'Sofá 3/3'],
+    ]);
+  });
+  it('dia 31 vira fim do mês nas parcelas', () => {
+    const D = base({ lancamentos: [{ id: 'b', tipo: 'saida', valor: 20000, cat: 'compras', desc: 'X', data: '2027-01-31', parcelas: 2, criado: 2000 }] });
+    expect(eventosEntre(D, '2027-01-01', '2027-03-31').map((e) => e.data)).toEqual(['2027-01-31', '2027-02-28']);
+  });
+});
+
+describe('ciclo do cartão (exemplo do Itaú)', () => {
+  const itau = { id: 'it', nome: 'Itaú', fechamento: 7, vencimento: 15 };
+  it('compra dia 20, fecha dia 7: entra na fatura do mês seguinte', () => {
+    expect(pagamentoCartao(itau, '2026-11-20')).toBe('2026-12-15');
+  });
+  it('compra dia 5, antes do fechamento: vence no mesmo mês', () => {
+    expect(pagamentoCartao(itau, '2026-12-05')).toBe('2026-12-15');
+  });
+  it('10x a partir de dezembro avançam fatura a fatura até 2027', () => {
+    const D = base({ cartoes: [itau], lancamentos: [{ id: 'l', tipo: 'saida', valor: 100000, cat: 'compras', desc: 'Celular', data: '2026-11-20', cartaoId: 'it', parcelas: 10, criado: 2000 }] });
+    const datas = eventosEntre(D, '2026-11-01', '2027-12-31').map((e) => e.data);
+    expect(datas[0]).toBe('2026-12-15');
+    expect(datas[9]).toBe('2027-09-15');
+  });
+});
+
 describe('projecao', () => {
   it('não conta o que já estava no saldo informado', () => {
     const D = base({ lancamentos: [

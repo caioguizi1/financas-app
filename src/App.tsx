@@ -1,5 +1,5 @@
-import { AnimatePresence, LazyMotion, m, MotionConfig } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { AnimatePresence, m } from 'motion/react';
+import { memo, useEffect, useState } from 'react';
 import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Ajustes, Extrato, Fixos } from './screens/Others';
@@ -16,14 +16,16 @@ const TABS: { id: Tab; label: string; Icon: () => React.ReactElement }[] = [
   { id: 'fixos', label: 'Fixos', Icon: IRepeat },
   { id: 'ajustes', label: 'Ajustes', Icon: IGear },
 ];
-const loadFeatures = () => import('./motion-features').then((r) => r.default);
-const SCREENS: Record<Tab, () => React.ReactElement> = { home: Home, extrato: Extrato, fixos: Fixos, ajustes: Ajustes };
+// memo: trocar de aba re-renderiza o App, mas as telas só recalculam quando os próprios dados mudam
+const SCREENS: Record<Tab, React.ComponentType> = { home: memo(Home), extrato: memo(Extrato), fixos: memo(Fixos), ajustes: memo(Ajustes) };
 
 export default function App() {
   const onboarded = useData().onboarded;
   const tab = useUI((s) => s.tab);
   const sheetOpen = useUI((s) => !!s.sheet);
   const [, tick] = useState(0);
+  const [visitadas, setVisitadas] = useState<Set<Tab>>(() => new Set([tab]));
+  useEffect(() => { setVisitadas((v) => (v.has(tab) ? v : new Set(v).add(tab))); }, [tab]);
 
   // Ao voltar pro app (ex.: no dia seguinte), recalcula "hoje".
   useEffect(() => {
@@ -48,25 +50,24 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [tab]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [tab]);
 
-  const Screen = SCREENS[tab];
   return (
-    <LazyMotion features={loadFeatures} strict>
-    <MotionConfig reducedMotion="user">
       <div id="app">
         <AnimatePresence mode="wait" initial={false}>
           {!onboarded ? (
             <m.div key="ob" exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}><Onboarding /></m.div>
           ) : (
             <m.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <AnimatePresence mode="wait" initial={false}>
-                <m.main key={tab} className="screen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
-                  <Screen />
-                </m.main>
-              </AnimatePresence>
+              {/* Telas ficam montadas depois da 1ª visita: trocar de aba não recria nada,
+                  e a entrada é uma animação CSS curta (roda no compositor, sem JS por quadro). */}
+              {TABS.filter((x) => visitadas.has(x.id)).map(({ id }) => {
+                const S = SCREENS[id];
+                return <main key={id} className={`screen tab-screen ${id === tab ? 'on' : 'off'}`} aria-hidden={id !== tab} inert={id !== tab}><S /></main>;
+              })}
               <nav className="tabbar">
-                <div className="tabs">
+                <div className="tabs" data-tab={tab}>
+                  <span className="tab-pill" aria-hidden />
                   {TABS.slice(0, 2).map((x) => <TabBtn key={x.id} {...x} />)}
                   <m.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
                     onClick={() => (sheetOpen ? useUI.getState().closeSheet() : openSheet(<QuickAdd />))}>
@@ -81,8 +82,6 @@ export default function App() {
         <SheetHost />
         <Toasts />
       </div>
-    </MotionConfig>
-    </LazyMotion>
   );
 }
 
@@ -92,7 +91,6 @@ function TabBtn({ id, label, Icon }: (typeof TABS)[number]) {
   const on = tab === id;
   return (
     <m.button whileTap={{ scale: 0.9 }} className={`tab ${on ? 'on' : ''}`} onClick={() => setTab(id)}>
-      {on && <m.span layoutId="tab-pill" className="tab-pill" transition={spring} />}
       <span className="tab-ic"><Icon /></span>
       <span className="tab-l">{label}</span>
     </m.button>

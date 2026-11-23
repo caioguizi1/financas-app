@@ -1,5 +1,5 @@
 import { AnimatePresence, m, type HTMLMotionProps } from 'motion/react';
-import { useId, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { spring, springSnappy } from './motion';
 
 type BtnKind = 'primary' | 'ghost' | 'link' | 'danger';
@@ -27,12 +27,13 @@ export function Chip({ on, added, onClick, children }: { on?: boolean; added?: b
 export function Segmented<T extends string | number>({ options, value, onChange }: {
   options: { v: T; label: string; tone?: 'in' | 'out' }[]; value: T; onChange: (v: T) => void;
 }) {
-  const id = useId();
+  const i = Math.max(0, options.findIndex((o) => o.v === value));
+  const tone = options[i]?.tone ?? '';
   return (
-    <div className="seg">
+    <div className="seg" style={{ ['--n' as string]: options.length, ['--i' as string]: i }}>
+      <span className={`seg-pill ${tone}`} aria-hidden />
       {options.map((o) => (
-        <button key={String(o.v)} className={value === o.v ? 'on' : ''} onClick={() => onChange(o.v)}>
-          {value === o.v && <m.span layoutId={`seg-${id}`} className={`seg-pill ${o.tone ?? ''}`} transition={spring} />}
+        <button key={String(o.v)} className={value === o.v ? `on ${o.tone ?? ''}` : ''} onClick={() => onChange(o.v)}>
           <span className="seg-label">{o.label}</span>
         </button>
       ))}
@@ -43,13 +44,12 @@ export function Segmented<T extends string | number>({ options, value, onChange 
 export function DayGrid({ value, onChange, caption = (d) => `Todo dia ${d}` }: {
   value: number | null; onChange: (d: number) => void; caption?: ((d: number) => string) | null;
 }) {
-  const id = useId();
   return (
     <>
       <div className="daygrid" role="radiogroup">
         {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
           <m.button key={d} role="radio" aria-checked={d === value} whileTap={{ scale: 0.88 }} transition={springSnappy} className={d === value ? 'on' : ''} onClick={() => onChange(d)}>
-            {d === value && <m.span layoutId={`day-${id}`} className="day-pill" transition={spring} />}
+            {d === value && <m.span className="day-pill" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={springSnappy} />}
             <span className="day-n">{d}</span>
           </m.button>
         ))}

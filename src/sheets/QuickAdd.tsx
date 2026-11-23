@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE } from '../lib/categories';
 import { aprender, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
-import { addDays, diaLabel, dm, today } from '../lib/dates';
+import { addDays, dateOf, diaLabel, dm, parse, today } from '../lib/dates';
 import { pagamentoCartao } from '../lib/engine';
 import { brl, uid } from '../lib/money';
 import type { Lancamento } from '../lib/types';
@@ -35,7 +35,18 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
     chipsRef.current?.querySelector('.chip.on')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [cat]);
   const cartao = l.cartaoId ? D.cartoes.find((c) => c.id === l.cartaoId) : undefined;
-  const parcelas = l.parcelas ?? 1;
+  const [parcelado, setParcelado] = useState((lanc?.parcelas ?? 1) > 1);
+  const [nParc, setNParc] = useState(Math.max(2, lanc?.parcelas ?? 2));
+  const [modoValor, setModoValor] = useState<'total' | 'parcela'>('total');
+  const parcelas = l.tipo === 'saida' && parcelado ? nParc : 1;
+  const total = parcelas > 1 && modoValor === 'parcela' ? l.valor * parcelas : l.valor;
+  const valorParcela = Math.floor(total / parcelas);
+
+  // cronograma: quando cada parcela sai da conta (cartão = vencimento da fatura; boleto/Pix = mês a mês)
+  const pd = parse(l.data);
+  const compraN = (i: number) => dateOf(pd.getFullYear(), pd.getMonth() + i, pd.getDate());
+  const saida = (i: number) => (cartao ? pagamentoCartao(cartao, compraN(i)) : compraN(i));
+  const fmtData = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
   const t = today();
   const datas: [string, string][] = [[t, 'Hoje'], [addDays(t, -1), 'Ontem'], [addDays(t, -2), diaLabel(addDays(t, -2))]];
@@ -43,14 +54,14 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
 
   const salvar = () => {
     if (!l.valor) return;
-    const final: Lancamento = { ...l, cat, ico: ico !== catE(cat) ? ico : undefined, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' ? l.cartaoId : null, parcelas: cartao ? parcelas : 1 };
+    const final: Lancamento = { ...l, valor: total, cat, ico: ico !== catE(cat) ? ico : undefined, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' ? l.cartaoId : null, parcelas };
     closeSheet();
     if (novo) {
       const before = getData();
       final.id = uid();
       final.criado = Date.now();
       mutate((d) => ({ ...d, lancamentos: [...d.lancamentos, final], uso: { ...d.uso, [cat]: (d.uso[cat] ?? 0) + 1 }, aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
-      toast(`${final.tipo === 'saida' ? 'Saída' : 'Entrada'} de ${brl(final.valor)} lançada`, () => restore(before));
+      toast(parcelas > 1 ? `${parcelas}x de ${brl(valorParcela)} lançadas` : `${final.tipo === 'saida' ? 'Saída' : 'Entrada'} de ${brl(final.valor)} lançada`, () => restore(before));
     } else {
       mutate((d) => ({ ...d, lancamentos: d.lancamentos.map((x) => (x.id === final.id ? final : x)), aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
       toast('Atualizado');
@@ -78,27 +89,48 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k }); }}>{e} {n}</Chip>)}
       </div>
 
-      {l.tipo === 'saida' && D.cartoes.length > 0 && (
-        <div className="chips scroll" style={{ marginTop: 10 }}>
-          <Chip on={!l.cartaoId} onClick={() => set({ cartaoId: null, parcelas: 1 })}>🏦 Conta/Pix</Chip>
-          {D.cartoes.map((c) => <Chip key={c.id} on={l.cartaoId === c.id} onClick={() => set({ cartaoId: c.id })}>💳 {c.nome}</Chip>)}
-        </div>
+      {l.tipo === 'saida' && (
+        <>
+          <div className="lab">Como pagou</div>
+          <div className="chips scroll">
+            <Chip on={!l.cartaoId} onClick={() => set({ cartaoId: null })}>🏦 Pix / débito / boleto</Chip>
+            {D.cartoes.map((c) => <Chip key={c.id} on={l.cartaoId === c.id} onClick={() => set({ cartaoId: c.id })}>💳 {c.nome}</Chip>)}
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <Segmented value={parcelado ? 'p' : 'v'} onChange={(v) => setParcelado(v === 'p')} options={[{ v: 'v', label: 'À vista' }, { v: 'p', label: 'Parcelado' }]} />
+          </div>
+          <AnimatePresence initial={false}>
+            {parcelado && (
+              <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring} style={{ overflow: 'hidden' }}>
+                <div className="row" style={{ marginTop: 12 }}>
+                  <span className="mut small">Quantas vezes</span><span className="sp" />
+                  <Stepper value={nParc} min={2} max={48} onChange={setNParc} fmt={(v) => `${v}x`} />
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  <Segmented value={modoValor} onChange={setModoValor} options={[{ v: 'total', label: 'Digitei o total' }, { v: 'parcela', label: 'Digitei a parcela' }]} />
+                </div>
+              </m.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence initial={false}>
+            {(cartao || parcelas > 1) && l.valor > 0 && (
+              <m.div className="cronograma" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring}>
+                {cartao && (
+                  <div className="cr-l">
+                    🗓️ Compra em {fmtData(l.data)} · {cartao.nome} fecha dia {cartao.fechamento}
+                    {' → '}<b>{parse(l.data).getDate() >= cartao.fechamento ? 'entra na fatura seguinte' : 'entra na fatura atual'}</b>, que vence {fmtData(saida(0))}
+                  </div>
+                )}
+                {parcelas > 1 ? (
+                  <div className="cr-l">
+                    <b className="num">{parcelas}x de {brl(valorParcela)}</b> (total {brl(total)}) · 1ª em {fmtData(saida(0))}, última em {fmtData(saida(parcelas - 1))}
+                  </div>
+                ) : cartao ? <div className="cr-l">Sai da conta em <b>{fmtData(saida(0))}</b></div> : null}
+              </m.div>
+            )}
+          </AnimatePresence>
+        </>
       )}
-      <AnimatePresence initial={false}>
-        {cartao && (
-          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring} style={{ overflow: 'hidden' }}>
-            <div className="row" style={{ marginTop: 12 }}>
-              <span className="mut" style={{ fontSize: 14 }}>Parcelas</span>
-              <span className="sp" />
-              <Stepper value={parcelas} min={1} max={24} onChange={(p) => set({ parcelas: p })} fmt={(v) => `${v}x`} />
-            </div>
-            <div className="dim hint">
-              Sai da conta em {dm(pagamentoCartao(cartao, l.data))}
-              {parcelas > 1 && ` · ${parcelas}x de ${brl(Math.floor(l.valor / parcelas))}`}
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
 
       <div className="chips scroll" style={{ marginTop: 12 }}>
         {datas.map(([d, n]) => <Chip key={d} on={l.data === d} onClick={() => set({ data: d })}>{n}</Chip>)}
