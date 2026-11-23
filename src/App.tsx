@@ -1,4 +1,5 @@
 import { AnimatePresence, m } from 'motion/react';
+import { MontadaVisivel } from './ui/Lista';
 import { memo, useEffect, useState } from 'react';
 import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
@@ -18,6 +19,16 @@ const TABS: { id: Tab; label: string; Icon: () => React.ReactElement }[] = [
 ];
 // memo: trocar de aba re-renderiza o App, mas as telas só recalculam quando os próprios dados mudam
 const SCREENS: Record<Tab, React.ComponentType> = { home: memo(Home), extrato: memo(Extrato), fixos: memo(Fixos), ajustes: memo(Ajustes) };
+
+/**
+ * Tela pré-montada escondida: listas já nascem prontas (sem animação de entrada).
+ * Depois que a tela é vista uma vez, o que entrar novo (ex.: outro mês) volta a animar.
+ */
+function Tela({ visivel, children }: { visivel: boolean; children: React.ReactNode }) {
+  const [jaVista, setJaVista] = useState(visivel);
+  useEffect(() => { if (visivel) setJaVista(true); }, [visivel]);
+  return <MontadaVisivel.Provider value={jaVista}>{children}</MontadaVisivel.Provider>;
+}
 
 export default function App() {
   const onboarded = useData().onboarded;
@@ -79,7 +90,7 @@ export default function App() {
                   e a entrada é uma animação CSS curta (roda no compositor, sem JS por quadro). */}
               {TABS.filter((x) => visitadas.has(x.id)).map(({ id }) => {
                 const S = SCREENS[id];
-                return <main key={id} className={`screen tab-screen ${id === tab ? 'on' : 'off'}`} aria-hidden={id !== tab} inert={id !== tab}><S /></main>;
+                return <main key={id} className={`screen tab-screen ${id === tab ? 'on' : 'off'}`} aria-hidden={id !== tab} inert={id !== tab}><Tela visivel={id === tab}><S /></Tela></main>;
               })}
               <nav className="tabbar">
                 <div className="tabs" data-tab={tab}>

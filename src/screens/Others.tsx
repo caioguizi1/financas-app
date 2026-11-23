@@ -15,10 +15,11 @@ import { openSheet, resetData, useData, useUI } from '../store';
 import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
 import { AjustarSaldo, EditNome } from '../sheets/Misc';
-import { Button, Chip, itemVariants, listVariants, Segmented } from '../ui/Controls';
+import { Button, Chip, itemVariants, Segmented } from '../ui/Controls';
 import { catE, catN } from '../lib/categories';
 import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
+import { Lista } from '../ui/Lista';
 import { EvItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
@@ -70,7 +71,7 @@ export function Extrato() {
           {cat && !cats.has(cat) && <Chip on onClick={() => setCat(null)}>{catE(cat)} {catN(cat)}</Chip>}
         </div>
       )}
-      <m.div key={`${y}-${mo}-${cat ?? ''}`} variants={listVariants} initial="hidden" animate="shown">
+      <Lista key={`${y}-${mo}-${cat ?? ''}`}>
         {days.length ? days.map((d) => {
           const tot = byDay.get(d)!.reduce((a, e) => a + e.valor, 0);
           return (
@@ -80,7 +81,7 @@ export function Extrato() {
             </m.div>
           );
         }) : <div className="card empty" style={{ marginTop: 14 }}>{cat ? `Nada em ${catN(cat)} neste mês.` : 'Nenhuma movimentação neste mês.'}</div>}
-      </m.div>
+      </Lista>
       <div className="footnote">{cat ? 'Cada compra aparece no dia em que sai da conta (no cartão, o vencimento da fatura).' : 'Compras no cartão aparecem no dia em que a fatura vence.'}</div>
     </>
   );
@@ -116,7 +117,7 @@ export function Fixos() {
       <div className={`alert ${te - ts < 0 ? '' : 'ok'}`}><span>{te - ts < 0 ? '⚠️' : '💡'}</span><div>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</div></div>
       <div className="mut small" style={{ margin: '14px 2px -6px' }}>Deslize um item pro lado pra editar ou apagar.</div>
       <h2>Entradas</h2>
-      {ent.length > 0 && <m.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></m.div>}
+      {ent.length > 0 && <Lista className="list"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <div className="btn-row">
         <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}>💼 Minha renda</Button>
         <Button kind="ghost" onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Outro fixo</Button>
@@ -124,15 +125,15 @@ export function Fixos() {
       <h2>Extras previstos</h2>
       <div className="mut small" style={{ margin: '-6px 2px 10px' }}>13º, PLR, férias, bônus… entram na projeção na data prevista.</div>
       {extras.length > 0 && (
-        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+        <Lista className="list">
           <AnimatePresence initial={false}>
             {extras.map((l) => <EvItem key={l.id} e={{ data: l.data, valor: l.valor, desc: l.desc, cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: null, criado: l.criado }} />)}
           </AnimatePresence>
-        </m.div>
+        </Lista>
       )}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<ExtraSheet />)}>＋ 13º, PLR, férias, bônus…</Button>
       <h2>Saídas</h2>
-      {sai.length > 0 && <m.div className="list" variants={listVariants} initial="hidden" animate="shown"><AnimatePresence>{sai.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></m.div>}
+      {sai.length > 0 && <Lista className="list"><AnimatePresence>{sai.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Gasto fixo</Button>
     </>
   );
@@ -152,19 +153,19 @@ export function Ajustes() {
     <>
       <h1 style={{ marginBottom: 6 }}>Ajustes</h1>
       <h2>Você</h2>
-      <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+      <Lista className="list">
         <Row ico="🙂" t="Nome" s={D.perfil.nome} onClick={() => openSheet(<EditNome />)} />
         {D.cartoes.length > 0 && <Row ico="💳" t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
         <Row ico="📥" t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
         <Row ico="🏦" t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
         <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
         <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
-      </m.div>
+      </Lista>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (
-        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+        <Lista className="list">
           {D.cartoes.map((c) => <Row key={c.id} ico="💳" t={c.nome} s={`Fecha dia ${c.fechamento} · vence dia ${c.vencimento}`} onClick={() => openSheet(<EditCartao cartao={c} />)} />)}
-        </m.div>
+        </Lista>
       )}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditCartao />)}>＋ Adicionar cartão</Button>
       <h2>Aparência</h2>
@@ -172,10 +173,10 @@ export function Ajustes() {
       <div className="dim hint" style={{ margin: '8px 2px 0' }}>Automático segue o modo do iPhone.</div>
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
-      <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+      <Lista className="list">
         <Row ico="⬆️" t="Exportar backup" s="Salvar arquivo no Arquivos/iCloud" onClick={exportar} />
         <Row ico="⬇️" t="Restaurar backup" s="Substitui os dados atuais" onClick={importar} />
-      </m.div>
+      </Lista>
       <Button kind="danger" style={{ marginTop: 22 }} onClick={() => { if (!confirm) return setConfirm(true); resetData(); useUI.getState().setTab('home'); }}>
         {confirm ? 'Toque de novo pra apagar TUDO' : 'Apagar tudo e recomeçar'}
       </Button>

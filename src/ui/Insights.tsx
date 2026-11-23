@@ -1,11 +1,12 @@
 import { m } from 'motion/react';
 import { useMemo } from 'react';
+import { Lista } from './Lista';
 import { monthKey, parse, today } from '../lib/dates';
 import { gerarInsights, type Insight } from '../lib/insights';
 import { uid } from '../lib/money';
 import { getData, openSheet, useData, withUndo } from '../store';
 import { ParcelasSheet } from '../sheets/Parcelas';
-import { itemVariants, listVariants } from './Controls';
+import { itemVariants } from './Controls';
 import { springSnappy } from './motion';
 
 function agir(i: Insight) {
@@ -29,7 +30,7 @@ export function InsightsStrip() {
   return (
     <>
       <h2>Pra você</h2>
-      <m.div className="insights" variants={listVariants} initial="hidden" animate="shown">
+      <Lista className="insights">
         {lista.map((i) => (
           <m.div key={i.id} variants={itemVariants} className={`insight ${i.tom}`} whileTap={i.acao ? { scale: 0.98 } : undefined} transition={springSnappy} onClick={() => agir(i)}>
             <div className="in-ico">{i.ico}</div>
@@ -38,7 +39,7 @@ export function InsightsStrip() {
             {i.acao && <button className="in-a">{i.acao.label} ›</button>}
           </m.div>
         ))}
-      </m.div>
+      </Lista>
     </>
   );
 }

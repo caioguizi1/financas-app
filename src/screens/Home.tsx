@@ -10,12 +10,13 @@ import { rendaAtual } from '../sheets/Renda';
 import { ano13 } from '../lib/extras';
 import { mutate } from '../store';
 import { InsightsStrip } from '../ui/Insights';
+import { Lista } from '../ui/Lista';
 import { CardFace, CarteiraSheet } from '../sheets/Carteira';
 import { faturasAtuais } from '../lib/faturas';
 import { trechoNegativo } from '../lib/insights';
 import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
-import { Button, itemVariants, listVariants } from '../ui/Controls';
+import { Button, itemVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { springSnappy } from '../ui/motion';
@@ -73,10 +74,10 @@ export function Home() {
         <BalanceChart pts={vm.fut} onScrub={setScrubI} />
       </m.div>
 
-      <m.div className="stats" variants={listVariants} initial="hidden" animate="shown">
+      <Lista className="stats">
         <m.div variants={itemVariants} className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${vm.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={vm.fimMes} /></div></m.div>
         <m.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
-      </m.div>
+      </Lista>
 
       {vm.neg && (
         <div className="alert"><span>⚠️</span><div>
@@ -124,7 +125,7 @@ export function Home() {
       )}
 
       <h2>Próximos meses</h2>
-      <m.div className="months" variants={listVariants} initial="hidden" animate="shown">
+      <Lista className="months">
         {vm.months.map((r) => {
           const tot = Math.max(r.ent + r.sai, 1);
           const res = r.ent - r.sai;
@@ -145,13 +146,13 @@ export function Home() {
             </m.div>
           );
         })}
-      </m.div>
+      </Lista>
 
       <h2>Vem aí</h2>
       {vm.prox.length ? (
-        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+        <Lista className="list">
           <AnimatePresence initial={false}>{vm.prox.map((e) => <EvItem key={`${e.ref}-${e.data}-${e.desc}`} e={e} />)}</AnimatePresence>
-        </m.div>
+        </Lista>
       ) : (
         <div className="card empty">Nada programado. Cadastre seus fixos em <b>Fixos</b>.</div>
       )}
