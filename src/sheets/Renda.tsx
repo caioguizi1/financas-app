@@ -1,4 +1,4 @@
-import { AnimatePresence, m } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { addMonths, mesCurto, monthKey, today } from '../lib/dates';
 import { holerite, TABELAS_ANO, type Holerite } from '../lib/folha';
@@ -7,8 +7,8 @@ import { ativaEm, substituirRenda, type Vigencia } from '../lib/versions';
 import { closeSheet, getData, withUndo } from '../store';
 import { Button, Chip, DayGrid, Segmented, Stepper } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
+import { Expande } from '../ui/Expande';
 import { ValueRows, type Linha } from '../ui/ValueRows';
-import { spring } from '../ui/motion';
 
 export const rendaAtual = () => {
   const mk = monthKey(today());
@@ -87,7 +87,7 @@ export function RendaSheet() {
 
       <AnimatePresence initial={false}>
         {h && bruto > 0 && (
-          <m.div className="holerite" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={spring}>
+          <Expande className="holerite">
             <div className="hl"><span>Salário bruto</span><b className="num">{brl(h.bruto)}</b></div>
             <div className="hl neg"><span>INSS</span><span className="num">{brl(-h.inss)}</span></div>
             <div className="hl neg">
@@ -101,7 +101,7 @@ export function RendaSheet() {
               <Stepper value={deps} min={0} max={10} onChange={setDeps} fmt={(v) => String(v)} />
             </div>
             <div className="dim hint">Tabelas INSS e IRRF {TABELAS_ANO}. Estimativa: horas extras, faltas e benefícios mudam o holerite real.</div>
-          </m.div>
+          </Expande>
         )}
       </AnimatePresence>
 

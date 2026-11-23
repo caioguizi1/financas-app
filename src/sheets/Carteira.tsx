@@ -12,6 +12,7 @@ import { brl } from '../lib/money';
 import { openSheet, toast, useData } from '../store';
 import { Button } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
+import { Expande } from '../ui/Expande';
 import { spring, springSnappy } from '../ui/motion';
 import { EditCartao } from './EditCartao';
 import { FaturasSheet } from './Faturas';
@@ -200,7 +201,7 @@ function Detalhes({ c }: { c: Cartao }) {
                 </button>
                 <AnimatePresence initial={false}>
                   {aberto && (
-                    <m.div className="wcat-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring}>
+                    <Expande className="wcat-list">
                       {itens.map((e) => (
                         <div key={`${e.ref}${e.desc}`} className="wcat-it">
                           <span className="t">{e.ico || catE(e.cat)} {e.desc}</span>
@@ -208,7 +209,7 @@ function Detalhes({ c }: { c: Cartao }) {
                         </div>
                       ))}
                       <div className="dim small" style={{ padding: '4px 0 2px' }}>{itens.length} {itens.length === 1 ? 'compra' : 'compras'} · {Math.round((val / v.totCat) * 100)}% da fatura</div>
-                    </m.div>
+                    </Expande>
                   )}
                 </AnimatePresence>
               </div>
@@ -241,7 +242,7 @@ function Detalhes({ c }: { c: Cartao }) {
       </div>
       <AnimatePresence initial={false}>
         {imgAberta && (
-          <m.div className="wimg" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+          <Expande className="wimg" chave={fonte ? `rec${fonte.w}x${fonte.h}` : 'opcoes'}>
             <div className="alert"><span>🔒</span><div>Use só a <b>arte</b> do cartão (a imagem do site do banco ou uma foto do verso liso). <b>Nunca</b> uma foto com número, nome, validade ou CVV. A imagem fica só neste aparelho.</div></div>
             {fonte && caixa ? (
               <>
@@ -259,7 +260,7 @@ function Detalhes({ c }: { c: Cartao }) {
                 {img && <Button kind="ghost" onClick={voltarPadrao}>↺ Padrão</Button>}
               </div>
             )}
-          </m.div>
+          </Expande>
         )}
       </AnimatePresence>
     </div>

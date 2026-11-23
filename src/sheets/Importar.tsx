@@ -9,6 +9,7 @@ import { aprender } from '../lib/smart';
 import { closeSheet, getData, restore, mutate, toast } from '../store';
 import { Button, Chip, Segmented } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
+import { Expande } from '../ui/Expande';
 import { spring } from '../ui/motion';
 
 const MOTIVO: Record<string, string> = { duplicado: 'já lançado', parcela: 'parcela de compra já importada', fixo: 'já é fixo', pagamento: 'pagamento da fatura', entrada: 'estorno/crédito' };
@@ -204,9 +205,9 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
                 <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}</div>
                 <AnimatePresence initial={false}>
                   {catAberta === i.id && (
-                    <m.div className="chips scroll" style={{ marginTop: 8 }} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                    <Expande className="chips scroll" style={{ marginTop: 8 }}>
                       {(i.valor > 0 ? CAT_OUT : CAT_IN).map(([k, e, n]) => <Chip key={k} on={i.cat === k} onClick={() => mudarCat(i.id, k)}>{e} {n}</Chip>)}
-                    </m.div>
+                    </Expande>
                   )}
                 </AnimatePresence>
               </div>

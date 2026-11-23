@@ -1,4 +1,4 @@
-import { AnimatePresence, m } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE } from '../lib/categories';
 import { aprender, sugerir } from '../lib/smart';
@@ -10,8 +10,8 @@ import type { Lancamento, Meio } from '../lib/types';
 import { closeSheet, getData, mutate, openSheet, restore, toast, withUndo } from '../store';
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
-import { spring } from '../ui/motion';
 import { SheetHeader } from '../ui/Sheet';
+import { Expande } from '../ui/Expande';
 import { EditRec } from './EditRec';
 import { ExtraSheet } from './Extras';
 
@@ -121,7 +121,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
           </div>
           <AnimatePresence initial={false}>
             {parcelado && (
-              <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring} style={{ overflow: 'hidden' }}>
+              <Expande>
                 <div className="row" style={{ marginTop: 12 }}>
                   <span className="mut small">Quantas vezes</span><span className="sp" />
                   <Stepper value={nParc} min={2} max={48} onChange={setNParc} fmt={(v) => `${v}x`} />
@@ -134,12 +134,12 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
                     <Segmented value={adiar} onChange={setAdiar} options={[{ v: 0, label: '1ª na data da compra' }, { v: 1, label: '1ª daqui 1 mês' }]} />
                   </div>
                 )}
-              </m.div>
+              </Expande>
             )}
           </AnimatePresence>
           <AnimatePresence initial={false}>
             {(cartao || parcelas > 1) && l.valor > 0 && (
-              <m.div className="cronograma" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring}>
+              <Expande className="cronograma">
                 {cartao && (
                   <div className="cr-l">
                     🗓️ Compra em {fmtData(l.data)} · {cartao.nome} fecha dia {cartao.fechamento}
@@ -151,7 +151,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
                     <b className="num">{parcelas}x de {brl(valorParcela)}</b> (total {brl(total)}) · 1ª em {fmtData(saida(0))}, última em {fmtData(saida(parcelas - 1))}
                   </div>
                 ) : cartao ? <div className="cr-l">Sai da conta em <b>{fmtData(saida(0))}</b></div> : null}
-              </m.div>
+              </Expande>
             )}
           </AnimatePresence>
         </>

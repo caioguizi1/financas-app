@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.13.4** — o que se abre aparece sozinho: painéis que expandem (imagem e categorias da carteira, editor de recorte, parcelas e cronograma do lançamento, holerite da renda, troca de categoria na importação) rolam a tela até ficarem inteiros à vista.
 - **v2.13.3** — botão "↺ Padrão" na imagem do cartão: volta pro visual gerado (cores do banco + nome), com Desfazer.
 - **v2.13.2** — regras fixas de categoria: 99Pay (Pix pelo cartão) → Outros, sem confundir com corrida de 99; Love Suites/motel → Lazer; hospital veterinário → Pets; correção única nos lançamentos já salvos e no que foi aprendido.
 - **v2.13.1** — carteira com arrasto próprio: o cartão sempre assenta no centro (distância + impulso do gesto; pontos tocáveis); categorias filtráveis: na carteira, tocar numa categoria abre as compras dela; no Extrato, chips por categoria com total do mês e % do gasto.
