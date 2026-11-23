@@ -1,6 +1,8 @@
 import { m, type HTMLMotionProps } from 'motion/react';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { springSnappy } from './motion';
+/** Início rápido, chegada suave (estilo iOS), sem ultrapassar. */
+const EASE_ABRIR = [0.32, 0.72, 0, 1] as const;
+const EASE_FECHAR = [0.4, 0, 0.6, 1] as const;
 
 /**
  * Traz um elemento recém-aberto pra dentro da tela, rolando o necessário (e só o necessário).
@@ -51,10 +53,11 @@ export function Expande({ children, chave, ...p }: HTMLMotionProps<'div'> & { ch
   return (
     <m.div
       ref={ref}
+      // curva (não mola) em altura: mola ultrapassava o tamanho e voltava ("enroscado") e
+      // arrastava os últimos pixels por ~200 ms ao fechar ("delay")
       initial={{ height: 0, opacity: 0 }}
-      animate={{ height: 'auto', opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={springSnappy}
+      animate={{ height: 'auto', opacity: 1, transition: { height: { duration: 0.28, ease: EASE_ABRIR }, opacity: { duration: 0.18 } } }}
+      exit={{ height: 0, opacity: 0, transition: { height: { duration: 0.2, ease: EASE_FECHAR }, opacity: { duration: 0.12 } } }}
       {...p}
       style={{ overflow: 'hidden', ...p.style }}
       onUpdate={(v) => { if (abrindo.current && ref.current && v.height !== undefined) acompanhar(ref.current); p.onUpdate?.(v); }}

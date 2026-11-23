@@ -588,6 +588,8 @@ html { touch-action: manipulation }
 
 /* categorias filtráveis */
 .wcat > .imp-cat { width: 100%; text-align: left; color: inherit; padding: 6px 0 }
+.wcat { transition: opacity 0.2s ease }
+.wcat > .imp-cat { transition: color 0.2s ease }
 .wcat.off { opacity: 0.45 }
 .wcat.on > .imp-cat { color: var(--acc-hi); font-weight: 650 }
 .wcat-list { overflow: hidden; padding-left: 8px; border-left: 2px solid var(--acc); margin: 2px 0 8px 6px }
