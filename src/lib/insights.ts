@@ -45,6 +45,40 @@ export function parcelasAbertas(D: Data, hoje: ISODate): ParcelaAberta[] {
     .sort((a, b) => (a.ultima < b.ultima ? -1 : 1));
 }
 
+export interface ParcelasMes { mes: string; total: number; porOrigem: { id: string; nome: string; valor: number }[]; renda: number }
+
+/**
+ * Parcelas mês a mês (todos os cartões + boleto/Pix parcelado), no mês em que o dinheiro SAI da conta
+ * (fatura: dia do vencimento/pagamento). `renda`: o que entra na conta nesse mês (salário, adiantamento,
+ * extras como 13º) — pra ver quanto das entradas do mês já está comprometido com parcelas.
+ */
+export function parcelasPorMes(D: Data, hoje: ISODate): ParcelasMes[] {
+  const meses = new Map<string, Map<string, { nome: string; valor: number }>>();
+  let ultima = hoje;
+  for (const l of D.lancamentos) {
+    if (l.tipo !== 'saida' || (l.parcelas ?? 1) <= 1) continue;
+    const evs = eventosEntre({ ...D, recorrentes: [], lancamentos: [l] }, addDays(l.data, -1), addDays(l.data, 31 * ((l.parcelas ?? 1) + 2)));
+    for (const e of evs) {
+      if (e.data <= hoje) continue;
+      const mk = monthKey(e.data), id = e.cartaoId ?? 'outros';
+      const m = meses.get(mk) ?? new Map(); meses.set(mk, m);
+      const x = m.get(id) ?? { nome: e.cartao ?? 'Boleto/Pix', valor: 0 }; x.valor -= e.valor; m.set(id, x);
+      if (e.data > ultima) ultima = e.data;
+    }
+  }
+  if (!meses.size) return [];
+  // entradas na conta por mês (sem créditos de cartão e sem estimativas)
+  const renda = new Map<string, number>();
+  for (const e of eventosEntre(D, addDays(hoje, 1), addDays(ultima, 31)))
+    if (e.valor > 0 && !e.cartaoId && !e.estimativa) renda.set(monthKey(e.data), (renda.get(monthKey(e.data)) ?? 0) + e.valor);
+  return [...meses].sort(([a], [b]) => a.localeCompare(b)).map(([mes, m]) => {
+    // ordem fixa (a dos cartões; boleto/Pix por último): a cor de cada cartão fica sempre no mesmo lugar
+    const ordem = (id: string) => { const i = D.cartoes.findIndex((c) => c.id === id); return i < 0 ? 99 : i; };
+    const porOrigem = [...m].map(([id, x]) => ({ id, ...x })).sort((a, b) => ordem(a.id) - ordem(b.id));
+    return { mes, total: porOrigem.reduce((s, x) => s + x.valor, 0), porOrigem, renda: renda.get(mes) ?? 0 };
+  });
+}
+
 export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
   const out: Insight[] = [];
   const mk = monthKey(hoje);
@@ -138,8 +172,10 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
   if (abertas.length) {
     const tot = abertas.reduce((a, x) => a + x.restante, 0);
     const ate = abertas.reduce((a, x) => (x.ultima > a ? x.ultima : a), hoje);
-    out.push({ id: 'parc', ico: '🧾', tom: 'info', peso: 65, titulo: `${brl(tot)} em parcelas`,
-      texto: `${abertas.length} ${abertas.length === 1 ? 'compra parcelada' : 'compras parceladas'} até ${mesCurto(monthKey(ate))}.`,
+    const prox = parcelasPorMes(D, hoje)[0];
+    const pct = prox && prox.renda ? Math.round((prox.total / prox.renda) * 100) : 0;
+    out.push({ id: 'parc', ico: '🧾', tom: 'info', peso: 65, titulo: `${brl(tot)} em parcelas até ${mesCurto(monthKey(ate))}`,
+      texto: `${abertas.length} ${abertas.length === 1 ? 'compra parcelada' : 'compras parceladas'}.${prox ? ` Em ${mesCurto(prox.mes)} saem ${brl(prox.total)}${pct ? `, ${pct}% do que você recebe no mês` : ''}.` : ''}`,
       acao: { label: 'Ver parcelas', tipo: 'parcelas' } });
   }
 

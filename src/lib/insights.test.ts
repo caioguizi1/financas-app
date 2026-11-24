@@ -68,3 +68,17 @@ describe('trecho negativo (alerta do Início)', () => {
     expect(trechoNegativo([{ d: '2026-12-01', v: 1 }])).toBeNull();
   });
 });
+
+import { parcelasPorMes } from './insights';
+describe('parcelas mês a mês', () => {
+  it('soma os cartões no mês em que sai da conta e compara com o que entra', () => {
+    const pp = { id: 'pp', nome: 'PicPay', fechamento: 9, vencimento: 15 }, it_ = { id: 'it', nome: 'Itaú', fechamento: 31, vencimento: 7 };
+    const L = (id: string, cartaoId: string, valor: number, parcelas: number, data: string) => ({ id, tipo: 'saida' as const, valor, cat: 'compras', desc: id, data, cartaoId, meio: 'credito' as const, parcelas, criado: 1 });
+    const D = { v: 1, onboarded: true, perfil: { nome: 'X' }, saldo: { valor: 0, data: '2026-11-24', ts: 1 }, cartoes: [pp, it_], uso: {},
+      recorrentes: [{ id: 'ad', tipo: 'entrada', desc: 'Adiantamento', cat: 'salario', valor: 265000, dia: 15, inicio: '2026-01' }, { id: 's', tipo: 'entrada', desc: 'Salário', cat: 'salario', valor: 265000, dia: 30, inicio: '2026-01' }],
+      lancamentos: [L('a', 'pp', 30000, 3, '2026-11-20'), L('b', 'it', 60000, 2, '2026-11-20')] } as never;
+    const m = parcelasPorMes(D, '2026-11-24');
+    expect(m.map((x) => [x.mes, x.total, x.renda])).toEqual([['2026-12', 40000, 530000], ['2027-01', 40000, 530000], ['2027-02', 10000, 530000]]);
+    expect(m[0].porOrigem.map((o) => [o.nome, o.valor])).toEqual([['PicPay', 10000], ['Itaú', 30000]]);
+  });
+});
