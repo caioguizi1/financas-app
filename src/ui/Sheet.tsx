@@ -98,10 +98,10 @@ function SheetFrame({ children }: { children: ReactNode }) {
 }
 
 /** Cabeçalho padrão: Cancelar · título · lixeira (quando o item já existe). */
-export function SheetHeader({ title, onDelete }: { title: string; onDelete?: () => void }) {
+export function SheetHeader({ title, onDelete, voltar }: { title: string; onDelete?: () => void; voltar?: { label: string; onClick: () => void } }) {
   return (
     <div className="sheet-head">
-      <button className="sh-btn" onClick={closeSheet}>Cancelar</button>
+      {voltar ? <button className="sh-btn" onClick={voltar.onClick}>‹ {voltar.label}</button> : <button className="sh-btn" onClick={closeSheet}>Cancelar</button>}
       <h3>{title}</h3>
       {onDelete ? (
         <m.button whileTap={{ scale: 0.88 }} className="sh-btn del" onClick={onDelete} aria-label="Apagar"><ITrash /></m.button>

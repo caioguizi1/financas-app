@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { dm, today } from '../lib/dates';
-import { ajusteFatura, faturasAtuais, pagarFatura } from '../lib/faturas';
+import { ajusteFatura, faturasAnteriores, faturasAtuais, pagarFatura } from '../lib/faturas';
 import { brl } from '../lib/money';
 import type { Lancamento } from '../lib/types';
 import { closeSheet, openSheet, useData, withUndo } from '../store';
@@ -17,6 +17,7 @@ import { ImportarSheet } from './Importar';
 import { CartaoMini } from '../ui/Ico';
 import { CatGlyph } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
+import { FaturaPassadaSheet } from './FaturaPassada';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
@@ -31,8 +32,11 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
   const reais = reaisPor[sel] ?? fats.map((f) => f.total);
   const setReais = (fn: (r: number[]) => number[]) => setReaisPor((x) => ({ ...x, [sel]: fn(reais) }));
   const [ativa, setAtiva] = useState(0);
+  const [todas, setTodas] = useState(false);
   const importadas = c ? doCartao(D, c.id) : [];
   const vals = (x: (typeof importadas)[number]) => valores(D, x);
+  const anteriores = c ? faturasAnteriores(D, c, hoje) : [];
+  const abrir = (venc: string) => openSheet(<FaturaPassadaSheet cartaoId={sel} venc={venc} voltar={() => openSheet(<FaturasSheet cartaoId={sel} />)} />);
   if (!c) return null;
 
   const mudou = D.cartoes.some((cc) => { const r = reaisPor[cc.id]; return !!r && faturasAtuais(D, cc, hoje).some((f, i) => r[i] !== f.total); });
@@ -59,36 +63,6 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
         <p className="mut small" style={{ marginBottom: 14 }}>
           Fecha dia {c.fechamento}, vence dia {c.vencimento}. Embaixo, confira com o app do banco: se o valor for diferente, digite o real e eu ajusto a diferença.
         </p>
-        <div className="lab" style={{ marginTop: 0 }}>Faturas importadas deste cartão</div>
-        {importadas.length ? (
-          <div className="list imp-lista">
-            {importadas.map((x) => (
-              <div key={x.id} className="imp-reg">
-                <span className={`imp-reg-i ${x.conferida === false ? 'warn' : 'ok'}`}>{x.conferida === false ? '!' : '✓'}</span>
-                <div className="m">
-                  <div className="t">{x.venc ? `Fatura de ${mesCurto(monthKey(x.venc))}` : 'Extrato'}{x.venc ? <span className="dim"> · {x.venc < hoje ? 'venceu' : 'vence'} {fmt(x.venc)}</span> : null}</div>
-                  <div className="s">
-                    {x.ids.length} itens · {brl(vals(x).creditos ? vals(x).liquido : x.total)}
-                    {x.conferida === true && ' · bate com o banco'}
-                    {x.conferida === false && x.totalBanco != null && ` · banco diz ${brl(x.totalBanco)}`}
-                    {x.inferida && ' · importada antes do histórico'}
-                    {!x.inferida && ` · enviada em ${new Date(x.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
-                  </div>
-                  {vals(x).creditos > 0 && <div className="s imp-reg-det">Compras {brl(vals(x).compras)} · créditos −{brl(vals(x).creditos)}</div>}
-                </div>
-                <button className="imp-reg-x" aria-label="Desfazer importação"
-                  onClick={() => withUndo(`Importação de ${x.venc ? mesCurto(monthKey(x.venc)) : 'extrato'} desfeita`, (d) => removerImportacao(d, x.id))}>
-                  <IUndo size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <button className="imp-vazio" onClick={() => openSheet(<ImportarSheet cartaoId={sel} />)}>
-            <IImport /><span>Nenhuma fatura importada ainda. <b>Importar</b> é opcional — lançar à mão funciona igual.</span>
-          </button>
-        )}
-
         <div className="lab">Faturas atuais</div>
         {fats.map((f) => (
           <div key={f.vencimento} className="fat-box">
@@ -124,6 +98,60 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
             nota: reais[i] !== f.total ? `ajuste de ${brl(reais[i] - f.total, true)}` : 'igual ao app' }))}
           ativa={ativa} onAtiva={setAtiva} onValor={(i, v) => setReais((r) => r.map((x, j) => (j === i ? v : x)))}
         />
+
+        <div className="lab">Faturas anteriores</div>
+        {anteriores.length ? (
+          <div className="list fat-hist">
+            {anteriores.slice(0, todas ? undefined : 6).map((f) => {
+              const reg = importadas.find((x) => x.venc === f.vencimento);
+              const pul = f.itens.filter((e) => e.adiado).length;
+              return (
+                <button key={f.vencimento} className="item" onClick={() => abrir(f.vencimento)}>
+                  <div className={`ico ${reg ? 'ok' : ''}`}>{reg ? <ICheckCircle size={18} /> : <ICalendar size={18} />}</div>
+                  <div className="m">
+                    <div className="t">Fatura de {mesCurto(monthKey(f.vencimento))}</div>
+                    <div className="s">venceu {fmt(f.vencimento)} · {f.itens.length} {f.itens.length === 1 ? 'item' : 'itens'}{pul ? ` · ${pul} ${pul === 1 ? 'pulada' : 'puladas'}` : ''}{reg ? ' · importada' : ''}</div>
+                  </div>
+                  <b className="v num">{brl(f.total)}</b>
+                  <span className="chev" aria-hidden>›</span>
+                </button>
+              );
+            })}
+            {!todas && anteriores.length > 6 && <button className="item fat-mais" onClick={() => setTodas(true)}>Ver mais antigas ({anteriores.length - 6})</button>}
+          </div>
+        ) : <div className="dim small" style={{ padding: '2px 2px 8px' }}>As faturas que já venceram aparecem aqui, com todas as compras.</div>}
+
+        <div className="lab">Importações deste cartão</div>
+        {importadas.length ? (
+          <div className="list imp-lista">
+            {importadas.map((x) => (
+              <div key={x.id} className="imp-reg">
+                <span className={`imp-reg-i ${x.conferida === false ? 'warn' : 'ok'}`}>{x.conferida === false ? '!' : '✓'}</span>
+                <button className="m imp-reg-abrir" onClick={() => x.venc && abrir(x.venc)} disabled={!x.venc}>
+                  <div className="t">{x.venc ? `Fatura de ${mesCurto(monthKey(x.venc))}` : 'Extrato'}{x.venc ? <span className="dim"> · {x.venc < hoje ? 'venceu' : 'vence'} {fmt(x.venc)}</span> : null}</div>
+                  <div className="s">
+                    {x.ids.length} itens · {brl(vals(x).creditos ? vals(x).liquido : x.total)}
+                    {x.conferida === true && ' · bate com o banco'}
+                    {x.conferida === false && x.totalBanco != null && ` · banco diz ${brl(x.totalBanco)}`}
+                    {x.inferida && ' · importada antes do histórico'}
+                    {!x.inferida && ` · enviada em ${new Date(x.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
+                  </div>
+                  {vals(x).creditos > 0 && <div className="s imp-reg-det">Compras {brl(vals(x).compras)} · créditos −{brl(vals(x).creditos)}</div>}
+                  {x.venc && <div className="s imp-reg-ver">Ver compras ›</div>}
+                </button>
+                <button className="imp-reg-x" aria-label="Desfazer importação"
+                  onClick={() => withUndo(`Importação de ${x.venc ? mesCurto(monthKey(x.venc)) : 'extrato'} desfeita`, (d) => removerImportacao(d, x.id))}>
+                  <IUndo size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <button className="imp-vazio" onClick={() => openSheet(<ImportarSheet cartaoId={sel} />)}>
+            <IImport /><span>Nenhuma fatura importada ainda. <b>Importar</b> é opcional — lançar à mão funciona igual.</span>
+          </button>
+        )}
+
       </div>
       <div className="sl-foot">
         {mudou

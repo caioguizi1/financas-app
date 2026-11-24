@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.27** — histórico de faturas: em Faturas, "Faturas anteriores" lista todas as faturas que já venceram (importadas ou lançadas à mão). Cada uma abre a lista completa, com filtros Puladas, Parcelas e Créditos, e volta para Faturas. Tocar numa importação também abre a fatura. "Ajuste fatura" passa a aparecer como "Compras não lançadas".
 - **v2.26** — "FIN" do PicPay = compra pulada (Pula Compra): etiqueta PULADA só na fatura em que o FIN aparece; nas parcelas seguintes de uma compra pulada e parcelada no app, ela é parcela normal. Migração preenche em qual fatura o FIN apareceu, a partir da importação.
 - **v2.25.1** — correção de texto: o que veio da fatura anterior ("FIN", parcelada/adiada) não é mais chamado de Pula Compra; o Pula Compra continua sendo só o crédito.
 - **v2.25** — etiqueta das compras do Pula Compra passa a ser FATURA ANTERIOR, numa linha própria, sem cortar o nome. O histórico de faturas importadas mostra o valor líquido (o mesmo do extrato), com compras e créditos embaixo. As dicas da fatura deixam essas compras fora da comparação com o normal e explicam quanto veio da fatura anterior.

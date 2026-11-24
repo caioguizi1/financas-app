@@ -28,7 +28,7 @@ export function fechamentoDe(c: Cartao, venc: ISODate): ISODate {
 /** Um dia de compra que cai com certeza na fatura que vence em `venc`. */
 export const diaDoCiclo = (c: Cartao, venc: ISODate) => addDays(fechamentoDe(c, venc), -1);
 
-function fatura(D: Data, c: Cartao, venc: ISODate, status: Fatura['status']): Fatura {
+export function fatura(D: Data, c: Cartao, venc: ISODate, status: Fatura['status']): Fatura {
   // a fatura é identificada pelo vencimento original, mesmo que paga em outra data
   const itens = eventosEntre(D, addDays(venc, -62), addDays(venc, 45)).filter((e) => e.cartaoId === c.id && e.venc === venc);
   const pg = pagamentoFatura(D, c, venc);
@@ -84,5 +84,24 @@ export function agruparFaturas(evs: Evento[], cartoes: Cartao[]): Evento[] {
     out.push(novo);
   }
   for (const g of grupos.values()) if (g.itens!.every((x) => x.estimativa)) { g.desc += ' (estimada)'; g.estimativa = true; }
+  return out;
+}
+
+/**
+ * Histórico: faturas que já venceram (mais recente primeiro), importadas ou lançadas à mão.
+ * Só entram as que têm algum lançamento. Vai até 3 anos pra trás.
+ */
+export function faturasAnteriores(D: Data, c: Cartao, hoje: ISODate, maxMeses = 36): Fatura[] {
+  const atuais = new Set(faturasAtuais(D, c, hoje).map((f) => f.vencimento));
+  const primeira = D.lancamentos.filter((l) => l.cartaoId === c.id).reduce((m, l) => (l.data < m ? l.data : m), hoje);
+  const va = parse(pagamentoCartao(c, hoje));
+  const out: Fatura[] = [];
+  for (let k = 1; k <= maxMeses; k++) {
+    const v = dateOf(va.getFullYear(), va.getMonth() - k, c.vencimento);
+    if (v < addDays(primeira, -62)) break;
+    if (atuais.has(v)) continue;
+    const f = fatura(D, c, v, 'fechada');
+    if (f.itens.length) out.push(f);
+  }
   return out;
 }

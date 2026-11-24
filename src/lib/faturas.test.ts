@@ -103,3 +103,15 @@ describe('gasto típico por fatura (estimativa)', () => {
     expect(p.saldoEm('2027-01-28')).toBe(200_000);
   });
 });
+
+import { faturasAnteriores } from './faturas';
+describe('histórico de faturas', () => {
+  it('lista as faturas que já venceram, mais recente primeiro, só as que têm lançamento', () => {
+    const pp = { id: 'pp', nome: 'PicPay', fechamento: 9, vencimento: 15 };
+    const l = (id: string, data: string, valor: number) => ({ id, tipo: 'saida' as const, valor, cat: 'comida', desc: id, data, cartaoId: 'pp', meio: 'credito' as const, criado: 1 });
+    const D = { v: 1, onboarded: true, perfil: { nome: 'X' }, saldo: { valor: 0, data: '2026-11-24', ts: 1 }, recorrentes: [], cartoes: [pp], uso: {},
+      lancamentos: [l('set', '2026-08-20', 1000), l('nov', '2026-10-20', 2000), l('dez', '2026-11-20', 3000)] } as never;
+    const fs = faturasAnteriores(D, pp, '2026-11-24');
+    expect(fs.map((f) => [f.vencimento, f.total])).toEqual([['2026-11-15', 2000], ['2026-09-15', 1000]]);
+  });
+});

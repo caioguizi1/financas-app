@@ -16,6 +16,7 @@ const semParcela = (d: string) => d.replace(/\s+\d{1,2}\/\d{1,2}$/, '').trim();
  * O texto salvo não muda.
  */
 export function nomeVisivel(D: Data, desc: string) {
+  if (desc.startsWith('Ajuste fatura ')) return 'Compras não lançadas'; // diferença pro valor que você informou do banco
   const imp = importados(D);
   return nomeLoja(desc, D.nomes, imp.has(desc) || imp.has(semParcela(desc)));
 }

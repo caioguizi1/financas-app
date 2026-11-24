@@ -734,3 +734,20 @@ html { touch-action: manipulation }
 .wcat-it > .t { display: flex; align-items: flex-start }
 .wcat-it > .t > .cat-g { margin-top: 1px }
 .m-col { min-width: 0; flex: 1 }
+
+/* ===== histórico de faturas (v2.27) ===== */
+.imp-reg-abrir { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer }
+.imp-reg-ver { color: var(--acc-hi); font-weight: 600; margin-top: 3px }
+.fat-hist .item { width: 100%; text-align: left; background: none; border: 0; color: inherit; font: inherit }
+.fat-hist .ico.ok { color: var(--in) }
+.fat-hist .v { font-weight: 650; white-space: nowrap; margin-left: 8px }
+.fat-hist .chev { color: var(--dim); margin-left: 6px; font-size: 20px; line-height: 1 }
+.fp-head { display: flex; gap: 14px; align-items: center; padding: 4px 2px 0 }
+.fp-head > .cmini, .fp-head > .cartao-mini { flex: none; width: 46px; height: 30px }
+.fp-meta { min-width: 0 }
+.fp-total { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin: 2px 0 }
+.fp-sub { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); margin-top: 2px }
+.fp-sub .tag { margin: 0; font-size: 9.5px }
+.fat-it .num.pos { color: var(--in) }
+.fat-hist .fat-mais { justify-content: center; color: var(--acc-hi); font-weight: 600 }
+.sheet-head .sh-btn { white-space: nowrap }
