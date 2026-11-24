@@ -16,7 +16,7 @@ export type TipoImport = 'fatura' | 'extrato';
 /** Linha lida do arquivo. `valor` em centavos: > 0 = saída (gasto), < 0 = entrada/estorno. */
 export interface Linha {
   data: ISODate; desc: string; valor: number; parcela?: { i: number; n: number };
-  /** PicPay marca com "FIN" a compra que você adiou/pulou pra uma fatura seguinte (Pula Compra). */
+  /** PicPay marca com "FIN" o que veio da fatura anterior (parcelada/adiada). Não confundir com o Pula Compra, que aparece como crédito. */
   adiado?: boolean;
 }
 

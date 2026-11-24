@@ -56,7 +56,7 @@ export interface Lancamento {
   /** Veio de fatura/extrato importado: só esses têm o nome do banco limpo na exibição.
    *  O que você digita aparece exatamente como digitou. */
   importado?: boolean;
-  /** Compra adiada pra uma fatura seguinte (PicPay "FIN"/Pula Compra): gasto antigo, não compra nova. */
+  /** Veio da fatura anterior (PicPay "FIN", parcelada/adiada): gasto antigo, não compra nova. Não é o Pula Compra. */
   adiado?: boolean;
   criado: number;
 }

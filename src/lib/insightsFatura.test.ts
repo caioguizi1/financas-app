@@ -43,7 +43,7 @@ describe('dicas da fatura', () => {
     const its = [ev('Vet antigo', 'pets', 40000, '2026-12-07', { adiado: true }), ev('Vet', 'pets', 10000), ev('Mercado', 'mercado', 5000)];
     const d = dicasDaFatura(comImport, c, '2026-12-07', its);
     expect(d.some((x) => x.id === 'alta-pets')).toBe(false);
-    expect(d.find((x) => x.id === 'adiadas')!.texto).toBe('R$ 400,00 desta fatura é 1 compra que veio da fatura anterior (Pula Compra) e é paga nesta. Fica fora da comparação com o normal.');
+    expect(d.find((x) => x.id === 'adiadas')!.texto).toBe('R$ 400,00 desta fatura é 1 compra que veio da fatura anterior e é paga nesta. Fica fora da comparação com o normal.');
   });
   it('fatura futura: fala do que já está comprometido, não de "100% parcelas"', () => {
     const its = [ev('TV 3/10', 'compras', 30000, '2027-01-07'), ev('Sofá 2/6', 'casa', 20000, '2027-01-07'), ev('Previsto', 'outros', 50000, '2027-01-07', { estimativa: true })];

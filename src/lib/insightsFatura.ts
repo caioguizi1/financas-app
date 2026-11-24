@@ -31,7 +31,7 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   const futura = previsto > 0;
   const out: DicaFatura[] = [];
 
-  // por categoria (nesta fatura) — sem as compras que vieram da fatura anterior (Pula Compra/"FIN"):
+  // por categoria (nesta fatura) — sem o que veio da fatura anterior ("FIN", parcelada/adiada; não é o Pula Compra):
   // elas são gasto de outro mês e inflariam a comparação com o normal
   const porCat = new Map<string, number>();
   for (const e of compras) if (!e.adiado) porCat.set(e.cat, (porCat.get(e.cat) ?? 0) - e.valor);
@@ -97,8 +97,8 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   const vAdiadas = -adiadas.reduce((a, e) => a + e.valor, 0);
   if (!futura && adiadas.length && vAdiadas >= 1000)
     out.push({ id: 'adiadas', tom: 'info', peso: 55, texto: adiadas.length === 1
-      ? `${brl(vAdiadas)} desta fatura é 1 compra que veio da fatura anterior (Pula Compra) e é paga nesta. Fica fora da comparação com o normal.`
-      : `${brl(vAdiadas)} desta fatura são ${adiadas.length} compras que vieram da fatura anterior (Pula Compra) e são pagas nesta. Ficam fora da comparação com o normal.` });
+      ? `${brl(vAdiadas)} desta fatura é 1 compra que veio da fatura anterior e é paga nesta. Fica fora da comparação com o normal.`
+      : `${brl(vAdiadas)} desta fatura são ${adiadas.length} compras que vieram da fatura anterior e são pagas nesta. Ficam fora da comparação com o normal.` });
 
   // 7) compromisso que já vem desta fatura
   const futuro = parc.reduce((a, x) => a + -x.e.valor * (x.p!.n - x.p!.i), 0);

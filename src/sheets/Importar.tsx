@@ -225,7 +225,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               <CatTile cat={i.cat} ico={i.ico} onClick={() => setCatAberta(catAberta === i.id ? null : i.id)} />
               <div className="m">
                 <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
-                <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}{i.adiado && <span className="tag tag-l" title="Compra adiada da fatura anterior (Pula Compra) e paga nesta">FATURA ANTERIOR</span>}</div>
+                <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}{i.adiado && <span className="tag tag-l" title="Veio da fatura anterior (parcelada/adiada) e é paga nesta">FATURA ANTERIOR</span>}</div>
                 <AnimatePresence initial={false}>
                   {catAberta === i.id && (
                     <Expande className="chips scroll" style={{ marginTop: 8 }}>

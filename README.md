@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.25.1** — correção de texto: o que veio da fatura anterior ("FIN", parcelada/adiada) não é mais chamado de Pula Compra; o Pula Compra continua sendo só o crédito.
 - **v2.25** — etiqueta das compras do Pula Compra passa a ser FATURA ANTERIOR, numa linha própria, sem cortar o nome. O histórico de faturas importadas mostra o valor líquido (o mesmo do extrato), com compras e créditos embaixo. As dicas da fatura deixam essas compras fora da comparação com o normal e explicam quanto veio da fatura anterior.
 - **v2.24** — compras adiadas do PicPay ("FIN"/Pula Compra) ganham a etiqueta ADIADA na prévia da importação, nas faturas, na carteira e no extrato; reimportar a mesma fatura recupera a marca das compras antigas sem duplicar nada (e créditos passam a ser reconhecidos como duplicados). Títulos dos cartões "Pra você" usam até duas linhas, com o valor sempre inteiro.
 - **v2.23** — nomes aparecem exatamente como você digita ("ITBI - Apartamento"); só o texto que veio do banco é limpo (marcação `importado` + migração dos antigos). Na edição, o teclado numérico só abre ao tocar no valor, fecha ao tocar fora ou em OK, e o primeiro dígito começa um valor novo. Seletor "Figuras das categorias" mostra sempre o ícone em Ícones e o emoji em Emoji.
