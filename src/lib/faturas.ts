@@ -105,3 +105,20 @@ export function faturasAnteriores(D: Data, c: Cartao, hoje: ISODate, maxMeses = 
   }
   return out;
 }
+
+/**
+ * Compras no cartão feitas num mês, pela DATA DA COMPRA — só pra mostrar no extrato (o dinheiro sai
+ * no vencimento da fatura, então não entram nos totais). Fica de fora o que veio de importação
+ * (já aparece completo na fatura), pra não lotar o extrato com a fatura inteira.
+ */
+export function comprasNoCartao(D: Data, ini: ISODate, fim: ISODate) {
+  const out: { l: Data['lancamentos'][number]; cartao: Cartao; venc: ISODate | null }[] = [];
+  for (const l of D.lancamentos) {
+    if (!l.cartaoId || l.tipo !== 'saida' || l.importado || l.cat === 'fatura' || l.data < ini || l.data > fim) continue;
+    const cartao = D.cartoes.find((c) => c.id === l.cartaoId);
+    if (!cartao) continue;
+    const ev = eventosEntre({ ...D, recorrentes: [], lancamentos: [l] }, addDays(l.data, -1), addDays(l.data, 120)).find((e) => e.venc);
+    out.push({ l, cartao, venc: ev?.venc ?? null });
+  }
+  return out;
+}

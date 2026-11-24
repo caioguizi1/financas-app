@@ -1,9 +1,11 @@
 import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
-import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
+import { diaLabel, dm, MESL, mesCurto, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
 import { ativaEm, serieDe } from '../lib/versions';
-import { agruparFaturas } from '../lib/faturas';
+import { agruparFaturas, comprasNoCartao } from '../lib/faturas';
+import { QuickAdd } from '../sheets/QuickAdd';
+import { nomeExib } from '../ui/nome';
 import type { Recorrente } from '../lib/types';
 import { ExtraSheet } from '../sheets/Extras';
 import { ImportarSheet } from '../sheets/Importar';
@@ -25,7 +27,7 @@ import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { exportar, importar } from './backup';
 import { Aviso } from '../ui/Aviso';
-import { CatGlyph, useEstiloIco } from '../ui/CatIco';
+import { CatGlyph, CatTile, useEstiloIco } from '../ui/CatIco';
 import { setEstiloIco } from '../lib/estiloIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
@@ -47,7 +49,12 @@ export function Extrato() {
   const sai = cat ? -evsView.filter((e) => e.valor < 0).reduce((a, e) => a + e.valor, 0) : r.sai;
   const byDay = new Map<string, Evento[]>();
   evsView.forEach((e) => byDay.set(e.data, [...(byDay.get(e.data) ?? []), e]));
-  const days = [...byDay.keys()].sort().reverse();
+  // compras no cartão no dia da compra: só informativo (saem da conta no vencimento da fatura)
+  const ini = `${y}-${String(mo + 1).padStart(2, '0')}-01`, fim = `${y}-${String(mo + 1).padStart(2, '0')}-31`;
+  const cartao = comprasNoCartao(D, ini, fim).filter((x) => !cat || x.l.cat === cat);
+  const cartaoDia = new Map<string, typeof cartao>();
+  cartao.forEach((x) => cartaoDia.set(x.l.data, [...(cartaoDia.get(x.l.data) ?? []), x]));
+  const days = [...new Set([...byDay.keys(), ...cartaoDia.keys()])].sort().reverse();
   const sob = ent - sai;
   const move = (d: 1 | -1) => { const x = new Date(y, mo + d, 1); setDir(d); setYM([x.getFullYear(), x.getMonth()]); };
 
@@ -77,16 +84,29 @@ export function Extrato() {
       )}
       <Lista key={`${y}-${mo}-${cat ?? ''}`}>
         {days.length ? days.map((d) => {
-          const tot = byDay.get(d)!.reduce((a, e) => a + e.valor, 0);
+          const evd = byDay.get(d) ?? [];
+          const tot = evd.reduce((a, e) => a + e.valor, 0);
           return (
             <m.div key={d} variants={itemVariants}>
-              <div className="day"><span>{diaLabel(d)}{d > t ? ' · previsto' : ''}</span><span className="num">{brl(tot, true)}</span></div>
-              <div className="list"><AnimatePresence initial={false}>{byDay.get(d)!.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}</AnimatePresence></div>
+              <div className="day"><span>{diaLabel(d)}{d > t ? ' · previsto' : ''}</span>{evd.length > 0 && <span className="num">{brl(tot, true)}</span>}</div>
+              <div className="list"><AnimatePresence initial={false}>
+                {evd.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}
+                {(cartaoDia.get(d) ?? []).map(({ l, cartao: c, venc }) => (
+                  <button key={`cc-${l.id}`} className="item no-cartao" onClick={() => openSheet(<QuickAdd lanc={l} />)}>
+                    <CatTile cat={l.cat} ico={l.ico} />
+                    <div className="m">
+                      <div className="t">{nomeExib(l.desc)}</div>
+                      <div className="s">{c.nome}{venc ? ` · fatura de ${mesCurto(monthKey(venc))}, vence ${dm(venc)}` : ''}{(l.parcelas ?? 1) > 1 ? ` · ${l.parcelas}x` : ''}</div>
+                    </div>
+                    <div className="v nc-v"><b className="num">{brl(-l.valor)}</b><span>no cartão</span></div>
+                  </button>
+                ))}
+              </AnimatePresence></div>
             </m.div>
           );
         }) : <div className="card empty" style={{ marginTop: 14 }}>{cat ? `Nada em ${catN(cat)} neste mês.` : 'Nenhuma movimentação neste mês.'}</div>}
       </Lista>
-      <div className="footnote">{cat ? 'Cada compra aparece no dia em que sai da conta (no cartão, o vencimento da fatura).' : 'Compras no cartão aparecem no dia em que a fatura vence.'}</div>
+      <div className="footnote">Compras no cartão aparecem no dia da compra como "no cartão" (sem entrar nos totais) e saem da conta no dia em que a fatura vence.</div>
     </>
   );
 }
