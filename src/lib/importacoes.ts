@@ -52,3 +52,12 @@ export function inferir(d: Data): Importacao[] {
   return out;
 }
 
+
+/** Valores de uma importação a partir dos lançamentos que ela criou: compras, créditos (estornos,
+ *  Pula Compra) e o líquido — o mesmo valor que a fatura mostra no extrato. */
+export function valores(d: Data, r: Importacao) {
+  const ids = new Set(r.ids);
+  let compras = 0, creditos = 0;
+  for (const l of d.lancamentos) if (ids.has(l.id)) { const v = naFatura(l); if (v > 0) compras += v; else creditos -= v; }
+  return { compras, creditos, liquido: compras - creditos };
+}

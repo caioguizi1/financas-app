@@ -116,8 +116,8 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
       });
     });
     closeSheet();
-    const adiadas = recuperaveis ? ` · ${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como adiada${recuperaveis === 1 ? '' : 's'}` : '';
-    toast(novos.length ? `${novos.length} lançamentos importados${adiadas}` : `${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como adiada${recuperaveis === 1 ? '' : 's'}`, () => restore(before));
+    const adiadas = recuperaveis ? ` · ${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como da fatura anterior` : '';
+    toast(novos.length ? `${novos.length} lançamentos importados${adiadas}` : `${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como da fatura anterior`, () => restore(before));
   };
 
   const alternar = (id: string) => setItens((xs) => xs!.map((i) => (i.id === id ? { ...i, incluir: !i.incluir } : i)));
@@ -224,8 +224,8 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               <button className="imp-chk" onClick={() => alternar(i.id)} aria-label={i.incluir ? 'Não importar' : 'Importar'}>{i.incluir ? '✓' : ''}</button>
               <CatTile cat={i.cat} ico={i.ico} onClick={() => setCatAberta(catAberta === i.id ? null : i.id)} />
               <div className="m">
-                <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}{i.adiado && <span className="tag" title="Compra adiada de uma fatura anterior">ADIADA</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
-                <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}</div>
+                <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
+                <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}{i.adiado && <span className="tag tag-l" title="Compra adiada da fatura anterior (Pula Compra) e paga nesta">FATURA ANTERIOR</span>}</div>
                 <AnimatePresence initial={false}>
                   {catAberta === i.id && (
                     <Expande className="chips scroll" style={{ marginTop: 8 }}>
@@ -241,7 +241,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
       </div>
       <div className="sl-foot">
         <Button disabled={!incluidos.length && !recuperaveis} onClick={importar}>
-          {incluidos.length ? `Importar ${incluidos.length} lançamentos` : `Marcar ${recuperaveis} ${recuperaveis === 1 ? 'compra adiada' : 'compras adiadas'}`}
+          {incluidos.length ? `Importar ${incluidos.length} lançamentos` : `Marcar ${recuperaveis} ${recuperaveis === 1 ? 'compra' : 'compras'} da fatura anterior`}
         </Button>
       </div>
     </div>

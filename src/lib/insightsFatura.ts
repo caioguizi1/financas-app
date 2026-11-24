@@ -31,15 +31,16 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   const futura = previsto > 0;
   const out: DicaFatura[] = [];
 
-  // por categoria (nesta fatura)
+  // por categoria (nesta fatura) — sem as compras que vieram da fatura anterior (Pula Compra/"FIN"):
+  // elas são gasto de outro mês e inflariam a comparação com o normal
   const porCat = new Map<string, number>();
-  for (const e of compras) porCat.set(e.cat, (porCat.get(e.cat) ?? 0) - e.valor);
+  for (const e of compras) if (!e.adiado) porCat.set(e.cat, (porCat.get(e.cat) ?? 0) - e.valor);
   const cats = [...porCat.entries()].sort((a, b) => b[1] - a[1]);
 
   // histórico: faturas anteriores deste cartão com compras lançadas (até 3)
   // só faturas COMPLETAS contam: importadas, ou com compras à vista lançadas. Uma fatura antiga que só tem
   // as parcelas anteriores de compras importadas depois não representa o gasto daquele mês.
-  const ant = eventosEntre(D, addDays(venc, -130), addDays(venc, -1)).filter((e) => e.cartaoId === c.id && e.venc && e.venc < venc && compra(e));
+  const ant = eventosEntre(D, addDays(venc, -130), addDays(venc, -1)).filter((e) => e.cartaoId === c.id && e.venc && e.venc < venc && compra(e) && !e.adiado);
   const importadas = new Set((D.importacoes ?? []).filter((x) => x.cartaoId === c.id && x.venc).map((x) => x.venc!));
   const completa = (v: ISODate) => importadas.has(v) || ant.filter((e) => e.venc === v && !parcelaDe(e)).length >= 3;
   const vencsAnt = [...new Set(ant.map((e) => e.venc!))].filter(completa).sort().slice(-3);
@@ -57,8 +58,8 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   }
 
   // 2) concentração numa categoria
-  const [topCat, topV] = cats[0];
-  if (!futura && topV / total >= 0.35 && topV >= 20000 && !out.some((d) => d.id === `alta-${topCat}`))
+  const [topCat, topV] = cats[0] ?? ['', 0];
+  if (!futura && topCat && topV / total >= 0.35 && topV >= 20000 && !out.some((d) => d.id === `alta-${topCat}`))
     out.push({ id: 'conc', tom: 'atencao', peso: 70, texto: `${catN(topCat)} é ${pct(topV / total)} desta fatura (${brl(topV)}) — é onde mais dá pra cortar.` });
 
   // 3) peso das parcelas e compras novas parceladas
@@ -91,7 +92,15 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   if (!futura && maior && -maior.valor / total >= 0.2 && compras.length >= 3)
     out.push({ id: 'maior', tom: 'info', peso: 50, texto: `A maior compra, ${nomeVisivel(D, maior.desc.replace(PARC, '').trim())}, é ${pct(-maior.valor / total)} da fatura (${brl(-maior.valor)}).` });
 
-  // 6) compromisso que já vem desta fatura
+  // 6) o que veio da fatura anterior (adiado): explica por que a fatura tem gasto de outro mês
+  const adiadas = compras.filter((e) => e.adiado);
+  const vAdiadas = -adiadas.reduce((a, e) => a + e.valor, 0);
+  if (!futura && adiadas.length && vAdiadas >= 1000)
+    out.push({ id: 'adiadas', tom: 'info', peso: 55, texto: adiadas.length === 1
+      ? `${brl(vAdiadas)} desta fatura é 1 compra que veio da fatura anterior (Pula Compra) e é paga nesta. Fica fora da comparação com o normal.`
+      : `${brl(vAdiadas)} desta fatura são ${adiadas.length} compras que vieram da fatura anterior (Pula Compra) e são pagas nesta. Ficam fora da comparação com o normal.` });
+
+  // 7) compromisso que já vem desta fatura
   const futuro = parc.reduce((a, x) => a + -x.e.valor * (x.p!.n - x.p!.i), 0);
   if (futuro >= 50000) out.push({ id: 'futuro', tom: 'info', peso: 45, texto: `As parcelas desta fatura ainda somam ${brl(futuro)} nas próximas.` });
 

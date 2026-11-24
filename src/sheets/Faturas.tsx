@@ -9,7 +9,7 @@ import { Button, Chip } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { ValueRows } from '../ui/ValueRows';
 import { QuickAdd } from './QuickAdd';
-import { doCartao, remover as removerImportacao } from '../lib/importacoes';
+import { doCartao, remover as removerImportacao, valores } from '../lib/importacoes';
 import { mesCurto, monthKey } from '../lib/dates';
 import { ICalendar, ICheckCircle, IImport, IUndo } from '../ui/Icons';
 import type { Fatura } from '../lib/faturas';
@@ -32,6 +32,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
   const setReais = (fn: (r: number[]) => number[]) => setReaisPor((x) => ({ ...x, [sel]: fn(reais) }));
   const [ativa, setAtiva] = useState(0);
   const importadas = c ? doCartao(D, c.id) : [];
+  const vals = (x: (typeof importadas)[number]) => valores(D, x);
   if (!c) return null;
 
   const mudou = D.cartoes.some((cc) => { const r = reaisPor[cc.id]; return !!r && faturasAtuais(D, cc, hoje).some((f, i) => r[i] !== f.total); });
@@ -67,12 +68,13 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
                 <div className="m">
                   <div className="t">{x.venc ? `Fatura de ${mesCurto(monthKey(x.venc))}` : 'Extrato'}{x.venc ? <span className="dim"> · {x.venc < hoje ? 'venceu' : 'vence'} {fmt(x.venc)}</span> : null}</div>
                   <div className="s">
-                    {x.ids.length} itens · {brl(x.total)}
+                    {x.ids.length} itens · {brl(vals(x).creditos ? vals(x).liquido : x.total)}
                     {x.conferida === true && ' · bate com o banco'}
                     {x.conferida === false && x.totalBanco != null && ` · banco diz ${brl(x.totalBanco)}`}
                     {x.inferida && ' · importada antes do histórico'}
                     {!x.inferida && ` · enviada em ${new Date(x.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
                   </div>
+                  {vals(x).creditos > 0 && <div className="s imp-reg-det">Compras {brl(vals(x).compras)} · créditos −{brl(vals(x).creditos)}</div>}
                 </div>
                 <button className="imp-reg-x" aria-label="Desfazer importação"
                   onClick={() => withUndo(`Importação de ${x.venc ? mesCurto(monthKey(x.venc)) : 'extrato'} desfeita`, (d) => removerImportacao(d, x.id))}>
@@ -100,7 +102,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
                   const l = D.lancamentos.find((x) => x.id === e.ref);
                   return (
                     <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
-                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span>{e.adiado && <span className="tag" title="Compra adiada de uma fatura anterior">ADIADA</span>}<span className="num">{brl(e.valor)}</span>
+                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m"><span className="m-n">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span>{e.adiado && <span className="tag tag-l" title="Compra adiada da fatura anterior (Pula Compra) e paga nesta">FATURA ANTERIOR</span>}</span><span className="num">{brl(e.valor)}</span>
                     </button>
                   );
                 })}

@@ -37,6 +37,14 @@ describe('dicas da fatura', () => {
     const comImport = D({ lancamentos: hist, importacoes: [{ id: 'i', tipo: 'fatura', cartaoId: 'it', venc: '2026-11-07', total: 10000, ids: ['h'], quando: 1 }] });
     expect(dicasDaFatura(comImport, c, '2026-12-07', its).find((x) => x.id === 'alta-pets')!.texto).toBe('Você está gastando mais com Pets: R$ 400,00, 4,0x a fatura de nov/26 (+R$ 300,00).');
   });
+  it('compra da fatura anterior (adiada) não infla a categoria e ganha a explicação', () => {
+    const hist = [{ id: 'h', tipo: 'saida' as const, valor: 10000, cat: 'pets', desc: 'Vet', data: '2026-10-10', cartaoId: 'it', fatura: '2026-11-07', criado: 1 }];
+    const comImport = D({ lancamentos: hist, importacoes: [{ id: 'i', tipo: 'fatura', cartaoId: 'it', venc: '2026-11-07', total: 10000, ids: ['h'], quando: 1 }] });
+    const its = [ev('Vet antigo', 'pets', 40000, '2026-12-07', { adiado: true }), ev('Vet', 'pets', 10000), ev('Mercado', 'mercado', 5000)];
+    const d = dicasDaFatura(comImport, c, '2026-12-07', its);
+    expect(d.some((x) => x.id === 'alta-pets')).toBe(false);
+    expect(d.find((x) => x.id === 'adiadas')!.texto).toBe('R$ 400,00 desta fatura é 1 compra que veio da fatura anterior (Pula Compra) e é paga nesta. Fica fora da comparação com o normal.');
+  });
   it('fatura futura: fala do que já está comprometido, não de "100% parcelas"', () => {
     const its = [ev('TV 3/10', 'compras', 30000, '2027-01-07'), ev('Sofá 2/6', 'casa', 20000, '2027-01-07'), ev('Previsto', 'outros', 50000, '2027-01-07', { estimativa: true })];
     const d = dicasDaFatura(D({ cartoes: [{ ...c, estimativa: 100000 }] }), { ...c, estimativa: 100000 }, '2027-01-07', its);
