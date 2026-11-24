@@ -14,6 +14,7 @@ import { Chip } from '../ui/Controls';
 import { CartaoMini } from '../ui/Ico';
 import { nomeExib } from '../ui/nome';
 import { SheetHeader } from '../ui/Sheet';
+import { catsDe, FiltroBar } from '../ui/Filtros';
 import { QuickAdd } from './QuickAdd';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
@@ -23,6 +24,8 @@ const COR: Record<Parte, string> = { mes: 'var(--fp-1)', novas: 'var(--fp-2)', a
 export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: string; venc: string; voltar?: () => void }) {
   const D = useData();
   const [filtro, setFiltro] = useState<Filtro>('todas');
+  const [ordem, setOrdem] = useState('data');
+  const [cat, setCat] = useState<string | null>(null);
   const c = D.cartoes.find((x) => x.id === cartaoId);
   if (!c) return null;
   const A = analisarFatura(D, c, venc, today());
@@ -31,7 +34,16 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
   const lanc = new Map(D.lancamentos.map((l) => [l.id, l]));
   // data da compra (a parcela mostra a data original da compra, como o banco)
   const linhas = f.itens.map((e) => ({ e, l: lanc.get(e.ref), p: parteDe(e) })).sort((x, y) => (x.l?.data ?? x.e.data).localeCompare(y.l?.data ?? y.e.data) || x.e.valor - y.e.valor);
-  const vis = linhas.filter((x) => filtro === 'todas' || x.p === filtro);
+  const doFiltro = linhas.filter((x) => filtro === 'todas' || x.p === filtro);
+  const cats = catsDe(doFiltro.map((x) => x.e.cat));
+  const catOk = cat && cats.some((c) => c.cat === cat) ? cat : null;
+  const dataDe = (x: (typeof linhas)[number]) => x.l?.data ?? x.e.data;
+  const vis = doFiltro.filter((x) => !catOk || x.e.cat === catOk).sort((a, b) =>
+    ordem === 'data-' ? dataDe(b).localeCompare(dataDe(a)) || a.e.valor - b.e.valor
+    : ordem === 'valor' ? a.e.valor - b.e.valor
+    : ordem === 'valor-' ? b.e.valor - a.e.valor
+    : dataDe(a).localeCompare(dataDe(b)) || a.e.valor - b.e.valor);
+  const somaVis = -vis.reduce((s, x) => s + x.e.valor, 0);
   const hoje = today();
 
   return (
@@ -54,6 +66,8 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
           {A.partes.map((p) => <Chip key={p.id} on={filtro === p.id} onClick={() => setFiltro(p.id)}><span className="fp-dot" style={{ background: COR[p.id] }} />{p.label} · {p.n}</Chip>)}
           {A.nCred > 0 && <Chip on={filtro === 'credito'} onClick={() => setFiltro('credito')}>Créditos · {A.nCred}</Chip>}
         </div>
+        <FiltroBar ordem={ordem} setOrdem={setOrdem} cat={catOk} setCat={setCat} cats={cats}
+          opcoes={[{ id: 'data', label: 'Data (mais antiga)' }, { id: 'data-', label: 'Data (mais recente)' }, { id: 'valor', label: 'Maior valor' }, { id: 'valor-', label: 'Menor valor' }]} />
         <div className="fat-box">
           <div className="fat-itens">
             {vis.map(({ e, l }, k) => (
@@ -67,6 +81,8 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
               </button>
             ))}
           </div>
+          {(filtro !== 'todas' || catOk) && <div className="fat-tot"><span className="mut">{vis.length} {vis.length === 1 ? 'item' : 'itens'} filtrados</span><b className="num">{brl(somaVis)}</b></div>}
+          {!vis.length && <div className="dim small" style={{ padding: '10px 0' }}>Nada com esse filtro.</div>}
           <div className="fat-tot"><span className="mut">Total da fatura</span><b className="num">{brl(f.total)}</b></div>
         </div>
       </div>

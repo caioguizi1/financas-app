@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.30** — ordenar e filtrar: na lista de parcelas (termina antes/depois, valor restante, maior parcela, data da compra) e na fatura completa (data, valor), com filtro por categoria e soma do que está filtrado.
 - **v2.29** — parcelas mês a mês: "Ver parcelas" mostra, para cada mês, quanto sai de parcelas (todos os cartões + boleto/Pix), dividido por cartão, e quanto isso representa do que entra na conta no mês. A dica de parcelas diz o prazo final e quanto sai no próximo mês.
 - **v2.28** — análise da fatura: barra mostrando de que o valor é feito (compras do mês, novas parceladas, parcelas antigas, puladas, fixos, não lançadas, créditos), cada parte filtra a lista. Mostra também a comparação com a fatura anterior (só se as duas estiverem completas e fechadas), a maior compra, quanto as parceladas ainda cobram nas próximas faturas e onde foi o dinheiro. Também vale para a fatura aberta ("Ver análise e fatura completa").
 - **v2.27** — histórico de faturas: em Faturas, "Faturas anteriores" lista todas as faturas que já venceram (importadas ou lançadas à mão). Cada uma abre a lista completa, com filtros Puladas, Parcelas e Créditos, e volta para Faturas. Tocar numa importação também abre a fatura. "Ajuste fatura" passa a aparecer como "Compras não lançadas".

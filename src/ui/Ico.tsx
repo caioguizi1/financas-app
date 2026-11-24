@@ -4,9 +4,7 @@
  * o que é AÇÃO ou AJUSTE usa ícone Lucide. Avisos usam <Aviso> (ui/Aviso.tsx).
  */
 import {
-  Banknote, Barcode, BriefcaseBusiness, CalendarClock, CalendarDays, Camera, Coins, CreditCard, Download, FileDown,
-  FileUp, Gift, Info, Landmark, LoaderCircle, Lock, Moon, PenLine, Receipt, RefreshCw, Repeat, RotateCcw, RotateCw,
-  Sparkles, Sun, SunMoon, Tv, TrendingUp, TriangleAlert, Upload, UserRound, WalletCards, Zap, type LucideIcon,
+  ArrowUpDown, Banknote, Barcode, BriefcaseBusiness, CalendarClock, CalendarDays, Camera, Coins, CreditCard, Download, FileDown, FileUp, Gift, Info, Landmark, ListFilter, LoaderCircle, Lock, Moon, PenLine, Receipt, RefreshCw, Repeat, RotateCcw, RotateCw, Sparkles, Sun, SunMoon, TrendingUp, TriangleAlert, Tv, Upload, UserRound, WalletCards, Zap, type LucideIcon,
 } from 'lucide-react';
 import type { Cartao } from '../lib/types';
 import { corDoCartao, useImagem } from '../lib/imagens';
@@ -14,6 +12,7 @@ import { corDoCartao, useImagem } from '../lib/imagens';
 export const ICONES = {
   nome: UserRound, carteira: WalletCards, importar: FileDown, saldo: Landmark, renda: BriefcaseBusiness, extras: Gift,
   exportar: Upload, restaurar: Download, sol: Sun, lua: Moon, auto: SunMoon,
+  ordenar: ArrowUpDown, filtro: ListFilter,
   pix: Zap, boleto: Barcode, pixparc: Repeat, cartao: CreditCard, data: CalendarDays, cronograma: CalendarClock,
   fixo: Repeat, camera: Camera, padrao: RotateCcw, girar: RotateCw, mao: PenLine, previsto: Sparkles, sugerido: Sparkles,
   arquivo: FileUp, carregando: LoaderCircle, privado: Lock, parcelas: Receipt, semDuplicar: RefreshCw, assinatura: Tv,

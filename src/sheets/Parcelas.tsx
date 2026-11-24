@@ -1,4 +1,6 @@
 import { m } from 'motion/react';
+import { useState } from 'react';
+import { catsDe, FiltroBar } from '../ui/Filtros';
 
 import { dm, today } from '../lib/dates';
 import { parcelasAbertas, parcelasPorMes } from '../lib/insights';
@@ -15,8 +17,22 @@ import { nomeExib } from '../ui/nome';
 /** Compras parceladas em aberto, com progresso. */
 export function ParcelasSheet() {
   const D = getData();
-  const abertas = parcelasAbertas(D, today());
-  const tot = abertas.reduce((a, x) => a + x.restante, 0);
+  const todasAbertas = parcelasAbertas(D, today());
+  const [ordem, setOrdem] = useState('fim');
+  const [cat, setCat] = useState<string | null>(null);
+  const cats = catsDe(todasAbertas.map((p) => p.lanc.cat));
+  const catOk = cat && cats.some((c) => c.cat === cat) ? cat : null;
+  const filtradas = todasAbertas.filter((p) => !catOk || p.lanc.cat === catOk);
+  const abertas = [...filtradas].sort((a, b) =>
+    ordem === 'fim-' ? b.ultima.localeCompare(a.ultima)
+    : ordem === 'valor' ? b.restante - a.restante
+    : ordem === 'valor-' ? a.restante - b.restante
+    : ordem === 'parcela' ? b.valorParcela - a.valorParcela
+    : ordem === 'compra' ? b.lanc.data.localeCompare(a.lanc.data)
+    : ordem === 'compra-' ? a.lanc.data.localeCompare(b.lanc.data)
+    : a.ultima.localeCompare(b.ultima));
+  const tot = todasAbertas.reduce((a, x) => a + x.restante, 0);
+  const totFiltro = abertas.reduce((a, x) => a + x.restante, 0);
   const meses = parcelasPorMes(D, today());
   const max = Math.max(1, ...meses.map((x) => x.total));
   const cor = (id: string, nome: string) => (id === 'outros' ? 'var(--fp-3)' : corDoCartao(D.cartoes.find((c) => c.id === id)?.nome ?? nome)[0]);
@@ -57,7 +73,11 @@ export function ParcelasSheet() {
           <div className="lab">Por compra</div>
         </>
       )}
-      <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+      <FiltroBar ordem={ordem} setOrdem={setOrdem} cat={catOk} setCat={setCat} cats={cats}
+        opcoes={[{ id: 'fim', label: 'Termina antes' }, { id: 'fim-', label: 'Termina depois' }, { id: 'valor', label: 'Maior valor restante' }, { id: 'valor-', label: 'Menor valor restante' },
+          { id: 'parcela', label: 'Maior parcela' }, { id: 'compra', label: 'Compra mais recente' }, { id: 'compra-', label: 'Compra mais antiga' }]} />
+      {catOk && <div className="fat-tot" style={{ margin: '0 2px 8px' }}><span className="mut">{abertas.length} {abertas.length === 1 ? 'compra' : 'compras'} nesta categoria</span><b className="num">{brl(totFiltro)}</b></div>}
+      <m.div key={`${ordem}|${catOk}`} className="list" variants={listVariants} initial="hidden" animate="shown">
         {abertas.map((p) => {
           const c = p.lanc.cartaoId ? D.cartoes.find((x) => x.id === p.lanc.cartaoId) : undefined;
           return (
@@ -73,7 +93,7 @@ export function ParcelasSheet() {
           );
         })}
       </m.div>
-      {!abertas.length && <div className="card empty">Nenhuma compra parcelada em aberto.</div>}
+      {!todasAbertas.length && <div className="card empty">Nenhuma compra parcelada em aberto.</div>}
     </>
   );
 }

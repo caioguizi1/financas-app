@@ -797,3 +797,13 @@ html { touch-action: manipulation }
 .pm-p { text-align: right; color: var(--mut); font-size: 13px }
 .pm-p.alto { color: var(--warn); font-weight: 650 }
 .pm-det { font-size: 12px; margin: 3px 0 0 62px }
+
+/* ===== ordenar/filtrar listas (v2.30) ===== */
+.fbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 2px 0 10px }
+.fsel { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; background: var(--card2); border: 1px solid var(--line); font-size: 13.5px; font-weight: 550; color: var(--text); max-width: 100% }
+.fsel.on { border-color: color-mix(in srgb, var(--acc-hi) 55%, transparent); background: color-mix(in srgb, var(--acc-hi) 12%, var(--card2)) }
+.fsel .ic-l, .fsel .lucide { margin: 0; color: var(--acc-hi) }
+.fsel .lucide.cat-g { margin: 0 }
+.fsel-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fsel select { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; font-size: 16px; cursor: pointer }
+.fsel-x { height: 34px; padding: 0 10px; border: 0; background: none; color: var(--acc-hi); font: inherit; font-size: 13.5px; font-weight: 600 }
