@@ -62,14 +62,14 @@ function titulo(s: string) {
 }
 
 /** "99 *99PayCAIOG" → "99Pay"; "MLP*NETSHOES-N 4/4" → "Netshoes · 4/4"; "Celular novo" → "Celular novo". */
-export function nomeLoja(desc: string, nomes?: Record<string, string>): string {
+export function nomeLoja(desc: string, nomes?: Record<string, string>, limparBanco = true): string {
   if (!desc) return desc;
   const m = desc.match(/^(.*?)\s+(\d{1,2}\/\d{1,2})$/); // sufixo de parcela que o app acrescenta
   const base = m ? m[1] : desc;
   const parc = m ? ` · ${m[2]}` : '';
   const aprendido = nomes?.[normalizar(base)];
   if (aprendido) return aprendido + parc;
-  if (!ehBruto(base)) return desc;
+  if (!limparBanco || !ehBruto(base)) return desc;
   const n = normalizar(base);
   for (const [re, nome] of MARCAS) if (re.test(n)) return nome + parc;
   return limpar(base) + parc;

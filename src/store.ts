@@ -23,7 +23,23 @@ function migrar(d: Data): Data {
     const c = d.cartoes.find((x) => l.desc === `Fatura ${x.nome} (já gasto)`);
     return c ? { ...l, cartaoId: c.id, meio: 'credito' as const, data: diaDoCiclo(c, l.data), ico: '💳' } : l;
   });
-  return historicoImportacoes(corrigirCategorias({ ...d, lancamentos }));
+  return marcarImportados(historicoImportacoes(corrigirCategorias({ ...d, lancamentos })));
+}
+
+/**
+ * Uma vez (v2.23): marca o que veio de importação, pra só esses terem o nome do banco limpo.
+ * Importado = está no histórico de importações, tem a âncora de fatura (só a importação grava)
+ * ou nasceu no mesmo instante que outros lançamentos (lote importado de uma vez).
+ */
+function marcarImportados(d: Data): Data {
+  const ID = 'marcar-importados';
+  if (d.migracoes?.includes(ID)) return d;
+  const ids = new Set((d.importacoes ?? []).flatMap((x) => x.ids));
+  const lote = new Map<number, number>();
+  for (const l of d.lancamentos) lote.set(l.criado, (lote.get(l.criado) ?? 0) + 1);
+  const lancamentos = d.lancamentos.map((l) =>
+    l.importado || ids.has(l.id) || (l.fatura && l.cat !== 'fatura') || (lote.get(l.criado) ?? 0) >= 3 ? { ...l, importado: true } : l);
+  return { ...d, lancamentos, migracoes: [...(d.migracoes ?? []), ID] };
 }
 
 /** Uma vez (v2.17): reconstrói o histórico das faturas importadas antes de ele existir. */

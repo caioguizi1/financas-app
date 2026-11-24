@@ -177,7 +177,7 @@ export function Ajustes() {
       <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: <><Ico n="auto" size={16} />Auto</> }, { v: 'claro', label: <><Ico n="sol" size={16} />Claro</> }, { v: 'escuro', label: <><Ico n="lua" size={16} />Escuro</> }]} />
       <div className="dim hint" style={{ margin: '8px 2px 0' }}>Auto segue o modo do iPhone.</div>
       <div className="lab" style={{ margin: '16px 2px 8px' }}>Figuras das categorias</div>
-      <Segmented value={estiloIco} onChange={setEstiloIco} options={[{ v: 'icone', label: <><CatGlyph cat="comida" ico="🍔" />Ícones</> }, { v: 'emoji', label: <><span className="emo" aria-hidden>🍔</span>Emoji</> }]} />
+      <Segmented value={estiloIco} onChange={setEstiloIco} options={[{ v: 'icone', label: <><CatGlyph cat="comida" ico="🍔" forcar="icone" />Ícones</> }, { v: 'emoji', label: <><CatGlyph cat="comida" ico="🍔" forcar="emoji" />Emoji</> }]} />
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
       <Lista className="list">

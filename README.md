@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.23** — nomes aparecem exatamente como você digita ("ITBI - Apartamento"); só o texto que veio do banco é limpo (marcação `importado` + migração dos antigos). Na edição, o teclado numérico só abre ao tocar no valor, fecha ao tocar fora ou em OK, e o primeiro dígito começa um valor novo. Seletor "Figuras das categorias" mostra sempre o ícone em Ícones e o emoji em Emoji.
 - **v2.22** — revisão visual: todo ícone de interface já nasce com respiro antes do texto (nada encostado), emoji idem no modo emoji; ícones em botões primários ficam brancos; quadros informativos com o ícone na cor de destaque; Minha renda e Recebimentos extras nos Ajustes no mesmo formato da lista. Auditoria automática mede o espaço ícone↔texto em ~25 telas, nos dois modos.
 - **v2.21** — categorias com ícone na cor da categoria, em círculo tingido (extrato, fixos, parcelas, faturas, importação, filtros e lançamento); emoji continua disponível em Ajustes › Aparência › Figuras das categorias. Faturas mantêm a miniatura do próprio cartão, incluindo a imagem personalizada.
 - **v2.20** — seletor de tema com ícone e texto alinhados (Auto, Claro, Escuro); salário e 13º com a mesma figura do extrato no menu, nos Fixos e no aviso do 13º.

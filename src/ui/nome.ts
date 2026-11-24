@@ -1,5 +1,5 @@
-import { nomeLoja } from '../lib/lojas';
+import { nomeVisivel } from '../lib/nomes';
 import { getData } from '../store';
 
-/** Nome pra exibir (loja legível; o que o usuário corrigiu vale). O texto salvo não muda. */
-export const nomeExib = (desc: string) => nomeLoja(desc, getData().nomes);
+/** Nome pra exibir: como você digitou; só o que veio do banco é limpo (ver lib/nomes). */
+export const nomeExib = (desc: string) => nomeVisivel(getData(), desc);

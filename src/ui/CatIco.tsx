@@ -13,7 +13,7 @@ import {
   WashingMachine, Wifi, Wrench, type LucideIcon,
 } from 'lucide-react';
 import { catE } from '../lib/categories';
-import { assinarEstiloIco, getEstiloIco } from '../lib/estiloIco';
+import { assinarEstiloIco, getEstiloIco, type EstiloIco } from '../lib/estiloIco';
 
 /** Cor de cada categoria (entradas todas no verde da renda). */
 export const COR_CAT: Record<string, string> = {
@@ -46,8 +46,9 @@ const corDe = (cat: string) => COR_CAT[cat] ?? COR_CAT.outros;
 const icoDe = (cat: string, ico?: string) => (ico && ICO_EMOJI[ico]) || ICO_CAT[cat] || Ellipsis;
 
 /** Figura em linha (chips, listas compactas, sugestão): emoji ou ícone colorido. */
-export function CatGlyph({ cat, ico, size = 16 }: { cat: string; ico?: string; size?: number }) {
-  const estilo = useEstiloIco();
+export function CatGlyph({ cat, ico, size = 16, forcar }: { cat: string; ico?: string; size?: number; forcar?: EstiloIco }) {
+  const atual = useEstiloIco();
+  const estilo = forcar ?? atual;
   if (estilo === 'emoji') return <span className="emo" aria-hidden>{ico || catE(cat)}</span>;
   const I = icoDe(cat, ico);
   return <I size={size} strokeWidth={2} className="cat-g" style={{ ['--c' as string]: corDe(cat) } as CSSProperties} aria-hidden />;

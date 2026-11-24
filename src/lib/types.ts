@@ -53,6 +53,9 @@ export interface Lancamento {
   fatura?: ISODate;
   /** Ícone sugerido pelo dicionário (ex.: 🐾); se ausente, usa o da categoria. */
   ico?: string;
+  /** Veio de fatura/extrato importado: só esses têm o nome do banco limpo na exibição.
+   *  O que você digita aparece exatamente como digitou. */
+  importado?: boolean;
   criado: number;
 }
 

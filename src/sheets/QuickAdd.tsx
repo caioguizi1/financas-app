@@ -9,7 +9,7 @@ import { brl, uid } from '../lib/money';
 import type { Lancamento, Meio } from '../lib/types';
 import { closeSheet, getData, mutate, openSheet, restore, toast, withUndo } from '../store';
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
-import { AmountDisplay, Keypad } from '../ui/Money';
+import { AmountDisplay, Keypad, TecladoRecolhivel, useTeclado } from '../ui/Money';
 import { SheetHeader } from '../ui/Sheet';
 import { Expande } from '../ui/Expande';
 import { EditRec } from './EditRec';
@@ -22,6 +22,7 @@ import { normalizar } from '../lib/smart';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const novo = !lanc;
+  const tec = useTeclado(novo);
   const D = getData();
   // compra importada: o campo mostra o nome legível; se não mexer, o texto original do banco fica salvo
   const nomeInicial = lanc?.desc ? nomeExib(lanc.desc) : '';
@@ -97,12 +98,13 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       const orig = lanc?.desc ?? '';
       const renomeou = !!orig && final.desc !== nomeInicial;
       if (!renomeou) final.desc = orig; // não mexeu no nome: mantém o original do banco
+      else delete final.importado; // o nome agora é seu: aparece exatamente como você digitou
       mutate((d) => ({
         ...d,
         lancamentos: d.lancamentos.map((x) => (x.id === final.id ? final : x)),
         aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido,
         // corrigiu o nome de uma compra do banco: vale pras próximas com o mesmo descritor
-        nomes: renomeou && ehBruto(orig) && final.desc ? { ...(d.nomes ?? {}), [normalizar(orig)]: final.desc } : d.nomes,
+        nomes: renomeou && lanc?.importado && ehBruto(orig) && final.desc ? { ...(d.nomes ?? {}), [normalizar(orig)]: final.desc } : d.nomes,
       }));
       toast('Atualizado');
     }
@@ -121,7 +123,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         onChange={(tipo) => { setManual(false); set({ tipo, cat: '', ...(tipo === 'entrada' ? { cartaoId: null, parcelas: 1 } : {}) }); }}
         options={[{ v: 'saida', label: 'Saída', tone: 'out' }, { v: 'entrada', label: 'Entrada', tone: 'in' }]}
       />
-      <AmountDisplay value={l.valor} compact />
+      <AmountDisplay value={l.valor} compact onClick={novo ? undefined : tec.abrir} ativo={tec.aberto} />
       </div>
       <div className="sl-mid" data-scroll>
 
@@ -206,7 +208,9 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       )}
       </div>
       <div className="sl-foot">
-      <Keypad small value={l.valor} onChange={(valor) => set({ valor })} />
+      {novo ? <Keypad small value={l.valor} onChange={(valor) => set({ valor })} /> : (
+        <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
+      )}
       <div className="actions tight">
         <Button disabled={!l.valor} onClick={salvar}>{novo ? 'Lançar' : 'Salvar'}</Button>
       </div>

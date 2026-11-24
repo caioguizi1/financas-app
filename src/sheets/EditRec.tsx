@@ -11,7 +11,7 @@ import type { Recorrente, Tipo } from '../lib/types';
 import { closeSheet, getData, mutate, toast, withUndo } from '../store';
 import { SheetHeader } from '../ui/Sheet';
 import { Button, Chip, DayGrid } from '../ui/Controls';
-import { AmountDisplay, Keypad } from '../ui/Money';
+import { AmountDisplay, Keypad, TecladoRecolhivel, useTeclado } from '../ui/Money';
 import { CatGlyph } from '../ui/CatIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
@@ -25,6 +25,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const D = getData();
   const cartoes = D.cartoes;
   // existente ou sugestão do cadastro (com ícone) = já escolhido; senão o dicionário decide até a pessoa tocar numa categoria
+  const tec = useTeclado(novo);
   const [manual, setManual] = useState(!novo || !!rec?.ico);
   const sug = useMemo(() => sugerir(r.desc, r.tipo, D.aprendido), [r.desc, r.tipo, D.aprendido]);
   const usaSug = !manual && !!sug;
@@ -60,8 +61,10 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <div className="sl-mid" data-scroll>
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
-      <AmountDisplay value={r.valor} />
-      <Keypad value={r.valor} onChange={(valor) => set({ valor })} />
+      <AmountDisplay value={r.valor} onClick={novo ? undefined : tec.abrir} ativo={tec.aberto} />
+      {novo ? <Keypad value={r.valor} onChange={(valor) => set({ valor })} /> : (
+        <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
+      )}
       <div className="lab">Todo dia</div>
       <DayGrid value={r.dia} onChange={(dia) => set({ dia })} />
       <div className="lab">Categoria</div>

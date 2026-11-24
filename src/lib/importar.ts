@@ -265,7 +265,7 @@ export function paraLancamentos(itens: Item[], tipo: TipoImport, cartao?: Cartao
   const agora = Date.now();
   return itens.filter((i) => i.incluir).map((i) => {
     const saida = i.valor > 0;
-    const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, criado: agora };
+    const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, importado: true, criado: agora };
     if (tipo !== 'fatura' || !cartao) return { ...base, meio: 'pix' };
     base.cartaoId = cartao.id; base.meio = 'credito';
     if (i.parcela) {
