@@ -14,6 +14,8 @@ import { mesCurto, monthKey } from '../lib/dates';
 import { ICalendar, ICheckCircle, IImport, IUndo } from '../ui/Icons';
 import type { Fatura } from '../lib/faturas';
 import { ImportarSheet } from './Importar';
+import { CartaoMini } from '../ui/Ico';
+import { nomeExib } from '../ui/nome';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
@@ -49,7 +51,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
       <div className="sl-mid" data-scroll>
         {D.cartoes.length > 1 && (
           <div className="chips scroll" style={{ marginBottom: 12 }}>
-            {D.cartoes.map((x) => <Chip key={x.id} on={x.id === sel} onClick={() => { setSel(x.id); setAtiva(0); }}>💳 {x.nome}</Chip>)}
+            {D.cartoes.map((x) => <Chip key={x.id} on={x.id === sel} onClick={() => { setSel(x.id); setAtiva(0); }}><CartaoMini c={x} />{x.nome}</Chip>)}
           </div>
         )}
         <p className="mut small" style={{ marginBottom: 14 }}>
@@ -97,7 +99,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
                   const l = D.lancamentos.find((x) => x.id === e.ref);
                   return (
                     <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
-                      <span>{e.ico || catE(e.cat)}</span><span className="m">{e.desc}{e.fixo ? ' · fixo' : ''}</span><span className="num">{brl(e.valor)}</span>
+                      <span>{e.ico || catE(e.cat)}</span><span className="m">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span><span className="num">{brl(e.valor)}</span>
                     </button>
                   );
                 })}
@@ -105,7 +107,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
             ) : <div className="dim small" style={{ padding: '6px 0' }}>Nada lançado nesta fatura ainda.</div>}
             <div className="fat-tot"><span className="mut">Somado no app</span><b className="num">{brl(f.total)}</b></div>
             {c.estimativa && f.status === 'aberta' && c.estimativa > f.total && (
-              <div className="fat-tot"><span className="mut">📊 Previsto com gasto típico</span><span className="num">{brl(c.estimativa)}</span></div>
+              <div className="fat-tot"><span className="mut">Previsto com gasto típico</span><span className="num">{brl(c.estimativa)}</span></div>
             )}
             <Pagamento f={f} hoje={hoje}
               pagarHoje={() => withUndo(`Fatura ${c.nome} paga hoje`, (d) => pagarFatura(d, c, f.vencimento, hoje))}

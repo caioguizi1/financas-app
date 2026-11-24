@@ -13,6 +13,7 @@ import { RecItem } from '../ui/Items';
 import { AmountDisplay, AnimatedBRL, Keypad } from '../ui/Money';
 import { importar } from './backup';
 import { spring } from '../ui/motion';
+import { CartaoMini } from '../ui/Ico';
 
 const STEPS = ['welcome', 'nome', 'saldo', 'renda', 'rendaFreq', 'adiantDia', 'adiantValor', 'rendaDia', 'cartoes', 'fixos', 'fim'] as const;
 type Step = (typeof STEPS)[number];
@@ -171,7 +172,7 @@ export function Onboarding() {
           <m.div className="list" style={{ marginBottom: 14 }} variants={listVariants} initial="hidden" animate="shown">
             {D.cartoes.map((c) => (
               <m.button key={c.id} variants={itemVariants} className="item" onClick={() => openSheet(<EditCartao cartao={c} />)}>
-                <div className="ico">💳</div><div className="m"><div className="t">{c.nome}</div><div className="s">Fecha dia {c.fechamento} · vence dia {c.vencimento}</div></div>
+                <div className="ico"><CartaoMini c={c} /></div><div className="m"><div className="t">{c.nome}</div><div className="s">Fecha dia {c.fechamento} · vence dia {c.vencimento}</div></div>
               </m.button>
             ))}
           </m.div>

@@ -2,6 +2,7 @@ import { AnimatePresence, m } from 'motion/react';
 import { catE, catN } from '../lib/categories';
 import type { Sugestao } from '../lib/smart';
 import { springSnappy } from './motion';
+import { Ico } from './Ico';
 
 /** Campo de descrição com o ícone sugerido "pulando" à esquerda. */
 export function SmartDesc({ value, onChange, ico, placeholder, autoFocus }: {
@@ -30,7 +31,7 @@ export function SmartHint({ sug, aplicada, atual }: { sug: Sugestao | null; apli
     <AnimatePresence initial={false}>
       {show && sug && (
         <m.div className="smart-hint" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={springSnappy}>
-          <span className="spark">✨</span>
+          <span className="spark"><Ico n="sugerido" size={14} /></span>
           {aplicada ? 'Categoria' : 'Sugestão'}: <b>{sug.ico || catE(sug.cat)} {catN(sug.cat)}</b>
           <span className="dim"> · {sug.fonte === 'aprendido' ? 'aprendido com você' : 'pelo dicionário'}</span>
         </m.div>

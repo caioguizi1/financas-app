@@ -12,6 +12,8 @@ import { Button, Chip, Segmented } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { Expande } from '../ui/Expande';
 import { spring } from '../ui/motion';
+import { CartaoMini, Ico } from '../ui/Ico';
+import { nomeExib } from '../ui/nome';
 
 const MOTIVO: Record<string, string> = { duplicado: 'já lançado', parcela: 'parcela de compra já importada', fixo: 'já é fixo', pagamento: 'pagamento da fatura', entrada: 'estorno/crédito' };
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
@@ -116,26 +118,26 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
       <div className="sl">
         <SheetHeader title="Importar" />
         <div className="sl-mid" data-scroll>
-          <div className="imp-opc">✨ Opcional: um atalho pra preencher mais rápido. O Fluxo funciona igual lançando à mão.</div>
+          <div className="imp-opc"><Ico n="info" size={16} />Opcional: um atalho pra preencher mais rápido. O Fluxo funciona igual lançando à mão.</div>
           <Segmented value={tipo} onChange={setTipo} options={[{ v: 'fatura', label: 'Fatura do cartão' }, { v: 'extrato', label: 'Extrato da conta' }]} />
           {tipo === 'fatura' && (
             D.cartoes.length ? (
               <>
                 <div className="lab">De qual cartão?</div>
-                <div className="chips scroll">{D.cartoes.map((c) => <Chip key={c.id} on={c.id === cid} onClick={() => setCid(c.id)}>💳 {c.nome}</Chip>)}</div>
+                <div className="chips scroll">{D.cartoes.map((c) => <Chip key={c.id} on={c.id === cid} onClick={() => setCid(c.id)}><CartaoMini c={c} />{c.nome}</Chip>)}</div>
               </>
             ) : <div className="pay-info" style={{ marginTop: 12, height: 'auto', padding: 12 }}>Cadastre um cartão em Ajustes antes de importar uma fatura.</div>
           )}
           <button className="imp-drop" onClick={escolher} disabled={lendo || (tipo === 'fatura' && !cartao)}>
-            <span className="imp-ico">{lendo ? '⏳' : '📄'}</span>
+            <span className="imp-ico">{lendo ? <Ico n="carregando" size={30} className="spin" /> : <Ico n="arquivo" size={30} />}</span>
             <b>{lendo ? 'Lendo o arquivo…' : 'Escolher arquivo'}</b>
             <span className="mut small">CSV, OFX ou PDF exportado do app do banco</span>
           </button>
           {erro && <div className="alert" style={{ marginTop: 12 }}><span>⚠️</span><div>{erro}</div></div>}
           <div className="imp-dicas">
-            <div>🔒 O arquivo é lido só no seu celular — nada é enviado.</div>
-            <div>🧾 Parcelas como "PARC 03/10" viram as 7 parcelas restantes nos meses seguintes.</div>
-            <div>♻️ O que você já lançou, os fixos e o pagamento da fatura são reconhecidos e não duplicam.</div>
+            <div><Ico n="privado" size={16} />O arquivo é lido só no seu celular — nada é enviado.</div>
+            <div><Ico n="parcelas" size={16} />Parcelas como "PARC 03/10" viram as 7 parcelas restantes nos meses seguintes.</div>
+            <div><Ico n="semDuplicar" size={16} />O que você já lançou, os fixos e o pagamento da fatura são reconhecidos e não duplicam.</div>
           </div>
         </div>
       </div>
@@ -195,7 +197,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
                 <div className="dim hint">{a.parcelados.length} {a.parcelados.length === 1 ? 'compra parcelada continua' : 'compras parceladas continuam'} — entram sozinhas nas próximas faturas.</div>
               </>
             )}
-            {a.assinaturas.length > 0 && <div className="dim hint">📺 Assinaturas nesta fatura: {a.assinaturas.map((i) => i.desc).join(', ')}. Vale cadastrar como fixo no cartão.</div>}
+            {a.assinaturas.length > 0 && <div className="dim hint"><Ico n="assinatura" size={16} />Assinaturas nesta fatura: {a.assinaturas.map((i) => i.desc).join(', ')}. Vale cadastrar como fixo no cartão.</div>}
             {cartao && (cartao.estimativa
               ? <div className="dim hint">Gasto típico do {cartao.nome}: {brl(cartao.estimativa)} (esta fatura: {brl(a.total)}). Ajuste em Editar cartão se mudou.</div>
               : <label className="imp-opt"><input type="checkbox" checked={usarTipico} onChange={(e) => setUsarTipico(e.target.checked)} />
@@ -211,7 +213,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               <button className="imp-chk" onClick={() => alternar(i.id)} aria-label={i.incluir ? 'Não importar' : 'Importar'}>{i.incluir ? '✓' : ''}</button>
               <button className="ico" onClick={() => setCatAberta(catAberta === i.id ? null : i.id)}>{i.ico}</button>
               <div className="m">
-                <div className="t">{i.desc}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>
+                <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
                 <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}</div>
                 <AnimatePresence initial={false}>
                   {catAberta === i.id && (

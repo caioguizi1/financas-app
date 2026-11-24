@@ -1,3 +1,4 @@
+import type React from 'react';
 import { AnimatePresence, m, type HTMLMotionProps } from 'motion/react';
 import type { ReactNode } from 'react';
 import { spring, springSnappy } from './motion';
@@ -25,7 +26,7 @@ export function Chip({ on, added, onClick, children }: { on?: boolean; added?: b
 
 /** Controle segmentado com a "pílula" deslizando entre as opções. */
 export function Segmented<T extends string | number>({ options, value, onChange }: {
-  options: { v: T; label: string; tone?: 'in' | 'out' }[]; value: T; onChange: (v: T) => void;
+  options: { v: T; label: React.ReactNode; tone?: 'in' | 'out' }[]; value: T; onChange: (v: T) => void;
 }) {
   const i = Math.max(0, options.findIndex((o) => o.v === value));
   const tone = options[i]?.tone ?? '';

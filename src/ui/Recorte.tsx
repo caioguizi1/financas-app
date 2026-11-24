@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { enquadrar, PROP, type Caixa, type FonteRecorte } from '../lib/imagens';
+import { Ico } from './Ico';
 
 /**
  * Ajuste fino do recorte: arrastar posiciona, o controle aproxima.
@@ -44,7 +45,7 @@ export function Recorte({ fonte, caixa, onChange }: { fonte: FonteRecorte; caixa
         <span>＋</span>
       </div>
       <div className="dim hint" style={{ textAlign: 'center' }}>Arraste pra posicionar · deslize pra aproximar</div>
-      <button className="rec-auto" onClick={() => onChange(enquadrar(fonte.caixa, fonte.w, fonte.h))}>↺ Voltar ao automático</button>
+      <button className="rec-auto" onClick={() => onChange(enquadrar(fonte.caixa, fonte.w, fonte.h))}><Ico n="padrao" size={15} />Voltar ao automático</button>
     </div>
   );
 }

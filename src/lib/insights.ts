@@ -10,6 +10,7 @@ import { brl } from './money';
 import { normalizar } from './smart';
 import { ativaEm } from './versions';
 import type { Data, ISODate, Lancamento } from './types';
+import { nomeLoja } from './lojas';
 
 export type Tom = 'bom' | 'alerta' | 'info';
 export interface Insight {
@@ -75,7 +76,7 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
     if (min.v >= 0 && min.v < limite) {
       const maior = p.evs.filter((e) => e.data === min.d && e.valor < 0).sort((a, b) => a.valor - b.valor)[0];
       out.push({ id: 'aperto', ico: '⚠️', tom: 'alerta', peso: 90, titulo: `Dia ${dm(min.d)} fica apertado`,
-        texto: `Sobra só ${brl(min.v)}${maior ? ` depois de ${maior.desc}` : ''}. Bom evitar compras grandes antes disso.` });
+        texto: `Sobra só ${brl(min.v)}${maior ? ` depois de ${nomeLoja(maior.desc, D.nomes)}` : ''}. Bom evitar compras grandes antes disso.` });
     }
   }
 
@@ -116,7 +117,7 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
     const meses = new Set(ls.map((l) => monthKey(l.data)));
     if (meses.size < 3 || fixosNomes.has(k)) continue;
     const ult = ls.sort((a, b) => (a.data < b.data ? 1 : -1))[0];
-    out.push({ id: `rec-${k}`, ico: '🔁', tom: 'info', peso: 60, titulo: `"${ult.desc}" todo mês`,
+    out.push({ id: `rec-${k}`, ico: '🔁', tom: 'info', peso: 60, titulo: `"${nomeLoja(ult.desc, D.nomes)}" todo mês`,
       texto: `Você lançou em ${meses.size} meses seguidos. Virando fixo, ele entra sozinho na projeção.`,
       acao: { label: 'Virar fixo', tipo: 'virarFixo', lancId: ult.id } });
     if (out.filter((i) => i.id.startsWith('rec-')).length >= 2) break;

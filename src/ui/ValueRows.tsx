@@ -3,6 +3,7 @@ import { dm } from '../lib/dates';
 import { centsToStr } from '../lib/money';
 import { Keypad } from './Money';
 import { springSnappy } from './motion';
+import { Ico } from './Ico';
 
 export interface Linha { id?: string; label: string; valor: number; data?: string; fixo?: boolean; nota?: string }
 
@@ -23,7 +24,7 @@ export function ValueRows({ linhas, ativa, onAtiva, onValor, onData }: {
               {l.nota && <div className="vr-n">{l.nota}</div>}
               {l.data && onData && (
                 <label className="vr-d" onClick={(e) => e.stopPropagation()}>
-                  📅 {dm(l.data)}/{l.data.slice(2, 4)}
+                  <Ico n="data" size={15} />{dm(l.data)}/{l.data.slice(2, 4)}
                   <input type="date" value={l.data} onChange={(e) => e.target.value && onData(i, e.target.value)} className="date-overlay" />
                 </label>
               )}

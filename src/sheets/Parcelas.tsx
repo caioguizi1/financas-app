@@ -7,6 +7,7 @@ import { getData, openSheet } from '../store';
 import { itemVariants, listVariants } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { QuickAdd } from './QuickAdd';
+import { nomeExib } from '../ui/nome';
 
 /** Compras parceladas em aberto, com progresso. */
 export function ParcelasSheet() {
@@ -24,8 +25,8 @@ export function ParcelasSheet() {
             <m.button key={p.lanc.id} variants={itemVariants} className="item parc" onClick={() => openSheet(<QuickAdd lanc={p.lanc} />)}>
               <div className="ico">{p.lanc.ico || catE(p.lanc.cat)}</div>
               <div className="m">
-                <div className="t">{p.lanc.desc || 'Compra parcelada'}</div>
-                <div className="s">{p.pagas}/{p.total} pagas · {brl(p.valorParcela)}/mês{c ? ` · 💳 ${c.nome}` : ''} · até {dm(p.ultima)}/{p.ultima.slice(2, 4)}</div>
+                <div className="t">{p.lanc.desc ? nomeExib(p.lanc.desc) : 'Compra parcelada'}</div>
+                <div className="s">{p.pagas}/{p.total} pagas · {brl(p.valorParcela)}/mês{c ? ` · ${c.nome}` : ''} · até {dm(p.ultima)}/{p.ultima.slice(2, 4)}</div>
                 <div className="parc-bar"><m.i initial={{ width: 0 }} animate={{ width: `${(p.pagas / p.total) * 100}%` }} transition={{ type: 'spring', stiffness: 140, damping: 22, delay: 0.15 }} /></div>
               </div>
               <div className="v num">{brl(-p.restante)}</div>

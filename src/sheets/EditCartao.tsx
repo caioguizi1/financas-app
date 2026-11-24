@@ -56,7 +56,7 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
         <DayGrid value={c.fechamento} onChange={(fechamento) => set({ fechamento })} caption={(d) => `fecha todo dia ${d} (compras a partir dele vão pra próxima)`} />
         <div className="lab">Dia do vencimento</div>
         <DayGrid value={c.vencimento} onChange={(vencimento) => set({ vencimento })} caption={(d) => `vence todo dia ${d}`} />
-        <div className="lab-big">💳 Fatura atual</div>
+        <div className="lab-big">Fatura atual</div>
         {!ok ? (
           <div className="pay-info" style={{ height: 'auto', padding: '12px 14px' }}>Escolha os dias de fechamento e vencimento acima pra informar o valor da fatura.</div>
         ) : (

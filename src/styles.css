@@ -663,3 +663,17 @@ html { touch-action: manipulation }
 .imp-vazio { width: 100%; display: flex; gap: 10px; align-items: center; text-align: left; padding: 12px; border-radius: 14px; border: 1.5px dashed var(--line); color: var(--mut); font-size: 13px; line-height: 1.4 }
 .imp-vazio svg { color: var(--acc-hi); flex: none }
 .btn-ico { display: inline-flex; vertical-align: -5px; margin-right: 8px; color: var(--acc-hi) }
+
+/* ícones de interface (Lucide) */
+.ico svg { color: var(--acc-hi) }
+.cmini { display: inline-block; width: 22px; height: 14px; border-radius: 3.5px; background-size: cover; background-position: center; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 1px 2px rgba(0, 0, 0, 0.3); flex: none }
+.ico .cmini { width: 26px; height: 17px; margin: 0; border-radius: 4px }
+.chip .lucide, .pay-info .lucide, .btn .lucide, .hint .lucide, .fat-prev .lucide { vertical-align: -3px; margin-right: 6px; color: var(--acc-hi); flex: none }
+.chip.on .lucide { color: inherit }
+.in-ico .lucide { color: var(--acc-hi) }
+.insight.alerta .in-ico .lucide { color: var(--out) }
+.insight.bom .in-ico .lucide { color: var(--in) }
+.spin { animation: girar 0.9s linear infinite }
+@keyframes girar { to { transform: rotate(360deg) } }
+
+.imp-it .raw { font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px }

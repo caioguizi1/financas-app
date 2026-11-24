@@ -8,6 +8,8 @@ import { EditRec } from '../sheets/EditRec';
 import { QuickAdd } from '../sheets/QuickAdd';
 import { FaturasSheet } from '../sheets/Faturas';
 import { SwipeRow } from './SwipeRow';
+import { nomeExib } from './nome';
+import { CartaoMini } from './Ico';
 
 /** Apaga o fixo inteiro (todas as versões do histórico). */
 export const apagarRec = (r: Recorrente) => {
@@ -27,14 +29,17 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
       <div className="item">
         <div className="ico">{r.ico || catE(r.cat)}</div>
         <div className="m">
-          <div className="t">{r.desc}</div>
-          <div className="s">Todo dia {r.dia}{c ? ` · 💳 ${c.nome}` : r.meio === 'boleto' ? ' · 📄 boleto' : r.tipo === 'saida' ? ' · ⚡ Pix/débito' : ''}{ate}</div>
+          <div className="t">{nomeExib(r.desc)}</div>
+          <div className="s">Todo dia {r.dia}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{ate}</div>
         </div>
         <div className={`v num ${r.tipo === 'entrada' ? 'pos' : ''}`}>{brl(r.tipo === 'entrada' ? r.valor : -r.valor)}</div>
       </div>
     </SwipeRow>
   );
 }
+
+/** Fatura agrupada ("Fatura Itaú"): mostra a miniatura do próprio cartão. */
+const cartaoDe = (e: Evento) => (e.cartaoId ? getData().cartoes.find((c) => c.id === e.cartaoId) : undefined);
 
 export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }) {
   const edit = () => {
@@ -48,14 +53,14 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
       if (r) openSheet(<EditRec rec={r} />);
     }
   };
-  const sub = [showDate ? diaLabel(e.data) : '', e.itens ? `${e.itens.length} ${e.itens.length === 1 ? 'item' : 'itens'}` : e.cartao ? `💳 ${e.cartao}` : ''].filter(Boolean).join(' · ');
+  const sub = [showDate ? diaLabel(e.data) : '', e.itens ? `${e.itens.length} ${e.itens.length === 1 ? 'item' : 'itens'}` : e.cartao ? `${e.cartao}` : ''].filter(Boolean).join(' · ');
   return (
     // Fixos só editam daqui (apagar um fixo some de todos os meses — isso fica na aba Fixos)
     <SwipeRow id={`ev-${e.ref}-${e.data}`} onTap={edit} onEdit={edit} onDelete={e.lanc && !e.itens ? () => apagarLanc(e.ref) : undefined}>
       <div className="item">
-        <div className="ico">{e.ico || catE(e.cat)}</div>
+        <div className="ico">{e.cat === 'fatura' && cartaoDe(e) ? <CartaoMini c={cartaoDe(e)!} /> : e.ico || catE(e.cat)}</div>
         <div className="m">
-          <div className="t">{e.desc}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
+          <div className="t">{nomeExib(e.desc)}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
           {sub && <div className="s">{sub}</div>}
         </div>
         <div className={`v num ${e.valor > 0 ? 'pos' : ''}`}>{brl(e.valor, true)}</div>

@@ -20,6 +20,8 @@ import { spring, springSnappy } from '../ui/motion';
 import { EditCartao } from './EditCartao';
 import { FaturasSheet } from './Faturas';
 import { ImportarSheet } from './Importar';
+import { Ico } from '../ui/Ico';
+import { nomeExib } from '../ui/nome';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
@@ -276,7 +278,7 @@ function Detalhes({ c }: { c: Cartao }) {
                     <Expande className="wcat-list">
                       {itens.map((e) => (
                         <div key={`${e.ref}${e.desc}`} className="wcat-it">
-                          <span className="t">{e.ico || catE(e.cat)} {e.desc}</span>
+                          <span className="t">{e.ico || catE(e.cat)} {nomeExib(e.desc)}</span>
                           <span className="num">{brl(-e.valor)}</span>
                         </div>
                       ))}
@@ -287,8 +289,8 @@ function Detalhes({ c }: { c: Cartao }) {
               </div>
             );
           })}
-          {foco.manual > 0 && <div className="fat-prev"><span>✍️ Valor informado à mão (sem detalhe)</span><span className="num">{brl(foco.manual)}</span></div>}
-          {foco.estimado > 0 && <div className="fat-prev"><span>🔮 Previsto pelo gasto típico (ainda não lançado)</span><span className="num">{brl(foco.estimado)}</span></div>}
+          {foco.manual > 0 && <div className="fat-prev"><span><Ico n="mao" size={15} />Valor informado à mão (sem detalhe)</span><span className="num">{brl(foco.manual)}</span></div>}
+          {foco.estimado > 0 && <div className="fat-prev"><span><Ico n="previsto" size={15} />Previsto pelo gasto típico (ainda não lançado)</span><span className="num">{brl(foco.estimado)}</span></div>}
         </>
       )}
 
@@ -298,7 +300,7 @@ function Detalhes({ c }: { c: Cartao }) {
           <div className="list">
             {v.parcelas.map((p) => (
               <div key={p.lanc.id} className="wparc">
-                <div className="m"><div className="t">{p.lanc.desc || catN(p.lanc.cat)}</div><div className="s">{p.pagas}/{p.total} · até {fmt(p.ultima)}</div></div>
+                <div className="m"><div className="t">{p.lanc.desc ? nomeExib(p.lanc.desc) : catN(p.lanc.cat)}</div><div className="s">{p.pagas}/{p.total} · até {fmt(p.ultima)}</div></div>
                 <div className="r"><b className="num">{brl(p.valorParcela)}</b><span className="dim small">faltam {brl(p.restante)}</span></div>
               </div>
             ))}
@@ -316,14 +318,14 @@ function Detalhes({ c }: { c: Cartao }) {
                 <Recorte fonte={fonte} caixa={caixa} onChange={setCaixa} />
                 <div className="wacts">
                   <Button onClick={async () => { await salvarImagem(c.id, recortar(fonte.canvas, caixa)); setFonte(null); setImgAberta(false); toast('Imagem do cartão salva'); }}>Usar esta</Button>
-                  <Button kind="ghost" onClick={() => abrir(fonte.canvas, true)}>⟲ Girar</Button>
+                  <Button kind="ghost" onClick={() => abrir(fonte.canvas, true)}><Ico n="girar" />Girar</Button>
                 </div>
                 <Button kind="link" onClick={escolherImg}>Escolher outra imagem</Button>
               </>
             ) : (
               <div className="wacts">
-                <Button onClick={escolherImg}>📷 Escolher</Button>
-                {img && <Button kind="ghost" onClick={voltarPadrao}>↺ Padrão</Button>}
+                <Button onClick={escolherImg}><Ico n="camera" />Escolher</Button>
+                {img && <Button kind="ghost" onClick={voltarPadrao}><Ico n="padrao" />Padrão</Button>}
               </div>
             )}
           </Expande>

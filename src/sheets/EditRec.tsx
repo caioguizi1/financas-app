@@ -12,6 +12,7 @@ import { closeSheet, getData, mutate, toast, withUndo } from '../store';
 import { SheetHeader } from '../ui/Sheet';
 import { Button, Chip, DayGrid } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
+import { CartaoMini, Ico } from '../ui/Ico';
 
 type Draft = Omit<Recorrente, 'id' | 'inicio' | 'dia'> & Partial<Pick<Recorrente, 'id' | 'inicio'>> & { dia: number | null };
 
@@ -70,9 +71,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
         <>
           <div className="lab">Como é pago</div>
           <div className="chips scroll">
-            <Chip on={!r.cartaoId && (r.meio ?? 'pix') === 'pix'} onClick={() => set({ cartaoId: null, meio: 'pix' })}>⚡ Pix / débito</Chip>
-            {cartoes.map((c) => <Chip key={c.id} on={r.cartaoId === c.id} onClick={() => set({ cartaoId: c.id, meio: 'credito' })}>💳 {c.nome}</Chip>)}
-            <Chip on={!r.cartaoId && r.meio === 'boleto'} onClick={() => set({ cartaoId: null, meio: 'boleto' })}>📄 Boleto</Chip>
+            <Chip on={!r.cartaoId && (r.meio ?? 'pix') === 'pix'} onClick={() => set({ cartaoId: null, meio: 'pix' })}><Ico n="pix" size={16} />Pix / débito</Chip>
+            {cartoes.map((c) => <Chip key={c.id} on={r.cartaoId === c.id} onClick={() => set({ cartaoId: c.id, meio: 'credito' })}><CartaoMini c={c} />{c.nome}</Chip>)}
+            <Chip on={!r.cartaoId && r.meio === 'boleto'} onClick={() => set({ cartaoId: null, meio: 'boleto' })}><Ico n="boleto" size={16} />Boleto</Chip>
           </div>
           <div className="dim hint">{r.cartaoId ? 'Entra todo mês na fatura do cartão e sai no vencimento dela.' : r.meio === 'boleto' ? 'Sai da conta no dia do boleto.' : 'Sai direto da conta no dia escolhido.'}</div>
         </>

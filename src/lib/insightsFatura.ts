@@ -8,6 +8,7 @@ import { addDays, mesCurto, monthKey } from './dates';
 import { eventosEntre } from './engine';
 import { brl } from './money';
 import type { Cartao, Data, Evento, ISODate } from './types';
+import { nomeLoja } from './lojas';
 
 export interface DicaFatura { id: string; tom: 'alerta' | 'atencao' | 'bom' | 'info'; texto: string; peso: number }
 
@@ -88,7 +89,7 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   // 5) uma compra pesando muito
   const maior = [...compras].sort((a, b) => a.valor - b.valor)[0];
   if (!futura && maior && -maior.valor / total >= 0.2 && compras.length >= 3)
-    out.push({ id: 'maior', tom: 'info', peso: 50, texto: `A maior compra, ${maior.desc.replace(PARC, '').trim()}, é ${pct(-maior.valor / total)} da fatura (${brl(-maior.valor)}).` });
+    out.push({ id: 'maior', tom: 'info', peso: 50, texto: `A maior compra, ${nomeLoja(maior.desc.replace(PARC, '').trim(), D.nomes)}, é ${pct(-maior.valor / total)} da fatura (${brl(-maior.valor)}).` });
 
   // 6) compromisso que já vem desta fatura
   const futuro = parc.reduce((a, x) => a + -x.e.valor * (x.p!.n - x.p!.i), 0);

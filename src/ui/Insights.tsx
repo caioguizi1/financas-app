@@ -9,6 +9,7 @@ import { SheetHeader } from './Sheet';
 import { ParcelasSheet } from '../sheets/Parcelas';
 import { Button, itemVariants } from './Controls';
 import { springSnappy } from './motion';
+import { Ico, icoDaDica } from './Ico';
 
 function agir(i: Insight) {
   if (!i.acao) return;
@@ -40,7 +41,7 @@ export function InsightsStrip() {
               if (i.acao) agir(i);
               else if (x && x.scrollHeight > x.clientHeight + 1) openSheet(<DicaSheet i={i} />);
             }}>
-            <div className="in-h"><span className="in-ico">{i.ico}</span><span className="in-t">{i.titulo}</span></div>
+            <div className="in-h"><span className="in-ico"><Ico n={icoDaDica(i.id)} size={19} /></span><span className="in-t">{i.titulo}</span></div>
             <div className="in-x">{i.texto}</div>
             {i.acao && <button className="in-a">{i.acao.label} ›</button>}
           </m.div>
@@ -54,7 +55,7 @@ export function InsightsStrip() {
 function DicaSheet({ i }: { i: Insight }) {
   return (
     <>
-      <SheetHeader title={`${i.ico} ${i.titulo}`} />
+      <SheetHeader title={i.titulo} />
       <p className="mut" style={{ lineHeight: 1.5 }}>{i.texto}</p>
       {i.acao && <div className="actions"><Button onClick={() => { closeSheet(); agir(i); }}>{i.acao.label}</Button></div>}
     </>

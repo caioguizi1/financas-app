@@ -82,6 +82,8 @@ export interface Data {
   /** Fatura paga/agendada fora do vencimento: 'cartaoId|vencimento' → data e momento. */
   /** Correções únicas já aplicadas aos dados. */
   migracoes?: string[];
+  /** Nomes de loja corrigidos pelo usuário (descritor normalizado → nome). */
+  nomes?: Record<string, string>;
   /** Faturas/extratos importados (histórico por cartão). */
   importacoes?: Importacao[];
   pagFaturas?: Record<string, { data: ISODate; ts: number }>;

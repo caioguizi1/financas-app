@@ -14,11 +14,17 @@ import { SheetHeader } from '../ui/Sheet';
 import { Expande } from '../ui/Expande';
 import { EditRec } from './EditRec';
 import { ExtraSheet } from './Extras';
+import { CartaoMini, Ico } from '../ui/Ico';
+import { nomeExib } from '../ui/nome';
+import { ehBruto } from '../lib/lojas';
+import { normalizar } from '../lib/smart';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const novo = !lanc;
   const D = getData();
-  const [l, setL] = useState<Lancamento>(() => lanc ?? { id: '', tipo: 'saida', valor: 0, cat: '', data: today(), cartaoId: null, parcelas: 1, desc: '', criado: 0 });
+  // compra importada: o campo mostra o nome legível; se não mexer, o texto original do banco fica salvo
+  const nomeInicial = lanc?.desc ? nomeExib(lanc.desc) : '';
+  const [l, setL] = useState<Lancamento>(() => (lanc ? { ...lanc, desc: nomeInicial } : { id: '', tipo: 'saida', valor: 0, cat: '', data: today(), cartaoId: null, parcelas: 1, desc: '', criado: 0 }));
   const set = (p: Partial<Lancamento>) => setL((x) => ({ ...x, ...p }));
   // categoria escolhida à mão? então a sugestão não sobrescreve
   const [manual, setManual] = useState(!!lanc);
@@ -87,7 +93,16 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       mutate((d) => ({ ...d, lancamentos: [...d.lancamentos, final], uso: { ...d.uso, [cat]: (d.uso[cat] ?? 0) + 1 }, aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
       toast(parcelas > 1 ? `${parcelas}x de ${brl(valorParcela)} lançadas` : `${final.tipo === 'saida' ? 'Saída' : 'Entrada'} de ${brl(final.valor)} lançada`, () => restore(before));
     } else {
-      mutate((d) => ({ ...d, lancamentos: d.lancamentos.map((x) => (x.id === final.id ? final : x)), aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
+      const orig = lanc?.desc ?? '';
+      const renomeou = !!orig && final.desc !== nomeInicial;
+      if (!renomeou) final.desc = orig; // não mexeu no nome: mantém o original do banco
+      mutate((d) => ({
+        ...d,
+        lancamentos: d.lancamentos.map((x) => (x.id === final.id ? final : x)),
+        aprendido: final.desc ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido,
+        // corrigiu o nome de uma compra do banco: vale pras próximas com o mesmo descritor
+        nomes: renomeou && ehBruto(orig) && final.desc ? { ...(d.nomes ?? {}), [normalizar(orig)]: final.desc } : d.nomes,
+      }));
       toast('Atualizado');
     }
   };
@@ -120,17 +135,17 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         <>
           <div className="lab">Como pagou</div>
           <div className="chips scroll">
-            <Chip on={meio === 'pix'} onClick={() => escolherMeio('pix')}>⚡ Pix / débito</Chip>
-            {D.cartoes.map((c) => <Chip key={c.id} on={meio === 'credito' && l.cartaoId === c.id} onClick={() => escolherMeio('credito', c.id)}>💳 {c.nome}</Chip>)}
-            <Chip on={meio === 'boleto'} onClick={() => escolherMeio('boleto')}>📄 Boleto</Chip>
-            <Chip on={meio === 'pixparc'} onClick={() => escolherMeio('pixparc')}>🔁 Pix parcelado</Chip>
+            <Chip on={meio === 'pix'} onClick={() => escolherMeio('pix')}><Ico n="pix" size={16} />Pix / débito</Chip>
+            {D.cartoes.map((c) => <Chip key={c.id} on={meio === 'credito' && l.cartaoId === c.id} onClick={() => escolherMeio('credito', c.id)}><CartaoMini c={c} />{c.nome}</Chip>)}
+            <Chip on={meio === 'boleto'} onClick={() => escolherMeio('boleto')}><Ico n="boleto" size={16} />Boleto</Chip>
+            <Chip on={meio === 'pixparc'} onClick={() => escolherMeio('pixparc')}><Ico n="pixparc" size={16} />Pix parcelado</Chip>
           </div>
           {/* linha de altura fixa: troca de forma de pagamento não faz a janela pular */}
           <div className="pay-row">
             {podeParcelar ? (
               <Segmented value={parcEscolha ? 'p' : 'v'} onChange={(v) => setParcEscolha(v === 'p')} options={[{ v: 'v', label: 'À vista' }, { v: 'p', label: 'Parcelado' }]} />
             ) : (
-              <div className="pay-info">{meio === 'pix' ? '⚡ Sai na hora da sua conta · sem parcelas' : '🔁 Cobrado mês a mês, fora do cartão'}</div>
+              <div className="pay-info">{meio === 'pix' ? <><Ico n="pix" size={16} />Sai na hora da sua conta · sem parcelas</> : <><Ico n="pixparc" size={16} />Cobrado mês a mês, fora do cartão</>}</div>
             )}
           </div>
           <AnimatePresence initial={false}>
@@ -156,7 +171,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
               <Expande className="cronograma">
                 {cartao && (
                   <div className="cr-l">
-                    🗓️ Compra em {fmtData(l.data)} · {cartao.nome} fecha dia {cartao.fechamento}
+                    <Ico n="cronograma" size={16} />Compra em {fmtData(l.data)} · {cartao.nome} fecha dia {cartao.fechamento}
                     {' → '}<b>{parse(l.data).getDate() >= cartao.fechamento ? 'entra na fatura seguinte' : 'entra na fatura atual'}</b>, que vence {fmtData(saida(0))}
                   </div>
                 )}
@@ -174,7 +189,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       <div className="chips scroll" style={{ marginTop: 12 }}>
         {datas.map(([d, n]) => <Chip key={d} on={l.data === d} onClick={() => set({ data: d })}>{n}</Chip>)}
         <label className={`chip ${outraData ? 'on' : ''}`} style={{ position: 'relative' }}>
-          📅 {outraData ? dm(l.data) : 'Outra data'}
+          <Ico n="data" size={16} />{outraData ? dm(l.data) : 'Outra data'}
           <input type="date" value={l.data} onChange={(e) => e.target.value && set({ data: e.target.value })} className="date-overlay" />
         </label>
       </div>
@@ -183,8 +198,8 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         <div className="ent-extra">
           <div className="lab">Isso se repete?</div>
           <div className="chips">
-            <Chip onClick={() => openSheet(<EditRec tipo="entrada" rec={{ tipo: 'entrada', desc: l.desc, cat, valor: l.valor, dia: parse(l.data).getDate() }} />)}>🔁 É fixo todo mês</Chip>
-            <Chip onClick={() => openSheet(<ExtraSheet />)}>🎁 13º, PLR, férias…</Chip>
+            <Chip onClick={() => openSheet(<EditRec tipo="entrada" rec={{ tipo: 'entrada', desc: l.desc, cat, valor: l.valor, dia: parse(l.data).getDate() }} />)}><Ico n="fixo" size={16} />É fixo todo mês</Chip>
+            <Chip onClick={() => openSheet(<ExtraSheet />)}><Ico n="extras" size={16} />13º, PLR, férias…</Chip>
           </div>
         </div>
       )}

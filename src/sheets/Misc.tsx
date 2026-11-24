@@ -7,6 +7,7 @@ import { closeSheet, getData, mutate, withUndo } from '../store';
 import { Button, Segmented } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 import { SheetHeader } from '../ui/Sheet';
+import { nomeExib } from '../ui/nome';
 
 export function AjustarSaldo() {
   const D0 = getData();
@@ -37,7 +38,7 @@ export function AjustarSaldo() {
             const caiu = !pend.has(k);
             return (
               <button key={k} className={`hoje-it ${caiu ? 'ok' : ''}`} onClick={() => alternar(k)}>
-                <span className="t">{e.ico || catE(e.cat)} {e.desc}</span>
+                <span className="t">{e.ico || catE(e.cat)} {nomeExib(e.desc)}</span>
                 <span className={`num ${e.valor > 0 ? 'pos' : ''}`}>{brl(e.valor, true)}</span>
                 <span className="st">{caiu ? '✓ já caiu' : 'ainda não'}</span>
               </button>

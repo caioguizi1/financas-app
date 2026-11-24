@@ -24,6 +24,7 @@ import { EvItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { exportar, importar } from './backup';
+import { CartaoMini, Ico } from '../ui/Ico';
 
 /* ================= Extrato ================= */
 export function Extrato() {
@@ -119,7 +120,7 @@ export function Fixos() {
       <h2>Entradas</h2>
       {ent.length > 0 && <Lista className="list"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <div className="btn-row">
-        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}>💼 Minha renda</Button>
+        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}><Ico n="renda" />Minha renda</Button>
         <Button kind="ghost" onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Outro fixo</Button>
       </div>
       <h2>Extras previstos</h2>
@@ -144,7 +145,7 @@ export function Ajustes() {
   const D = useData();
   const [confirm, setConfirm] = useState(false);
   const [tema, setT] = useState<Tema>(getTema);
-  const Row = ({ ico, t, s, onClick }: { ico: string; t: string; s?: string; onClick: () => void }) => (
+  const Row = ({ ico, t, s, onClick }: { ico: React.ReactNode; t: string; s?: string; onClick: () => void }) => (
     <m.button variants={itemVariants} className="item" onClick={onClick}>
       <div className="ico">{ico}</div><div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
     </m.button>
@@ -154,28 +155,28 @@ export function Ajustes() {
       <h1 style={{ marginBottom: 6 }}>Ajustes</h1>
       <h2>Você</h2>
       <Lista className="list">
-        <Row ico="🙂" t="Nome" s={D.perfil.nome} onClick={() => openSheet(<EditNome />)} />
-        {D.cartoes.length > 0 && <Row ico="💳" t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
-        <Row ico="📥" t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
-        <Row ico="🏦" t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
-        <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
-        <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
+        <Row ico={<Ico n="nome" size={20} />} t="Nome" s={D.perfil.nome} onClick={() => openSheet(<EditNome />)} />
+        {D.cartoes.length > 0 && <Row ico={<Ico n="carteira" size={20} />} t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
+        <Row ico={<Ico n="importar" size={20} />} t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
+        <Row ico={<Ico n="saldo" size={20} />} t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
+        <Row ico={<Ico n="renda" size={20} />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
+        <Row ico={<Ico n="extras" size={20} />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
       </Lista>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (
         <Lista className="list">
-          {D.cartoes.map((c) => <Row key={c.id} ico="💳" t={c.nome} s={`Fecha dia ${c.fechamento} · vence dia ${c.vencimento}`} onClick={() => openSheet(<EditCartao cartao={c} />)} />)}
+          {D.cartoes.map((c) => <Row key={c.id} ico={<CartaoMini c={c} />} t={c.nome} s={`Fecha dia ${c.fechamento} · vence dia ${c.vencimento}`} onClick={() => openSheet(<EditCartao cartao={c} />)} />)}
         </Lista>
       )}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditCartao />)}>＋ Adicionar cartão</Button>
       <h2>Aparência</h2>
-      <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: 'Automático' }, { v: 'claro', label: '☀️ Claro' }, { v: 'escuro', label: '🌙 Escuro' }]} />
+      <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: 'Automático' }, { v: 'claro', label: <><Ico n="sol" size={16} />Claro</> }, { v: 'escuro', label: <><Ico n="lua" size={16} />Escuro</> }]} />
       <div className="dim hint" style={{ margin: '8px 2px 0' }}>Automático segue o modo do iPhone.</div>
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
       <Lista className="list">
-        <Row ico="⬆️" t="Exportar backup" s="Salvar arquivo no Arquivos/iCloud" onClick={exportar} />
-        <Row ico="⬇️" t="Restaurar backup" s="Substitui os dados atuais" onClick={importar} />
+        <Row ico={<Ico n="exportar" size={20} />} t="Exportar backup" s="Salvar arquivo no Arquivos/iCloud" onClick={exportar} />
+        <Row ico={<Ico n="restaurar" size={20} />} t="Restaurar backup" s="Substitui os dados atuais" onClick={importar} />
       </Lista>
       <Button kind="danger" style={{ marginTop: 22 }} onClick={() => { if (!confirm) return setConfirm(true); resetData(); useUI.getState().setTab('home'); }}>
         {confirm ? 'Toque de novo pra apagar TUDO' : 'Apagar tudo e recomeçar'}
