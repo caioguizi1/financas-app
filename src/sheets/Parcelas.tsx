@@ -1,5 +1,5 @@
 import { m } from 'motion/react';
-import { catE } from '../lib/categories';
+
 import { dm, today } from '../lib/dates';
 import { parcelasAbertas } from '../lib/insights';
 import { brl } from '../lib/money';
@@ -7,6 +7,7 @@ import { getData, openSheet } from '../store';
 import { itemVariants, listVariants } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { QuickAdd } from './QuickAdd';
+import { CatTile } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 
 /** Compras parceladas em aberto, com progresso. */
@@ -23,7 +24,7 @@ export function ParcelasSheet() {
           const c = p.lanc.cartaoId ? D.cartoes.find((x) => x.id === p.lanc.cartaoId) : undefined;
           return (
             <m.button key={p.lanc.id} variants={itemVariants} className="item parc" onClick={() => openSheet(<QuickAdd lanc={p.lanc} />)}>
-              <div className="ico">{p.lanc.ico || catE(p.lanc.cat)}</div>
+              <CatTile cat={p.lanc.cat} ico={p.lanc.ico} />
               <div className="m">
                 <div className="t">{p.lanc.desc ? nomeExib(p.lanc.desc) : 'Compra parcelada'}</div>
                 <div className="s">{p.pagas}/{p.total} pagas · {brl(p.valorParcela)}/mês{c ? ` · ${c.nome}` : ''} · até {dm(p.ultima)}/{p.ultima.slice(2, 4)}</div>

@@ -1,4 +1,4 @@
-import { catE } from '../lib/categories';
+
 import { diaLabel, MES, mesCurto, monthKey, today } from '../lib/dates';
 import { serieDe } from '../lib/versions';
 import { brl } from '../lib/money';
@@ -9,6 +9,7 @@ import { QuickAdd } from '../sheets/QuickAdd';
 import { FaturasSheet } from '../sheets/Faturas';
 import { SwipeRow } from './SwipeRow';
 import { nomeExib } from './nome';
+import { CatTile } from './CatIco';
 import { CartaoMini } from './Ico';
 
 /** Apaga o fixo inteiro (todas as versões do histórico). */
@@ -27,7 +28,7 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
   return (
     <SwipeRow id={`rec-${r.id}`} onTap={edit} onEdit={edit} onDelete={() => apagarRec(r)}>
       <div className="item">
-        <div className="ico">{r.ico || catE(r.cat)}</div>
+        <CatTile cat={r.cat} ico={r.ico} />
         <div className="m">
           <div className="t">{nomeExib(r.desc)}</div>
           <div className="s">Todo dia {r.dia}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{ate}</div>
@@ -58,7 +59,7 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
     // Fixos só editam daqui (apagar um fixo some de todos os meses — isso fica na aba Fixos)
     <SwipeRow id={`ev-${e.ref}-${e.data}`} onTap={edit} onEdit={edit} onDelete={e.lanc && !e.itens ? () => apagarLanc(e.ref) : undefined}>
       <div className="item">
-        <div className="ico">{e.cat === 'fatura' && cartaoDe(e) ? <CartaoMini c={cartaoDe(e)!} /> : e.ico || catE(e.cat)}</div>
+        {e.cat === 'fatura' && cartaoDe(e) ? <CatTile cat="fatura"><CartaoMini c={cartaoDe(e)!} /></CatTile> : <CatTile cat={e.cat} ico={e.ico} />}
         <div className="m">
           <div className="t">{nomeExib(e.desc)}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
           {sub && <div className="s">{sub}</div>}

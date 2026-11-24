@@ -203,6 +203,8 @@ button.item:active { background: var(--card2) }
 .seg-pill.in { background: linear-gradient(135deg, #6ff0c0, #3fbf91) }
 .seg-label { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap }
 .seg-label > .lucide { flex: none; width: 15px; height: 15px; opacity: .9 }
+.seg-label > .cat-g { margin-right: 0; opacity: 1 }
+.seg-label > .emo { font-size: 15px }
 .emo { font-size: 1.05em; line-height: 1 }
 .chip .emo, .btn .emo { margin-right: 6px }
 .field { background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; width: 100%; outline: 0; font-size: 16px }
@@ -695,3 +697,11 @@ html { touch-action: manipulation }
 @keyframes girar { to { transform: rotate(360deg) } }
 
 .imp-it .raw { font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px }
+
+/* ===== figuras de categoria: ícone na cor da categoria (padrão) ===== */
+.ico.cat { border-radius: 50%; color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent) }
+.ico.cat svg { color: inherit }
+[data-theme='light'] .ico.cat { color: color-mix(in srgb, var(--c) 70%, #000); background: color-mix(in srgb, var(--c) 18%, #fff) }
+.lucide.cat-g, .chip .lucide.cat-g, .btn .lucide.cat-g { color: var(--c); vertical-align: -3px; margin-right: 6px; flex: none }
+[data-theme='light'] .lucide.cat-g, [data-theme='light'] .chip .lucide.cat-g, [data-theme='light'] .btn .lucide.cat-g { color: color-mix(in srgb, var(--c) 70%, #000) }
+.chip.on .lucide.cat-g { color: inherit }

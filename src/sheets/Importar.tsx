@@ -14,6 +14,7 @@ import { Expande } from '../ui/Expande';
 import { spring } from '../ui/motion';
 import { CartaoMini, Ico } from '../ui/Ico';
 import { Aviso } from '../ui/Aviso';
+import { CatGlyph, CatTile } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 
 const MOTIVO: Record<string, string> = { duplicado: 'já lançado', parcela: 'parcela de compra já importada', fixo: 'já é fixo', pagamento: 'pagamento da fatura', entrada: 'estorno/crédito' };
@@ -184,7 +185,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
             <div className="lab">Onde foi o dinheiro</div>
             {a.porCategoria.slice(0, 5).map((c) => (
               <div key={c.cat} className="imp-cat">
-                <span>{catE(c.cat)} {catN(c.cat)}</span>
+                <span><CatGlyph cat={c.cat} />{catN(c.cat)}</span>
                 <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, c.pct * 100)}%` }} transition={spring} /></div>
                 <span className="num">{brl(c.valor)}</span>
               </div>
@@ -212,7 +213,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
           {itens.map((i) => (
             <div key={i.id} className={`imp-it ${i.incluir ? '' : 'off'}`}>
               <button className="imp-chk" onClick={() => alternar(i.id)} aria-label={i.incluir ? 'Não importar' : 'Importar'}>{i.incluir ? '✓' : ''}</button>
-              <button className="ico" onClick={() => setCatAberta(catAberta === i.id ? null : i.id)}>{i.ico}</button>
+              <CatTile cat={i.cat} ico={i.ico} onClick={() => setCatAberta(catAberta === i.id ? null : i.id)} />
               <div className="m">
                 <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
                 <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}</div>

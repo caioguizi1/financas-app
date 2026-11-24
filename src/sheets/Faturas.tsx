@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { catE } from '../lib/categories';
+
 import { dm, today } from '../lib/dates';
 import { ajusteFatura, faturasAtuais, pagarFatura } from '../lib/faturas';
 import { brl } from '../lib/money';
@@ -15,6 +15,7 @@ import { ICalendar, ICheckCircle, IImport, IUndo } from '../ui/Icons';
 import type { Fatura } from '../lib/faturas';
 import { ImportarSheet } from './Importar';
 import { CartaoMini } from '../ui/Ico';
+import { CatGlyph } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
@@ -99,7 +100,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
                   const l = D.lancamentos.find((x) => x.id === e.ref);
                   return (
                     <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
-                      <span>{e.ico || catE(e.cat)}</span><span className="m">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span><span className="num">{brl(e.valor)}</span>
+                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span><span className="num">{brl(e.valor)}</span>
                     </button>
                   );
                 })}

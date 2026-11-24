@@ -1,6 +1,6 @@
 import { animate, AnimatePresence, m, useMotionValue, type PanInfo } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { catE, catN } from '../lib/categories';
+import { catN } from '../lib/categories';
 import { dm, mesCurto, monthKey, today } from '../lib/dates';
 import { projecao } from '../lib/engine';
 import { agruparFaturas, faturasAtuais } from '../lib/faturas';
@@ -22,6 +22,7 @@ import { FaturasSheet } from './Faturas';
 import { ImportarSheet } from './Importar';
 import { Ico } from '../ui/Ico';
 import { Aviso } from '../ui/Aviso';
+import { CatGlyph } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
@@ -270,7 +271,7 @@ function Detalhes({ c }: { c: Cartao }) {
             return (
               <div key={cat} className={`wcat ${aberto ? 'on' : ''} ${catSel && !aberto ? 'off' : ''}`}>
                 <button className="imp-cat" onClick={() => setCatSel(aberto ? null : cat)} aria-expanded={aberto}>
-                  <span>{catE(cat)} {catN(cat)}</span>
+                  <span><CatGlyph cat={cat} />{catN(cat)}</span>
                   <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, (val / foco.totCat) * 100)}%` }} transition={spring} /></div>
                   <span className="num">{brl(val)}</span>
                 </button>
@@ -279,7 +280,7 @@ function Detalhes({ c }: { c: Cartao }) {
                     <Expande className="wcat-list">
                       {itens.map((e) => (
                         <div key={`${e.ref}${e.desc}`} className="wcat-it">
-                          <span className="t">{e.ico || catE(e.cat)} {nomeExib(e.desc)}</span>
+                          <span className="t"><CatGlyph cat={e.cat} ico={e.ico} />{nomeExib(e.desc)}</span>
                           <span className="num">{brl(-e.valor)}</span>
                         </div>
                       ))}

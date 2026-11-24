@@ -12,6 +12,7 @@ import { closeSheet, getData, mutate, toast, withUndo } from '../store';
 import { SheetHeader } from '../ui/Sheet';
 import { Button, Chip, DayGrid } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
+import { CatGlyph } from '../ui/CatIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
 type Draft = Omit<Recorrente, 'id' | 'inicio' | 'dia'> & Partial<Pick<Recorrente, 'id' | 'inicio'>> & { dia: number | null };
@@ -57,7 +58,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
     <div className="sl">
       <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
       <div className="sl-mid" data-scroll>
-      <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
+      <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
       <AmountDisplay value={r.valor} />
       <Keypad value={r.valor} onChange={(valor) => set({ valor })} />
@@ -65,7 +66,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <DayGrid value={r.dia} onChange={(dia) => set({ dia })} />
       <div className="lab">Categoria</div>
       <div className="chips scroll">
-        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k, ico: undefined }); }}>{e} {n}</Chip>)}
+        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k, ico: undefined }); }}><CatGlyph cat={k} ico={e} />{n}</Chip>)}
       </div>
       {r.tipo === 'saida' && (
         <>

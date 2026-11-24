@@ -9,6 +9,7 @@ import { closeSheet, getData, openSheet, restore, mutate, toast } from '../store
 import { Button, itemVariants, listVariants, Segmented, Stepper } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { ValueRows } from '../ui/ValueRows';
+import { CatGlyph, comFigura } from '../ui/CatIco';
 import { rendaAtual, RendaSheet } from './Renda';
 
 /** Recebimentos extras previstos: 13º, PLR, férias, bônus, IR... */
@@ -22,7 +23,7 @@ export function ExtraSheet({ k }: { k?: string }) {
         <m.div className="extra-grid" variants={listVariants} initial="hidden" animate="shown">
           {EXTRAS.map((e) => (
             <m.button key={e.k} variants={itemVariants} whileTap={{ scale: 0.95 }} className="extra-card" onClick={() => setModelo(e)}>
-              <span className="ex-ico">{e.ico}</span><span>{e.nome}</span>
+              <span className="ex-ico"><CatGlyph cat={e.cat} ico={e.ico} size={24} /></span><span>{e.nome}</span>
             </m.button>
           ))}
         </m.div>
@@ -76,12 +77,12 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
     }));
     mutate((d) => ({ ...d, lancamentos: [...d.lancamentos, ...novos] }));
     closeSheet();
-    toast(`${modelo.ico} ${modelo.nome}: ${brl(total)} na previsão`, () => restore(before));
+    toast(comFigura(modelo.ico, `${modelo.nome}: ${brl(total)} na previsão`), () => restore(before));
   };
 
   return (
     <div className="sl">
-      <SheetHeader title={`${modelo.ico} ${modelo.nome}`} />
+      <SheetHeader title={comFigura(modelo.ico, modelo.nome)} />
       <div className="sl-mid" data-scroll>
       {voltar && <button className="link-back" onClick={voltar}>‹ Outros tipos</button>}
       <div className="extra-nota">{modelo.nota}</div>

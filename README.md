@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.21** — categorias com ícone na cor da categoria, em círculo tingido (extrato, fixos, parcelas, faturas, importação, filtros e lançamento); emoji continua disponível em Ajustes › Aparência › Figuras das categorias. Faturas mantêm a miniatura do próprio cartão, incluindo a imagem personalizada.
 - **v2.20** — seletor de tema com ícone e texto alinhados (Auto, Claro, Escuro); salário e 13º com a mesma figura do extrato no menu, nos Fixos e no aviso do 13º.
 - **v2.19** — avisos por gravidade (opção 3): ícone na cor do nível (vermelho grave, âmbar atenção, verde positivo, roxo informativo); só o saldo projetado negativo ganha a versão reforçada. Ver "Decisões de design".
 - **v2.18** — interface sem emoji em menus e botões (ícones Lucide; emoji só nas categorias e nos avisos); miniatura do próprio cartão no lugar do 💳; nomes de loja legíveis ("MLP*NETSHOES-N" → "Netshoes", ~60 marcas + limpeza de maquininha/cidade/caixa alta), com o original guardado e correções do usuário aprendidas.
@@ -79,4 +80,5 @@ npm run build      # build de produção
 
 ## Decisões de design
 - **Avisos (23/11/2026) — opção 3 escolhida.** Comparadas: (1) emoji como antes, ⚠️ amarelo pra tudo; (2) ícone Lucide na cor da gravidade, em círculo tingido; (3) a 2 com o aviso grave reforçado (círculo cheio, borda forte). Motivo: segue o padrão de design systems (Carbon, Atlassian, Material), com uma intensidade discreta pro dia a dia e uma forte só pro crítico. O positivo fica discreto de propósito, pra evitar fadiga de alerta. Se precisar rever, a opção 2 é só tirar a classe `forte` em `src/ui/Aviso.tsx`; prévias das três opções ficam fora do repositório.
-- **Emoji × ícone (23/11/2026).** O que é uma *coisa* do extrato (categoria, salário, 13º, extras) usa o mesmo emoji em todo lugar: 💼 renda, 🎄 13º, 🎁 recebimentos extras. O que é *ação* ou *ajuste* (backup, tema, importar, conferir saldo) usa ícone Lucide. Regra documentada em `src/ui/Ico.tsx`.
+- **Emoji × ícone (23/11/2026).** Uma *coisa* do extrato (categoria, salário, 13º, extras) usa a mesma figura em todo lugar, via `CatTile`/`CatGlyph` (`src/ui/CatIco.tsx`). *Ação* ou *ajuste* usa ícone Lucide neutro (`src/ui/Ico.tsx`).
+- **Figuras das categorias (23/11/2026) — Estilo B escolhido.** Padrão: ícone Lucide na cor da categoria, em círculo tingido (padrão de banco: Nubank, Revolut, Monzo). Emoji fica como opção em Ajustes, salva só no aparelho. O emoji continua sendo o dado salvo e é só traduzido para o ícone, então trocar de estilo não altera nenhum lançamento. Faturas sempre mostram a miniatura do cartão (cor da marca ou imagem personalizada). Custo: ~7 KB compactado.

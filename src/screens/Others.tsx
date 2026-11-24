@@ -16,7 +16,7 @@ import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
 import { AjustarSaldo, EditNome } from '../sheets/Misc';
 import { Button, Chip, itemVariants, Segmented } from '../ui/Controls';
-import { catE, catN } from '../lib/categories';
+import { catN } from '../lib/categories';
 import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
 import { Lista } from '../ui/Lista';
@@ -25,6 +25,8 @@ import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { exportar, importar } from './backup';
 import { Aviso } from '../ui/Aviso';
+import { CatGlyph, CatTile, useEstiloIco } from '../ui/CatIco';
+import { setEstiloIco } from '../lib/estiloIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
 /* ================= Extrato ================= */
@@ -69,8 +71,8 @@ export function Extrato() {
       {listaCats.length > 1 && (
         <div className="catf">
           <Chip on={!cat} onClick={() => setCat(null)}>Todas</Chip>
-          {listaCats.map(([k, v]) => <Chip key={k} on={cat === k} onClick={() => setCat(cat === k ? null : k)}>{catE(k)} {catN(k)} · {brl(v)}</Chip>)}
-          {cat && !cats.has(cat) && <Chip on onClick={() => setCat(null)}>{catE(cat)} {catN(cat)}</Chip>}
+          {listaCats.map(([k, v]) => <Chip key={k} on={cat === k} onClick={() => setCat(cat === k ? null : k)}><CatGlyph cat={k} />{catN(k)} · {brl(v)}</Chip>)}
+          {cat && !cats.has(cat) && <Chip on onClick={() => setCat(null)}><CatGlyph cat={cat} />{catN(cat)}</Chip>}
         </div>
       )}
       <Lista key={`${y}-${mo}-${cat ?? ''}`}>
@@ -121,7 +123,7 @@ export function Fixos() {
       <h2>Entradas</h2>
       {ent.length > 0 && <Lista className="list"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <div className="btn-row">
-        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}><span className="emo" aria-hidden>💼</span>Minha renda</Button>
+        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}><CatGlyph cat="salario" ico="💼" />Minha renda</Button>
         <Button kind="ghost" onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Outro fixo</Button>
       </div>
       <h2>Extras previstos</h2>
@@ -146,9 +148,10 @@ export function Ajustes() {
   const D = useData();
   const [confirm, setConfirm] = useState(false);
   const [tema, setT] = useState<Tema>(getTema);
-  const Row = ({ ico, t, s, onClick }: { ico: React.ReactNode; t: string; s?: string; onClick: () => void }) => (
+  const estiloIco = useEstiloIco();
+  const Row = ({ ico, tile, t, s, onClick }: { ico?: React.ReactNode; tile?: React.ReactNode; t: string; s?: string; onClick: () => void }) => (
     <m.button variants={itemVariants} className="item" onClick={onClick}>
-      <div className="ico">{ico}</div><div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
+      {tile ?? <div className="ico">{ico}</div>}<div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
     </m.button>
   );
   return (
@@ -160,8 +163,8 @@ export function Ajustes() {
         {D.cartoes.length > 0 && <Row ico={<Ico n="carteira" size={20} />} t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
         <Row ico={<Ico n="importar" size={20} />} t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
         <Row ico={<Ico n="saldo" size={20} />} t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
-        <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
-        <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
+        <Row tile={<CatTile cat="salario" ico="💼" />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
+        <Row tile={<CatTile cat="extra" ico="🎁" />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
       </Lista>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (
@@ -173,6 +176,8 @@ export function Ajustes() {
       <h2>Aparência</h2>
       <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: <><Ico n="auto" size={16} />Auto</> }, { v: 'claro', label: <><Ico n="sol" size={16} />Claro</> }, { v: 'escuro', label: <><Ico n="lua" size={16} />Escuro</> }]} />
       <div className="dim hint" style={{ margin: '8px 2px 0' }}>Auto segue o modo do iPhone.</div>
+      <div className="lab" style={{ margin: '16px 2px 8px' }}>Figuras das categorias</div>
+      <Segmented value={estiloIco} onChange={setEstiloIco} options={[{ v: 'icone', label: <><CatGlyph cat="comida" ico="🍔" />Ícones</> }, { v: 'emoji', label: <><span className="emo" aria-hidden>🍔</span>Emoji</> }]} />
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
       <Lista className="list">

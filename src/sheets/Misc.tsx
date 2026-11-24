@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { today } from '../lib/dates';
-import { catE } from '../lib/categories';
+
 import { chaveEvento, eventosEntre, projecao } from '../lib/engine';
 import { brl } from '../lib/money';
 import { closeSheet, getData, mutate, withUndo } from '../store';
 import { Button, Segmented } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
 import { SheetHeader } from '../ui/Sheet';
+import { CatGlyph } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 
 export function AjustarSaldo() {
@@ -38,7 +39,7 @@ export function AjustarSaldo() {
             const caiu = !pend.has(k);
             return (
               <button key={k} className={`hoje-it ${caiu ? 'ok' : ''}`} onClick={() => alternar(k)}>
-                <span className="t">{e.ico || catE(e.cat)} {nomeExib(e.desc)}</span>
+                <span className="t"><CatGlyph cat={e.cat} ico={e.ico} />{nomeExib(e.desc)}</span>
                 <span className={`num ${e.valor > 0 ? 'pos' : ''}`}>{brl(e.valor, true)}</span>
                 <span className="st">{caiu ? '✓ já caiu' : 'ainda não'}</span>
               </button>

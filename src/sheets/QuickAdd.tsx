@@ -17,6 +17,7 @@ import { ExtraSheet } from './Extras';
 import { CartaoMini, Ico } from '../ui/Ico';
 import { nomeExib } from '../ui/nome';
 import { ehBruto } from '../lib/lojas';
+import { CatGlyph } from '../ui/CatIco';
 import { normalizar } from '../lib/smart';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
@@ -124,11 +125,11 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       </div>
       <div className="sl-mid" data-scroll>
 
-      <SmartDesc value={l.desc} onChange={(desc) => set({ desc })} ico={ico} placeholder={l.tipo === 'saida' ? 'Com o quê? (ex: ração, uber, ifood)' : 'De onde veio? (ex: freela)'} />
+      <SmartDesc value={l.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={l.tipo === 'saida' ? 'Com o quê? (ex: ração, uber, ifood)' : 'De onde veio? (ex: freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
 
       <div className="chips scroll" ref={chipsRef} style={{ marginTop: 10 }}>
-        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k }); }}>{e} {n}</Chip>)}
+        {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k }); }}><CatGlyph cat={k} ico={e} />{n}</Chip>)}
       </div>
 
       {l.tipo === 'saida' && (
@@ -199,7 +200,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
           <div className="lab">Isso se repete?</div>
           <div className="chips">
             <Chip onClick={() => openSheet(<EditRec tipo="entrada" rec={{ tipo: 'entrada', desc: l.desc, cat, valor: l.valor, dia: parse(l.data).getDate() }} />)}><Ico n="fixo" size={16} />É fixo todo mês</Chip>
-            <Chip onClick={() => openSheet(<ExtraSheet />)}><span className="emo" aria-hidden>🎁</span>13º, PLR, férias…</Chip>
+            <Chip onClick={() => openSheet(<ExtraSheet />)}><CatGlyph cat="extra" ico="🎁" />13º, PLR, férias…</Chip>
           </div>
         </div>
       )}
