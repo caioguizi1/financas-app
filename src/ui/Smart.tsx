@@ -26,7 +26,7 @@ export function SmartDesc({ value, onChange, ico, cat, placeholder, autoFocus }:
 }
 
 /** Linha "✨ sugerido" abaixo do campo. */
-export function SmartHint({ sug, aplicada, atual }: { sug: Sugestao | null; aplicada: boolean; atual?: string }) {
+export function SmartHint({ sug, aplicada, atual, onUsar }: { sug: Sugestao | null; aplicada: boolean; atual?: string; onUsar?: () => void }) {
   const show = !!sug && (aplicada || sug.cat !== atual);
   return (
     <AnimatePresence initial={false}>
@@ -35,6 +35,7 @@ export function SmartHint({ sug, aplicada, atual }: { sug: Sugestao | null; apli
           <span className="spark"><Ico n="sugerido" size={14} /></span>
           {aplicada ? 'Categoria' : 'Sugestão'}: <b><CatGlyph cat={sug.cat} ico={sug.ico} size={14} />{catN(sug.cat)}</b>
           <span className="dim"> · {sug.fonte === 'aprendido' ? 'aprendido com você' : 'pelo dicionário'}</span>
+          {!aplicada && onUsar && <button className="sug-usar" onClick={onUsar}>Usar</button>}
         </m.div>
       )}
     </AnimatePresence>

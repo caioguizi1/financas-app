@@ -107,8 +107,11 @@ export function useTeclado(inicial: boolean) {
       if (t?.closest('[data-teclado],[data-amount]')) return;
       setAberto(false);
     };
-    document.addEventListener('pointerdown', fora, true);
-    return () => document.removeEventListener('pointerdown', fora, true);
+    // fecha no 'click' (depois do toque), não no pointerdown: assim a tela não se mexe antes do toque
+    // terminar e o dedo não acerta outro chip
+    const fecha = (e: MouseEvent) => { const ev = e as unknown as PointerEvent; setTimeout(() => fora(ev), 0); };
+    document.addEventListener('click', fecha, true);
+    return () => document.removeEventListener('click', fecha, true);
   }, [aberto]);
   return { aberto, abrir: () => setAberto((a) => !a), fechar: () => setAberto(false) };
 }

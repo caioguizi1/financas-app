@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.32** — extrato: compras no cartão em bloco próprio no dia ("No cartão · sai na fatura"), com deslizar para editar/apagar e nome da categoria quando a compra não tem nome. Edição: trocar o nome aplica a sugestão do nome novo, e a dica "Sugestão" ganhou o botão Usar. O teclado numérico fecha depois do toque, sem deslocar a tela.
 - **v2.31** — extrato: compras lançadas no cartão aparecem no dia da compra, marcadas "no cartão" e com a fatura em que caem. Não entram nos totais (o dinheiro sai no vencimento da fatura) e tocar abre a edição. As compras importadas continuam só na fatura, pra não lotar o extrato.
 - **v2.30.1** — filtros: o valor em destaque de cada parcela acompanha a ordenação ("Maior parcela" mostra o valor por mês; as outras mostram o restante, com o prazo ou a data da compra embaixo); na fatura, "maior/menor valor" ordena pelo tamanho do valor (créditos não vão mais pro topo).
 - **v2.30** — ordenar e filtrar: na lista de parcelas (termina antes/depois, valor restante, maior parcela, data da compra) e na fatura completa (data, valor), com filtro por categoria e soma do que está filtrado.

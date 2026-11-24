@@ -28,8 +28,9 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const nomeInicial = lanc?.desc ? nomeExib(lanc.desc) : '';
   const [l, setL] = useState<Lancamento>(() => (lanc ? { ...lanc, desc: nomeInicial } : { id: '', tipo: 'saida', valor: 0, cat: '', data: today(), cartaoId: null, parcelas: 1, desc: '', criado: 0 }));
   const set = (p: Partial<Lancamento>) => setL((x) => ({ ...x, ...p }));
-  // categoria escolhida à mão? então a sugestão não sobrescreve
-  const [manual, setManual] = useState(!!lanc);
+  // categoria escolhida à mão nesta tela? então a sugestão não sobrescreve.
+  // Editando: mantém a categoria salva até você trocar o nome — aí a sugestão do nome novo vale.
+  const [manual, setManual] = useState(false);
   const sug = useMemo(() => sugerir(l.desc, l.tipo, D.aprendido), [l.desc, l.tipo, D.aprendido]);
 
   const cats = useMemo(() => {
@@ -37,7 +38,8 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
     return [...list].sort((a, b) => (D.uso[b[0]] ?? 0) - (D.uso[a[0]] ?? 0));
   }, [l.tipo, D.uso]);
   const catEscolhida = l.cat && (l.cat === 'fatura' || cats.some((c) => c[0] === l.cat)) ? l.cat : '';
-  const usaSug = !manual && !!sug;
+  const mudouNome = novo || normalizar(l.desc) !== normalizar(nomeInicial);
+  const usaSug = !manual && !!sug && mudouNome;
   const cat = usaSug ? sug!.cat : catEscolhida || cats[0][0];
   const ico = sug && sug.cat === cat ? sug.ico || catE(cat) : manual && lanc?.ico && lanc.cat === cat ? lanc.ico : catE(cat);
   const chipsRef = useRef<HTMLDivElement>(null);
@@ -128,7 +130,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       <div className="sl-mid" data-scroll>
 
       <SmartDesc value={l.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={l.tipo === 'saida' ? 'Com o quê? (ex: ração, uber, ifood)' : 'De onde veio? (ex: freela)'} />
-      <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
+      <SmartHint sug={sug} aplicada={usaSug} atual={cat} onUsar={() => { setManual(true); set({ cat: sug!.cat }); }} />
 
       <div className="chips scroll" ref={chipsRef} style={{ marginTop: 10 }}>
         {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k }); }}><CatGlyph cat={k} ico={e} />{n}</Chip>)}

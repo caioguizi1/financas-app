@@ -1,11 +1,9 @@
 import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
-import { diaLabel, dm, MESL, mesCurto, monthKey, today } from '../lib/dates';
+import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
 import { ativaEm, serieDe } from '../lib/versions';
 import { agruparFaturas, comprasNoCartao } from '../lib/faturas';
-import { QuickAdd } from '../sheets/QuickAdd';
-import { nomeExib } from '../ui/nome';
 import type { Recorrente } from '../lib/types';
 import { ExtraSheet } from '../sheets/Extras';
 import { ImportarSheet } from '../sheets/Importar';
@@ -22,12 +20,12 @@ import { catN } from '../lib/categories';
 import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
 import { Lista } from '../ui/Lista';
-import { EvItem, RecItem } from '../ui/Items';
+import { CompraCartaoItem, EvItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { exportar, importar } from './backup';
 import { Aviso } from '../ui/Aviso';
-import { CatGlyph, CatTile, useEstiloIco } from '../ui/CatIco';
+import { CatGlyph, useEstiloIco } from '../ui/CatIco';
 import { setEstiloIco } from '../lib/estiloIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
@@ -89,19 +87,17 @@ export function Extrato() {
           return (
             <m.div key={d} variants={itemVariants}>
               <div className="day"><span>{diaLabel(d)}{d > t ? ' · previsto' : ''}</span>{evd.length > 0 && <span className="num">{brl(tot, true)}</span>}</div>
-              <div className="list"><AnimatePresence initial={false}>
+              {evd.length > 0 && <div className="list"><AnimatePresence initial={false}>
                 {evd.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}
-                {(cartaoDia.get(d) ?? []).map(({ l, cartao: c, venc }) => (
-                  <button key={`cc-${l.id}`} className="item no-cartao" onClick={() => openSheet(<QuickAdd lanc={l} />)}>
-                    <CatTile cat={l.cat} ico={l.ico} />
-                    <div className="m">
-                      <div className="t">{nomeExib(l.desc)}</div>
-                      <div className="s">{c.nome}{venc ? ` · fatura de ${mesCurto(monthKey(venc))}, vence ${dm(venc)}` : ''}{(l.parcelas ?? 1) > 1 ? ` · ${l.parcelas}x` : ''}</div>
-                    </div>
-                    <div className="v nc-v"><b className="num">{brl(-l.valor)}</b><span>no cartão</span></div>
-                  </button>
-                ))}
-              </AnimatePresence></div>
+              </AnimatePresence></div>}
+              {(cartaoDia.get(d) ?? []).length > 0 && (
+                <>
+                  <div className="nc-lab"><span>No cartão · sai na fatura</span><span className="num">{brl(-(cartaoDia.get(d) ?? []).reduce((s, x) => s + x.l.valor, 0))}</span></div>
+                  <div className="list nc-list"><AnimatePresence initial={false}>
+                    {(cartaoDia.get(d) ?? []).map((x) => <CompraCartaoItem key={`cc-${x.l.id}`} l={x.l} cartao={x.cartao} venc={x.venc} />)}
+                  </AnimatePresence></div>
+                </>
+              )}
             </m.div>
           );
         }) : <div className="card empty" style={{ marginTop: 14 }}>{cat ? `Nada em ${catN(cat)} neste mês.` : 'Nenhuma movimentação neste mês.'}</div>}

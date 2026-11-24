@@ -1,8 +1,9 @@
 
-import { diaLabel, MES, mesCurto, monthKey, today } from '../lib/dates';
+import { diaLabel, dm, MES, mesCurto, monthKey, today } from '../lib/dates';
 import { serieDe } from '../lib/versions';
 import { brl } from '../lib/money';
-import type { Evento, Recorrente } from '../lib/types';
+import type { Cartao, Evento, ISODate, Lancamento, Recorrente } from '../lib/types';
+import { catN } from '../lib/categories';
 import { getData, openSheet, withUndo } from '../store';
 import { EditRec } from '../sheets/EditRec';
 import { QuickAdd } from '../sheets/QuickAdd';
@@ -61,10 +62,32 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
       <div className="item">
         {e.cat === 'fatura' && cartaoDe(e) ? <CatTile cat="fatura"><CartaoMini c={cartaoDe(e)!} /></CatTile> : <CatTile cat={e.cat} ico={e.ico} />}
         <div className="m">
-          <div className="t">{nomeExib(e.desc)}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
+          <div className="t">{nomeExib(e.desc) || catN(e.cat)}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
           {(sub || e.adiado) && <div className="s">{sub}{e.adiado && <span className="tag tag-l" title="Compra pulada (Pula Compra): paga nesta fatura">PULADA</span>}</div>}
         </div>
         <div className={`v num ${e.valor > 0 ? 'pos' : ''}`}>{brl(e.valor, true)}</div>
+      </div>
+    </SwipeRow>
+  );
+}
+
+/**
+ * Compra no cartão no dia da compra (extrato): só informativa — o dinheiro sai no vencimento da fatura.
+ * Mesmo jeito dos outros itens: tocar ou deslizar edita, deslizar apaga.
+ */
+export function CompraCartaoItem({ l, cartao, venc }: { l: Lancamento; cartao: Cartao; venc: ISODate | null }) {
+  const edit = () => openSheet(<QuickAdd lanc={l} />);
+  const n = l.parcelas ?? 1;
+  const sub = [cartao.nome, venc ? `fatura ${dm(venc)}` : '', n > 1 ? `${n}x de ${brl(Math.floor(l.valor / n))}` : ''].filter(Boolean).join(' · ').replace(/R\$ /g, 'R$\u00a0');
+  return (
+    <SwipeRow id={`cc-${l.id}`} onTap={edit} onEdit={edit} onDelete={() => apagarLanc(l.id)}>
+      <div className="item no-cartao">
+        <CatTile cat={l.cat} ico={l.ico} />
+        <div className="m">
+          <div className="t">{nomeExib(l.desc) || catN(l.cat)}</div>
+          <div className="s">{sub}</div>
+        </div>
+        <div className="v nc-v"><b className="num">{brl(-l.valor)}</b></div>
       </div>
     </SwipeRow>
   );

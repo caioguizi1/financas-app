@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
-import { aprender, sugerir } from '../lib/smart';
+import { aprender, normalizar, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
 import { mesCurto, monthKey, today } from '../lib/dates';
 import { brl } from '../lib/money';
@@ -26,9 +26,11 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const cartoes = D.cartoes;
   // existente ou sugestão do cadastro (com ícone) = já escolhido; senão o dicionário decide até a pessoa tocar numa categoria
   const tec = useTeclado(novo);
-  const [manual, setManual] = useState(!novo || !!rec?.ico);
+  // editando: a categoria salva vale até você trocar o nome; aí a sugestão do nome novo entra
+  const [manual, setManual] = useState(novo && !!rec?.ico);
   const sug = useMemo(() => sugerir(r.desc, r.tipo, D.aprendido), [r.desc, r.tipo, D.aprendido]);
-  const usaSug = !manual && !!sug;
+  const descInicial = useMemo(() => normalizar(rec?.desc ?? ''), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const usaSug = !manual && !!sug && (novo || normalizar(r.desc) !== descInicial);
   const cat = usaSug ? sug!.cat : r.cat;
   const ico = usaSug ? sug!.ico || catE(cat) : r.ico || catE(cat);
 
@@ -60,7 +62,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
       <div className="sl-mid" data-scroll>
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
-      <SmartHint sug={sug} aplicada={usaSug} atual={cat} />
+      <SmartHint sug={sug} aplicada={usaSug} atual={cat} onUsar={() => { setManual(true); set({ cat: sug!.cat, ico: sug!.ico }); }} />
       <AmountDisplay value={r.valor} onClick={novo ? undefined : tec.abrir} ativo={tec.aberto} />
       {novo ? <Keypad value={r.valor} onChange={(valor) => set({ valor })} /> : (
         <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
