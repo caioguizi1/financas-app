@@ -201,7 +201,10 @@ button.item:active { background: var(--card2) }
 .seg-pill { position: absolute; inset: 0; border-radius: 11px; background: var(--card3) }
 .seg-pill.out { background: var(--bdx-grad); box-shadow: 0 4px 16px rgba(168, 51, 88, 0.35) }
 .seg-pill.in { background: linear-gradient(135deg, #6ff0c0, #3fbf91) }
-.seg-label { position: relative }
+.seg-label { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap }
+.seg-label > .lucide { flex: none; width: 15px; height: 15px; opacity: .9 }
+.emo { font-size: 1.05em; line-height: 1 }
+.chip .emo, .btn .emo { margin-right: 6px }
 .field { background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; width: 100%; outline: 0; font-size: 16px }
 .field:focus { border-color: rgba(110, 91, 255, 0.6) }
 .field::placeholder { color: var(--dim) }

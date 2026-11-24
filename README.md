@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.20** — seletor de tema com ícone e texto alinhados (Auto, Claro, Escuro); salário e 13º com a mesma figura do extrato no menu, nos Fixos e no aviso do 13º.
 - **v2.19** — avisos por gravidade (opção 3): ícone na cor do nível (vermelho grave, âmbar atenção, verde positivo, roxo informativo); só o saldo projetado negativo ganha a versão reforçada. Ver "Decisões de design".
 - **v2.18** — interface sem emoji em menus e botões (ícones Lucide; emoji só nas categorias e nos avisos); miniatura do próprio cartão no lugar do 💳; nomes de loja legíveis ("MLP*NETSHOES-N" → "Netshoes", ~60 marcas + limpeza de maquininha/cidade/caixa alta), com o original guardado e correções do usuário aprendidas.
 - **v2.17** — carteira com atalhos em ícone (Faturas, Importar, Imagem, Editar) logo abaixo da fatura; histórico de faturas importadas por cartão (conferência com o banco, desfazer importação; as antigas reconstruídas); leitura da fatura (categoria acima do normal, concentração, peso das parcelas, compras novas parceladas, acima/abaixo do típico, comprometido nas próximas); pagamento redesenhado (Paguei hoje / Outra data / Alterar data / Desfazer).
@@ -78,3 +79,4 @@ npm run build      # build de produção
 
 ## Decisões de design
 - **Avisos (23/11/2026) — opção 3 escolhida.** Comparadas: (1) emoji como antes, ⚠️ amarelo pra tudo; (2) ícone Lucide na cor da gravidade, em círculo tingido; (3) a 2 com o aviso grave reforçado (círculo cheio, borda forte). Motivo: segue o padrão de design systems (Carbon, Atlassian, Material), com uma intensidade discreta pro dia a dia e uma forte só pro crítico. O positivo fica discreto de propósito, pra evitar fadiga de alerta. Se precisar rever, a opção 2 é só tirar a classe `forte` em `src/ui/Aviso.tsx`; prévias das três opções ficam fora do repositório.
+- **Emoji × ícone (23/11/2026).** O que é uma *coisa* do extrato (categoria, salário, 13º, extras) usa o mesmo emoji em todo lugar: 💼 renda, 🎄 13º, 🎁 recebimentos extras. O que é *ação* ou *ajuste* (backup, tema, importar, conferir saldo) usa ícone Lucide. Regra documentada em `src/ui/Ico.tsx`.

@@ -121,7 +121,7 @@ export function Fixos() {
       <h2>Entradas</h2>
       {ent.length > 0 && <Lista className="list"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <div className="btn-row">
-        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}><Ico n="renda" />Minha renda</Button>
+        <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}><span className="emo" aria-hidden>💼</span>Minha renda</Button>
         <Button kind="ghost" onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Outro fixo</Button>
       </div>
       <h2>Extras previstos</h2>
@@ -160,8 +160,8 @@ export function Ajustes() {
         {D.cartoes.length > 0 && <Row ico={<Ico n="carteira" size={20} />} t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
         <Row ico={<Ico n="importar" size={20} />} t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
         <Row ico={<Ico n="saldo" size={20} />} t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
-        <Row ico={<Ico n="renda" size={20} />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
-        <Row ico={<Ico n="extras" size={20} />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
+        <Row ico="💼" t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
+        <Row ico="🎁" t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
       </Lista>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (
@@ -171,8 +171,8 @@ export function Ajustes() {
       )}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditCartao />)}>＋ Adicionar cartão</Button>
       <h2>Aparência</h2>
-      <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: 'Automático' }, { v: 'claro', label: <><Ico n="sol" size={16} />Claro</> }, { v: 'escuro', label: <><Ico n="lua" size={16} />Escuro</> }]} />
-      <div className="dim hint" style={{ margin: '8px 2px 0' }}>Automático segue o modo do iPhone.</div>
+      <Segmented value={tema} onChange={(t) => { setT(t); setTema(t); }} options={[{ v: 'auto', label: <><Ico n="auto" size={16} />Auto</> }, { v: 'claro', label: <><Ico n="sol" size={16} />Claro</> }, { v: 'escuro', label: <><Ico n="lua" size={16} />Escuro</> }]} />
+      <div className="dim hint" style={{ margin: '8px 2px 0' }}>Auto segue o modo do iPhone.</div>
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
       <Lista className="list">

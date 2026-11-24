@@ -20,7 +20,6 @@ import { Button, itemVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { springSnappy } from '../ui/motion';
-import { Ico } from '../ui/Ico';
 import { Aviso } from '../ui/Aviso';
 import { nomeExib } from '../ui/nome';
 
@@ -94,7 +93,7 @@ export function Home() {
       <AnimatePresence initial={false}>
         {mostra13 && (
           <m.div className="nudge" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
-            <div className="nudge-ico"><Ico n="extras" size={22} /></div>
+            <div className="nudge-ico" aria-hidden>🎄</div>
             <div className="m">
               <div className="t">O 13º está chegando</div>
               <div className="s">1ª parcela até 30/nov, 2ª até 20/dez. Quer colocar na previsão?</div>

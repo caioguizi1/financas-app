@@ -199,7 +199,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
           <div className="lab">Isso se repete?</div>
           <div className="chips">
             <Chip onClick={() => openSheet(<EditRec tipo="entrada" rec={{ tipo: 'entrada', desc: l.desc, cat, valor: l.valor, dia: parse(l.data).getDate() }} />)}><Ico n="fixo" size={16} />É fixo todo mês</Chip>
-            <Chip onClick={() => openSheet(<ExtraSheet />)}><Ico n="extras" size={16} />13º, PLR, férias…</Chip>
+            <Chip onClick={() => openSheet(<ExtraSheet />)}><span className="emo" aria-hidden>🎁</span>13º, PLR, férias…</Chip>
           </div>
         </div>
       )}
