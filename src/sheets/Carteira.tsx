@@ -6,6 +6,9 @@ import { projecao } from '../lib/engine';
 import { agruparFaturas, faturasAtuais } from '../lib/faturas';
 import { abrirImagem, corDoCartao, recortar, salvarImagem, useImagem, type Caixa, type FonteRecorte } from '../lib/imagens';
 import { Recorte } from '../ui/Recorte';
+import { IFile, IImage, IImport, IPencil, IReceipt } from '../ui/Icons';
+import { dicasDaFatura } from '../lib/insightsFatura';
+import { doCartao } from '../lib/importacoes';
 import { parcelasAbertas } from '../lib/insights';
 import type { Cartao } from '../lib/types';
 import { brl } from '../lib/money';
@@ -158,8 +161,10 @@ function Detalhes({ c }: { c: Cartao }) {
     const estimado = -itens.filter((e) => e.estimativa).reduce((a, e) => a + e.valor, 0);
     const manual = -itens.filter((e) => e.cat === 'fatura' && !e.estimativa).reduce((a, e) => a + e.valor, 0);
     const total = -itens.reduce((a, e) => a + e.valor, 0);
-    return { compras, cats: [...cats.entries()].sort((a, b) => b[1] - a[1]), totCat, estimado, manual, total, venc: sel ? sel.venc ?? sel.data : v.aberta.vencimento };
-  }, [sel, v]);
+    const venc = sel ? sel.venc ?? sel.data : v.aberta.vencimento;
+    return { compras, cats: [...cats.entries()].sort((a, b) => b[1] - a[1]), totCat, estimado, manual, total, venc, dicas: dicasDaFatura(D, c, venc, itens) };
+  }, [sel, v, D, c]);
+  const importadas = doCartao(D, c.id);
 
   const { fechada, aberta } = v;
   const meta = c.estimativa ?? 0;
@@ -209,6 +214,22 @@ function Detalhes({ c }: { c: Cartao }) {
         <span className="chev">›</span>
       </button>
 
+      {importadas.length > 0 && (
+        <button className="imp-hist" onClick={() => openSheet(<FaturasSheet cartaoId={c.id} />)}>
+          <IFile />
+          <span>Importadas: {importadas.slice(0, 3).map((x) => (x.venc ? mesCurto(monthKey(x.venc)) : 'extrato')).join(', ')}{importadas.length > 3 ? ` +${importadas.length - 3}` : ''}</span>
+          {importadas.every((x) => x.conferida !== false) && <span className="ok">✓</span>}
+          <span className="chev">›</span>
+        </button>
+      )}
+      {/* atalhos do cartão — logo abaixo da fatura, ao alcance sem rolar: ícone em bloco + rótulo curto (padrão dos apps de banco) */}
+      <div className="qa">
+        <button onClick={() => openSheet(<FaturasSheet cartaoId={c.id} />)}><span className="qa-i"><IReceipt /></span>Faturas</button>
+        <button onClick={() => openSheet(<ImportarSheet cartaoId={c.id} />)}><span className="qa-i"><IImport /></span>Importar</button>
+        <button className={imgAberta ? 'on' : ''} onClick={() => setImgAberta((x) => !x)} aria-expanded={imgAberta}><span className="qa-i"><IImage /></span>Imagem</button>
+        <button onClick={() => openSheet(<EditCartao cartao={c} />)}><span className="qa-i"><IPencil /></span>Editar</button>
+      </div>
+
       {v.futuras.length > 0 && (
         <>
           <div className="lab">Próximas faturas <span className="dim">· toque pra ver as compras</span></div>
@@ -234,6 +255,11 @@ function Detalhes({ c }: { c: Cartao }) {
             <span>{sel ? `Fatura de ${mesCurto(monthKey(foco.venc))}` : 'Nesta fatura'} <span className="dim">· {brl(foco.total)}</span></span>
             {sel && <button className="inline-link" onClick={() => escolherFatura(null)}>← atual</button>}
           </div>
+          {foco.dicas.length > 0 && (
+            <div className="fdicas">
+              {foco.dicas.map((d) => <div key={d.id} className={`fdica ${d.tom}`}>{d.texto}</div>)}
+            </div>
+          )}
           {foco.cats.length === 0 && <div className="dim small" style={{ padding: '2px 0 6px' }}>Ainda sem compras lançadas nesta fatura.</div>}
           {foco.cats.map(([cat, val]) => {
             const aberto = catSel === cat;
@@ -280,14 +306,6 @@ function Detalhes({ c }: { c: Cartao }) {
         </>
       )}
 
-      <div className="wacts">
-        <Button kind="ghost" onClick={() => openSheet(<FaturasSheet cartaoId={c.id} />)}>Conferir fatura</Button>
-        <Button kind="ghost" onClick={() => openSheet(<ImportarSheet cartaoId={c.id} />)}>📥 Importar</Button>
-      </div>
-      <div className="wacts">
-        <Button kind="ghost" onClick={() => setImgAberta((x) => !x)}>🖼️ Imagem</Button>
-        <Button kind="ghost" onClick={() => openSheet(<EditCartao cartao={c} />)}>✏️ Editar</Button>
-      </div>
       <AnimatePresence initial={false}>
         {imgAberta && (
           <Expande className="wimg" chave={fonte ? `rec${fonte.w}x${fonte.h}` : 'opcoes'}>

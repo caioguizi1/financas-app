@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.17** — carteira com atalhos em ícone (Faturas, Importar, Imagem, Editar) logo abaixo da fatura; histórico de faturas importadas por cartão (conferência com o banco, desfazer importação; as antigas reconstruídas); leitura da fatura (categoria acima do normal, concentração, peso das parcelas, compras novas parceladas, acima/abaixo do típico, comprometido nas próximas); pagamento redesenhado (Paguei hoje / Outra data / Alterar data / Desfazer).
 - **v2.16** — carteira: os meses de "Próximas faturas" são tocáveis e mostram as compras daquela fatura por categoria (com parcela x/n), mais o que é previsão (gasto típico ainda não lançado e valor informado à mão); atualiza a cada lançamento/importação.
 - **v2.15.3** — painéis que se expandem (categorias da carteira, imagem, parcelas, holerite…) abrem e fecham com curva suave em vez de mola: sem ultrapassar e sem a demora no fim; categorias não selecionadas apagam com transição.
 - **v2.15.2** — cartões de dica no padrão de carrossel: mesma altura na faixa, ícone e título na mesma linha, texto até 3 linhas (toque mostra inteiro), ação presa na base.

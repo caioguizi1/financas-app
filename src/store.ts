@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { ReactNode } from 'react';
 import { today } from './lib/dates';
 import { regraFixa } from './lib/smart';
+import { inferir as inferirImportacoes } from './lib/importacoes';
 import { diaDoCiclo } from './lib/faturas';
 import type { Data } from './lib/types';
 
@@ -22,7 +23,14 @@ function migrar(d: Data): Data {
     const c = d.cartoes.find((x) => l.desc === `Fatura ${x.nome} (já gasto)`);
     return c ? { ...l, cartaoId: c.id, meio: 'credito' as const, data: diaDoCiclo(c, l.data), ico: '💳' } : l;
   });
-  return corrigirCategorias({ ...d, lancamentos });
+  return historicoImportacoes(corrigirCategorias({ ...d, lancamentos }));
+}
+
+/** Uma vez (v2.17): reconstrói o histórico das faturas importadas antes de ele existir. */
+function historicoImportacoes(d: Data): Data {
+  const ID = 'historico-importacoes';
+  if (d.migracoes?.includes(ID)) return d;
+  return { ...d, importacoes: [...(d.importacoes ?? []), ...inferirImportacoes(d)], migracoes: [...(d.migracoes ?? []), ID] };
 }
 
 /** Correção única de categorias (v2.13.2): 99Pay → Outros; Love Suites/motel → Lazer; hospital veterinário → Pets — nos lançamentos e no que foi aprendido. */

@@ -9,6 +9,10 @@ import { Button, Chip } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { ValueRows } from '../ui/ValueRows';
 import { QuickAdd } from './QuickAdd';
+import { doCartao, remover as removerImportacao } from '../lib/importacoes';
+import { mesCurto, monthKey } from '../lib/dates';
+import { ICalendar, ICheckCircle, IImport, IUndo } from '../ui/Icons';
+import type { Fatura } from '../lib/faturas';
 import { ImportarSheet } from './Importar';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
@@ -24,6 +28,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
   const reais = reaisPor[sel] ?? fats.map((f) => f.total);
   const setReais = (fn: (r: number[]) => number[]) => setReaisPor((x) => ({ ...x, [sel]: fn(reais) }));
   const [ativa, setAtiva] = useState(0);
+  const importadas = c ? doCartao(D, c.id) : [];
   if (!c) return null;
 
   const mudou = D.cartoes.some((cc) => { const r = reaisPor[cc.id]; return !!r && faturasAtuais(D, cc, hoje).some((f, i) => r[i] !== f.total); });
@@ -47,9 +52,39 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
             {D.cartoes.map((x) => <Chip key={x.id} on={x.id === sel} onClick={() => { setSel(x.id); setAtiva(0); }}>💳 {x.nome}</Chip>)}
           </div>
         )}
-        <p className="mut small" style={{ marginBottom: 12 }}>
-          Fecha dia {c.fechamento}, vence dia {c.vencimento}. Confira com o app do banco: se o valor for diferente, digite o real e eu ajusto a diferença.
+        <p className="mut small" style={{ marginBottom: 14 }}>
+          Fecha dia {c.fechamento}, vence dia {c.vencimento}. Embaixo, confira com o app do banco: se o valor for diferente, digite o real e eu ajusto a diferença.
         </p>
+        <div className="lab" style={{ marginTop: 0 }}>Faturas importadas deste cartão</div>
+        {importadas.length ? (
+          <div className="list imp-lista">
+            {importadas.map((x) => (
+              <div key={x.id} className="imp-reg">
+                <span className={`imp-reg-i ${x.conferida === false ? 'warn' : 'ok'}`}>{x.conferida === false ? '!' : '✓'}</span>
+                <div className="m">
+                  <div className="t">{x.venc ? `Fatura de ${mesCurto(monthKey(x.venc))}` : 'Extrato'}{x.venc ? <span className="dim"> · {x.venc < hoje ? 'venceu' : 'vence'} {fmt(x.venc)}</span> : null}</div>
+                  <div className="s">
+                    {x.ids.length} itens · {brl(x.total)}
+                    {x.conferida === true && ' · bate com o banco'}
+                    {x.conferida === false && x.totalBanco != null && ` · banco diz ${brl(x.totalBanco)}`}
+                    {x.inferida && ' · importada antes do histórico'}
+                    {!x.inferida && ` · enviada em ${new Date(x.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
+                  </div>
+                </div>
+                <button className="imp-reg-x" aria-label="Desfazer importação"
+                  onClick={() => withUndo(`Importação de ${x.venc ? mesCurto(monthKey(x.venc)) : 'extrato'} desfeita`, (d) => removerImportacao(d, x.id))}>
+                  <IUndo size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <button className="imp-vazio" onClick={() => openSheet(<ImportarSheet cartaoId={sel} />)}>
+            <IImport /><span>Nenhuma fatura importada ainda. <b>Importar</b> é opcional — lançar à mão funciona igual.</span>
+          </button>
+        )}
+
+        <div className="lab">Faturas atuais</div>
         {fats.map((f) => (
           <div key={f.vencimento} className="fat-box">
             <div className="fat-h">
@@ -72,18 +107,10 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
             {c.estimativa && f.status === 'aberta' && c.estimativa > f.total && (
               <div className="fat-tot"><span className="mut">📊 Previsto com gasto típico</span><span className="num">{brl(c.estimativa)}</span></div>
             )}
-            <div className="fat-pag">
-              <span className="mut small">{f.antecipada ? <>Sai da conta em <b>{fmt(f.pagaEm)}</b> {f.pagaEm < f.vencimento ? '(adiantada)' : '(agendada)'}</> : <>Sai da conta no vencimento, <b>{fmt(f.vencimento)}</b></>}</span>
-              <div className="chips" style={{ marginTop: 8 }}>
-                {f.pagaEm !== hoje && <Chip onClick={() => withUndo(`Fatura ${c.nome} paga hoje`, (d) => pagarFatura(d, c, f.vencimento, hoje))}>✅ Paguei hoje</Chip>}
-                <label className="chip" style={{ position: 'relative' }}>
-                  📅 {f.antecipada ? 'Mudar data' : 'Pagar em outra data'}
-                  <input type="date" className="date-overlay" value={f.pagaEm}
-                    onChange={(e) => e.target.value && withUndo(`Fatura ${c.nome}: pagamento em ${fmt(e.target.value)}`, (d) => pagarFatura(d, c, f.vencimento, e.target.value))} />
-                </label>
-                {f.antecipada && <Chip onClick={() => withUndo('Voltou pro vencimento', (d) => pagarFatura(d, c, f.vencimento, null))}>↩︎ Voltar pro vencimento</Chip>}
-              </div>
-            </div>
+            <Pagamento f={f} hoje={hoje}
+              pagarHoje={() => withUndo(`Fatura ${c.nome} paga hoje`, (d) => pagarFatura(d, c, f.vencimento, hoje))}
+              pagarEm={(data) => withUndo(`Fatura ${c.nome}: pagamento em ${fmt(data)}`, (d) => pagarFatura(d, c, f.vencimento, data))}
+              voltar={() => withUndo('Voltou pro vencimento', (d) => pagarFatura(d, c, f.vencimento, null))} />
           </div>
         ))}
         <div className="lab">Valor no app do banco</div>
@@ -94,8 +121,36 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
         />
       </div>
       <div className="sl-foot">
-        <Button kind="link" onClick={() => openSheet(<ImportarSheet cartaoId={sel} />)}>📥 Importar esta fatura (opcional)</Button>
-        <Button disabled={!mudou} onClick={salvar}>{mudou ? 'Ajustar faturas' : 'Faturas conferidas'}</Button>
+        {mudou
+          ? <Button onClick={salvar}>Salvar valores do banco</Button>
+          : <Button kind="ghost" onClick={() => openSheet(<ImportarSheet cartaoId={sel} />)}><span className="btn-ico"><IImport /></span>Importar fatura (opcional)</Button>}
+      </div>
+    </div>
+  );
+}
+
+/** Quando a fatura sai da conta + ações (pagar hoje / escolher data / voltar pro vencimento). */
+function Pagamento({ f, hoje, pagarHoje, pagarEm, voltar }: { f: Fatura; hoje: string; pagarHoje: () => void; pagarEm: (d: string) => void; voltar: () => void }) {
+  const pagaHoje = f.antecipada && f.pagaEm === hoje;
+  const jaPaga = f.antecipada && f.pagaEm <= hoje;
+  const titulo = !f.antecipada ? `Sai da conta em ${fmt(f.vencimento)}` : jaPaga ? (pagaHoje ? 'Paga hoje' : `Paga em ${fmt(f.pagaEm)}`) : `Agendada pra ${fmt(f.pagaEm)}`;
+  const sub = !f.antecipada ? 'no vencimento' : f.pagaEm < f.vencimento ? `${jaPaga ? 'adiantada' : 'antes do vencimento'} (vence ${fmt(f.vencimento)})` : `depois do vencimento (${fmt(f.vencimento)})`;
+  const data = (rotulo: string, principal = false) => (
+    <label className={`pay-b ${principal ? 'pri' : ''}`}>
+      <ICalendar size={18} /><span>{rotulo}</span>
+      <input type="date" className="date-overlay" value={f.pagaEm} onChange={(e) => e.target.value && pagarEm(e.target.value)} aria-label={rotulo} />
+    </label>
+  );
+  return (
+    <div className={`pay ${jaPaga ? 'paga' : ''}`}>
+      <div className="pay-st">
+        <span className="pay-i">{jaPaga ? <ICheckCircle size={20} /> : <ICalendar size={20} />}</span>
+        <div><b>{titulo}</b><span>{sub}</span></div>
+      </div>
+      <div className="pay-acts">
+        {!jaPaga && <button className="pay-b pri" onClick={pagarHoje}><ICheckCircle size={18} /><span>Paguei hoje</span></button>}
+        {data(f.antecipada ? 'Alterar data' : 'Outra data', false)}
+        {f.antecipada && <button className="pay-b" onClick={voltar}><IUndo size={18} /><span>Desfazer</span></button>}
       </div>
     </div>
   );

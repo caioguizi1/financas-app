@@ -3,7 +3,8 @@ import { useMemo, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { dm, mesCurto, today } from '../lib/dates';
 import { analisar, encaixar, lerArquivo, paraLancamentos, preparar, type Item, type MetaFatura, type TipoImport } from '../lib/importar';
-import type { Cartao } from '../lib/types';
+import type { Cartao, Data } from '../lib/types';
+import { registrar } from '../lib/importacoes';
 import { brl } from '../lib/money';
 import { aprender } from '../lib/smart';
 import { closeSheet, getData, restore, mutate, toast } from '../store';
@@ -25,6 +26,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
   const [lendo, setLendo] = useState(false);
   const [usarTipico, setUsarTipico] = useState(true);
   const [meta, setMeta] = useState<MetaFatura>({});
+  const [nomeArquivo, setNomeArquivo] = useState<string>();
   const [ajustarDias, setAjustarDias] = useState(true);
   const [catAberta, setCatAberta] = useState<string | null>(null);
   const cartao = tipo === 'fatura' ? D.cartoes.find((c) => c.id === cid) : undefined;
@@ -51,6 +53,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
           if (alvo) setCid(alvo.id);
         }
         setMeta(lido.meta);
+        setNomeArquivo(f.name);
         setItens(preparar(getData(), lido.linhas, tipo, alvo));
       } catch {
         setErro('Não consegui ler esse arquivo. Tente exportar em CSV ou OFX pelo app do banco — ou continue lançando à mão, que funciona igual.');
@@ -86,12 +89,19 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
     mutate((d) => {
       let mem = d.aprendido ?? {};
       for (const l of novos) if (l.desc) mem = aprender(mem, l.desc, l.tipo, l.cat, l.ico);
-      return {
+      const nd: Data = {
         ...d,
         lancamentos: plano.lancamentos,
         aprendido: mem,
         cartoes: cartaoFinal ? d.cartoes.map((c) => (c.id === cartaoFinal.id ? { ...cartaoFinal, estimativa: c.estimativa ?? (usarTipico && a ? a.tipicoSugerido : undefined) } : c)) : d.cartoes,
       };
+      // histórico: qual fatura foi enviada pra qual cartão, e se bateu com o banco
+      const conf = a?.conferencia;
+      return registrar(nd, {
+        tipo, cartaoId: cartaoFinal?.id, venc: meta.vencimento, fechamento: meta.fechamento, arquivo: nomeArquivo,
+        total: a?.total ?? 0, totalBanco: conf?.banco, conferida: conf ? Math.abs(conf.lido - conf.banco) <= 100 : undefined,
+        ids: novos.map((l) => l.id),
+      });
     });
     closeSheet();
     toast(`${novos.length} lançamentos importados`, () => restore(before));

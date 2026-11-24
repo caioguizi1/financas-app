@@ -172,3 +172,21 @@ describe('fatura em PDF', () => {
     expect([prox[0].incluir, prox[0].motivo]).toEqual([false, 'parcela']);
   });
 });
+
+describe('histórico de faturas importadas', () => {
+  it('registra, substitui ao reimportar a mesma fatura e desfaz', async () => {
+    const { registrar, remover, doCartao, inferir } = await import('./importacoes');
+    const l1 = { id: 'a', tipo: 'saida' as const, valor: 1000, cat: 'comida', desc: 'x', data: '2026-10-10', cartaoId: 'it', fatura: '2026-11-07', criado: 7 };
+    const l2 = { ...l1, id: 'b' }, l3 = { ...l1, id: 'c', parcelas: 10, valor: 10000, fatura: '2026-02-07' };
+    let d = D({ lancamentos: [l1, l2, l3] });
+    // reconstrução (importações antigas): mesmo instante de criação + âncora
+    const inf = inferir(d);
+    expect(inf.map((x) => [x.cartaoId, x.venc, x.total, x.ids.length])).toEqual([['it', '2026-11-07', 3000, 3]]);
+    d = registrar(d, { tipo: 'fatura', cartaoId: 'it', venc: '2026-11-07', total: 3000, ids: ['a', 'b', 'c'] });
+    d = registrar(d, { tipo: 'fatura', cartaoId: 'it', venc: '2026-11-07', total: 3000, ids: ['a'], conferida: true });
+    expect(doCartao(d, 'it').length).toBe(1);
+    expect(doCartao(d, 'it')[0].conferida).toBe(true);
+    d = remover(d, doCartao(d, 'it')[0].id);
+    expect([d.lancamentos.length, d.importacoes!.length]).toEqual([0, 0]);
+  });
+});

@@ -82,6 +82,8 @@ export interface Data {
   /** Fatura paga/agendada fora do vencimento: 'cartaoId|vencimento' → data e momento. */
   /** Correções únicas já aplicadas aos dados. */
   migracoes?: string[];
+  /** Faturas/extratos importados (histórico por cartão). */
+  importacoes?: Importacao[];
   pagFaturas?: Record<string, { data: ISODate; ts: number }>;
   /** Avisos que o usuário dispensou (ex.: '13-2026'). */
   dispensados?: string[];
@@ -106,4 +108,25 @@ export interface Evento {
   /** Item agrupado (fatura): as compras que o compõem. */
   itens?: Evento[];
   criado: number;
+}
+
+/** Registro de uma importação de fatura (ou extrato). */
+export interface Importacao {
+  id: string;
+  tipo: 'fatura' | 'extrato';
+  cartaoId?: string;
+  /** Vencimento da fatura importada (quando conhecido). */
+  venc?: ISODate;
+  fechamento?: ISODate;
+  arquivo?: string;
+  /** Compras da fatura (centavos). */
+  total: number;
+  /** Total impresso pelo banco, quando o PDF informa — e se bateu com o lido. */
+  totalBanco?: number;
+  conferida?: boolean;
+  /** Lançamentos criados (permite desfazer a importação). */
+  ids: string[];
+  quando: number;
+  /** Reconstruída a partir dos lançamentos (importação feita antes do histórico existir). */
+  inferida?: boolean;
 }
