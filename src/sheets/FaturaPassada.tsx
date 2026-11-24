@@ -3,8 +3,9 @@
  * Abre pelo histórico de faturas do cartão (importadas ou lançadas à mão).
  */
 import { useState } from 'react';
+import { analisarFatura, parteDe, type Parte } from '../lib/analiseFatura';
+import { catN } from '../lib/categories';
 import { dm, mesCurto, monthKey, today } from '../lib/dates';
-import { fatura } from '../lib/faturas';
 import { doCartao } from '../lib/importacoes';
 import { brl } from '../lib/money';
 import { openSheet, useData } from '../store';
@@ -16,27 +17,21 @@ import { SheetHeader } from '../ui/Sheet';
 import { QuickAdd } from './QuickAdd';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
-type Filtro = 'todas' | 'puladas' | 'parcelas' | 'creditos';
+type Filtro = 'todas' | Parte | 'credito';
+const COR: Record<Parte, string> = { mes: 'var(--fp-1)', novas: 'var(--fp-2)', antigas: 'var(--fp-3)', puladas: 'var(--fp-4)', fixos: 'var(--fp-5)', naoLanc: 'var(--fp-6)' };
 
 export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: string; venc: string; voltar?: () => void }) {
   const D = useData();
   const [filtro, setFiltro] = useState<Filtro>('todas');
   const c = D.cartoes.find((x) => x.id === cartaoId);
   if (!c) return null;
-  const f = fatura(D, c, venc, 'fechada');
+  const A = analisarFatura(D, c, venc, today());
+  const f = A.f;
   const reg = doCartao(D, c.id).find((x) => x.venc === venc);
   const lanc = new Map(D.lancamentos.map((l) => [l.id, l]));
-  // data da compra (a parcela i mostra a data original da compra, como o banco)
-  const linhas = f.itens.map((e) => ({ e, l: lanc.get(e.ref) })).sort((a, b) => (a.l?.data ?? a.e.data).localeCompare(b.l?.data ?? b.e.data) || a.e.valor - b.e.valor);
-  const compras = -f.itens.filter((e) => e.valor < 0).reduce((s, e) => s + e.valor, 0);
-  const creditos = f.itens.filter((e) => e.valor > 0).reduce((s, e) => s + e.valor, 0);
-  const conta = {
-    todas: linhas.length,
-    puladas: linhas.filter((x) => x.e.adiado).length,
-    parcelas: linhas.filter((x) => (x.l?.parcelas ?? 1) > 1).length,
-    creditos: linhas.filter((x) => x.e.valor > 0).length,
-  };
-  const vis = linhas.filter(({ e, l }) => filtro === 'todas' || (filtro === 'puladas' ? e.adiado : filtro === 'parcelas' ? (l?.parcelas ?? 1) > 1 : e.valor > 0));
+  // data da compra (a parcela mostra a data original da compra, como o banco)
+  const linhas = f.itens.map((e) => ({ e, l: lanc.get(e.ref), p: parteDe(e) })).sort((x, y) => (x.l?.data ?? x.e.data).localeCompare(y.l?.data ?? y.e.data) || x.e.valor - y.e.valor);
+  const vis = linhas.filter((x) => filtro === 'todas' || x.p === filtro);
   const hoje = today();
 
   return (
@@ -46,17 +41,18 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
         <div className="fp-head">
           <CartaoMini c={c} />
           <div className="fp-meta">
-            <div className="mut small">{c.nome} · fechou {fmt(f.fecha)} · {venc < hoje ? 'venceu' : 'vence'} {fmt(venc)}</div>
+            <div className="mut small">{c.nome} · {f.fecha <= hoje ? 'fechou' : 'fecha'} {fmt(f.fecha)} · {venc < hoje ? 'venceu' : 'vence'} {fmt(venc)}</div>
             <div className="fp-total num">{brl(f.total)}</div>
-            {creditos > 0 && <div className="dim small">Compras {brl(compras)} · créditos −{brl(creditos)}</div>}
+            {A.creditos > 0 && <div className="dim small">Compras {brl(A.compras)} · créditos −{brl(A.creditos)}</div>}
             {reg && <div className="dim small">{reg.conferida ? 'Importada e conferida com o banco' : 'Importada'}{reg.inferida ? '' : ` em ${dm(new Date(reg.quando).toISOString().slice(0, 10))}`}</div>}
           </div>
         </div>
-        <div className="chips scroll" style={{ margin: '14px 0 10px' }}>
-          <Chip on={filtro === 'todas'} onClick={() => setFiltro('todas')}>Todas · {conta.todas}</Chip>
-          {conta.puladas > 0 && <Chip on={filtro === 'puladas'} onClick={() => setFiltro('puladas')}>Puladas · {conta.puladas}</Chip>}
-          {conta.parcelas > 0 && <Chip on={filtro === 'parcelas'} onClick={() => setFiltro('parcelas')}>Parcelas · {conta.parcelas}</Chip>}
-          {conta.creditos > 0 && <Chip on={filtro === 'creditos'} onClick={() => setFiltro('creditos')}>Créditos · {conta.creditos}</Chip>}
+        <Resumo A={A} filtro={filtro} setFiltro={setFiltro} />
+        <div className="lab">Compras{filtro !== 'todas' ? ` · ${filtro === 'credito' ? 'Créditos' : A.partes.find((p) => p.id === filtro)?.label}` : ''}</div>
+        <div className="chips scroll" style={{ margin: '0 0 10px' }}>
+          <Chip on={filtro === 'todas'} onClick={() => setFiltro('todas')}>Todas · {linhas.length}</Chip>
+          {A.partes.map((p) => <Chip key={p.id} on={filtro === p.id} onClick={() => setFiltro(p.id)}><span className="fp-dot" style={{ background: COR[p.id] }} />{p.label} · {p.n}</Chip>)}
+          {A.nCred > 0 && <Chip on={filtro === 'credito'} onClick={() => setFiltro('credito')}>Créditos · {A.nCred}</Chip>}
         </div>
         <div className="fat-box">
           <div className="fat-itens">
@@ -74,6 +70,89 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
           <div className="fat-tot"><span className="mut">Total da fatura</span><b className="num">{brl(f.total)}</b></div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Resumo no topo: composição (barra), comparação, o que continua e categorias. */
+function Resumo({ A, filtro, setFiltro }: { A: ReturnType<typeof analisarFatura>; filtro: Filtro; setFiltro: (f: Filtro) => void }) {
+  const base = A.compras || 1;
+  const var_ = A.anterior ? A.total - A.anterior.total : 0;
+  const maxF = Math.max(1, ...A.futuro.map((x) => x.valor));
+  const totF = A.futuro.reduce((s, x) => s + x.valor, 0);
+  return (
+    <div className="fp-res">
+      <div className="lab" style={{ marginTop: 16 }}>De que é feita</div>
+      <div className="fp-card">
+        <div className="fp-bar" role="img" aria-label={A.partes.map((p) => `${p.label} ${brl(p.valor)}`).join(', ')}>
+          {A.partes.map((p) => <span key={p.id} style={{ flexGrow: p.valor, background: COR[p.id] }} className={p.id === 'naoLanc' ? 'hatch' : ''} />)}
+        </div>
+        {A.partes.map((p) => (
+          <button key={p.id} className={`fp-leg ${filtro === p.id ? 'on' : ''}`} onClick={() => setFiltro(filtro === p.id ? 'todas' : p.id)}>
+            <span className={`fp-dot ${p.id === 'naoLanc' ? 'hatch' : ''}`} style={{ background: COR[p.id] }} />
+            <span className="fp-leg-t"><b>{p.label}</b><span className="dim">{p.n} {p.n === 1 ? 'item' : 'itens'} · {p.dica}</span></span>
+            <span className="fp-leg-v"><b className="num">{brl(p.valor)}</b><span className="dim num">{Math.round((p.valor / base) * 100)}%</span></span>
+          </button>
+        ))}
+        {A.creditos > 0 && (
+          <button className={`fp-leg ${filtro === 'credito' ? 'on' : ''}`} onClick={() => setFiltro(filtro === 'credito' ? 'todas' : 'credito')}>
+            <span className="fp-dot cred" />
+            <span className="fp-leg-t"><b>Créditos</b><span className="dim">{A.nCred} {A.nCred === 1 ? 'item' : 'itens'} · estornos e Pula Compra</span></span>
+            <span className="fp-leg-v"><b className="num pos">+{brl(A.creditos)}</b></span>
+          </button>
+        )}
+      </div>
+
+      {(A.anterior || A.maior) && (
+        <div className="fp-fatos">
+          {A.anterior && (
+            <div className="fp-fato">
+              <span className="dim small">vs. fatura de {mesCurto(monthKey(A.anterior.venc))}</span>
+              <b className={`num ${var_ > 0 ? 'neg' : var_ < 0 ? 'pos' : ''}`}>{var_ === 0 ? 'igual' : `${var_ > 0 ? '+' : '−'}${brl(Math.abs(var_))}`}</b>
+              <span className="dim small">era {brl(A.anterior.total)}{A.anterior.total ? ` · ${var_ >= 0 ? '+' : '−'}${Math.round(Math.abs(var_ / A.anterior.total) * 100)}%` : ''}</span>
+            </div>
+          )}
+          {A.maior && (
+            <div className="fp-fato">
+              <span className="dim small">maior compra</span>
+              <b className="num">{brl(-A.maior.valor)}</b>
+              <span className="dim small fp-ell">{nomeExib(A.maior.desc)}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {A.futuro.length > 0 && (
+        <>
+          <div className="lab">Continua nas próximas faturas</div>
+          <div className="fp-card">
+            <div className="dim small" style={{ marginBottom: 8 }}>Das parceladas desta fatura, ainda faltam <b className="num">{brl(totF).replace('R$ ', 'R$\u00a0')}</b>, até {mesCurto(monthKey(A.futuro[A.futuro.length - 1].venc))}.</div>
+            {A.futuro.slice(0, 6).map((x) => (
+              <div key={x.venc} className="fp-row">
+                <span className="fp-row-l">{mesCurto(monthKey(x.venc))}</span>
+                <span className="fp-row-b"><span style={{ width: `${(x.valor / maxF) * 100}%` }} /></span>
+                <span className="num fp-row-v">{brl(x.valor)}</span>
+              </div>
+            ))}
+            {A.futuro.length > 6 && <div className="dim small" style={{ marginTop: 6 }}>e mais {A.futuro.length - 6} {A.futuro.length - 6 === 1 ? 'mês' : 'meses'}</div>}
+          </div>
+        </>
+      )}
+
+      {A.categorias.length > 0 && (
+        <>
+          <div className="lab">Onde foi o dinheiro</div>
+          <div className="fp-card">
+            {A.categorias.slice(0, 5).map((x) => (
+              <div key={x.cat} className="fp-row">
+                <span className="fp-row-l"><CatGlyph cat={x.cat} />{catN(x.cat)}</span>
+                <span className="fp-row-b cat"><span style={{ width: `${x.pct * 100}%` }} /></span>
+                <span className="num fp-row-v">{brl(x.valor)}<span className="dim"> · {Math.round(x.pct * 100)}%</span></span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

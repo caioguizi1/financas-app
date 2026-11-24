@@ -116,6 +116,8 @@ export interface Evento {
   estimativa?: boolean;
   /** Compra pulada, na fatura em que o "FIN" apareceu (ver Lancamento.adiado). */
   adiado?: boolean;
+  /** Parcela i de n (só compras parceladas). */
+  parcela?: { i: number; n: number };
   /** Item agrupado (fatura): as compras que o compõem. */
   itens?: Evento[];
   criado: number;

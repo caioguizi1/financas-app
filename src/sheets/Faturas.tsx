@@ -83,6 +83,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
               </div>
             ) : <div className="dim small" style={{ padding: '6px 0' }}>Nada lançado nesta fatura ainda.</div>}
             <div className="fat-tot"><span className="mut">Somado no app</span><b className="num">{brl(f.total)}</b></div>
+            {f.itens.length > 0 && <button className="fat-ver" onClick={() => abrir(f.vencimento)}>Ver análise e fatura completa ›</button>}
             {c.estimativa && f.status === 'aberta' && c.estimativa > f.total && (
               <div className="fat-tot"><span className="mut">Previsto com gasto típico</span><span className="num">{brl(c.estimativa)}</span></div>
             )}

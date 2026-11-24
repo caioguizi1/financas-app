@@ -751,3 +751,34 @@ html { touch-action: manipulation }
 .fat-it .num.pos { color: var(--in) }
 .fat-hist .fat-mais { justify-content: center; color: var(--acc-hi); font-weight: 600 }
 .sheet-head .sh-btn { white-space: nowrap }
+
+/* ===== análise da fatura (v2.28) ===== */
+:root { --fp-1: #9085e9; --fp-2: #d95926; --fp-3: #3987e5; --fp-4: #c98500; --fp-5: #d55181; --fp-6: #8e89a6 }
+[data-theme='light'] { --fp-1: #6250d6; --fp-2: #eb6834; --fp-3: #2a78d6; --fp-4: #eda100; --fp-5: #e87ba4; --fp-6: #8f8aa3 }
+.fp-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px 14px 8px }
+.fp-bar { display: flex; gap: 2px; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 8px }
+.fp-bar > span { min-width: 3px; height: 100%; transition: flex-grow .3s }
+.hatch { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.28) 0 2px, transparent 2px 5px) !important; background-color: var(--fp-6) }
+.fp-leg { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 4px; border: 0; background: none; color: inherit; font: inherit; text-align: left; border-top: 1px solid var(--line); border-radius: 10px }
+.fp-leg:first-of-type { border-top: 0 }
+.fp-leg.on { background: var(--card2) }
+.fp-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; display: inline-block }
+.chip .fp-dot { margin-right: 6px; vertical-align: 0 }
+.fp-dot.cred { background: var(--in) }
+.fp-leg-t { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px }
+.fp-leg-t .dim { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fp-leg-v { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; white-space: nowrap }
+.fp-leg-v .dim { font-size: 12px }
+.num.pos { color: var(--in) } .num.neg { color: var(--out) }
+.fp-fatos { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 10px }
+.fp-fato { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.fp-fato b { font-size: 18px; letter-spacing: -0.02em }
+.fp-ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fp-row { display: grid; grid-template-columns: 112px 1fr auto; align-items: center; gap: 10px; padding: 6px 0; font-size: 13.5px }
+.fp-row-l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.fp-row-b { height: 8px; border-radius: 4px; background: var(--card3); overflow: hidden }
+.fp-row-b > span { display: block; height: 100%; border-radius: 4px; background: var(--fp-3) }
+.fp-row-b.cat > span { background: var(--fp-1) }
+.fp-row-v { white-space: nowrap; font-weight: 600 }
+.fp-row-v .dim { font-weight: 400 }
+.fat-ver { display: block; width: 100%; margin-top: 8px; padding: 10px; border: 0; border-radius: 12px; background: var(--card2); color: var(--acc-hi); font: inherit; font-weight: 600; font-size: 14px }
