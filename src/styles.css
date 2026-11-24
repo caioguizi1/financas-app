@@ -205,8 +205,7 @@ button.item:active { background: var(--card2) }
 .seg-label > .lucide { flex: none; width: 15px; height: 15px; opacity: .9 }
 .seg-label > .cat-g { margin-right: 0; opacity: 1 }
 .seg-label > .emo { font-size: 15px }
-.emo { font-size: 1.05em; line-height: 1 }
-.chip .emo, .btn .emo { margin-right: 6px }
+.emo { font-size: 1.05em; line-height: 1; margin-inline-end: 6px }
 .field { background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; width: 100%; outline: 0; font-size: 16px }
 .field:focus { border-color: rgba(110, 91, 255, 0.6) }
 .field::placeholder { color: var(--dim) }
@@ -705,3 +704,12 @@ html { touch-action: manipulation }
 .lucide.cat-g, .chip .lucide.cat-g, .btn .lucide.cat-g { color: var(--c); vertical-align: -3px; margin-right: 6px; flex: none }
 [data-theme='light'] .lucide.cat-g, [data-theme='light'] .chip .lucide.cat-g, [data-theme='light'] .btn .lucide.cat-g { color: color-mix(in srgb, var(--c) 70%, #000) }
 .chip.on .lucide.cat-g { color: inherit }
+
+/* ===== respiro padrão entre ícone e texto (v2.22) ===== */
+.ic-l { flex: none; margin-inline-end: 6px; vertical-align: -0.2em }
+/* ícone sozinho ou container que já tem gap: sem respiro extra */
+.ico > .ic-l, .in-ico > .ic-l, .ic > .ic-l, .spark > .ic-l, .seg-label > .ic-l, .tab .ic-l, .fab .ic-l { margin-inline-end: 0 }
+.btn.primary .ic-l, .btn.danger .ic-l { color: currentColor }
+.ico > .cat-g { margin: 0 }
+.ico > .emo, .smart-ico .emo, .ex-ico > .emo, .seg-label > .emo { margin: 0 }
+.cr-l > .ic-l, .imp-dicas .ic-l, .imp-opc > .ic-l, .vr-d > .ic-l, .rec-auto .ic-l { color: var(--acc-hi) }

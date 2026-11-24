@@ -21,9 +21,11 @@ export const ICONES = {
 } satisfies Record<string, LucideIcon>;
 export type NomeIcone = keyof typeof ICONES;
 
+/** Ícone de interface. Por padrão já vem com respiro à direita (ícone antes de texto);
+ *  onde ele fica sozinho (quadradinho, círculo) ou o container usa `gap`, o CSS zera o respiro. */
 export function Ico({ n, size = 18, className }: { n: NomeIcone; size?: number; className?: string }) {
   const C = ICONES[n];
-  return <C size={size} strokeWidth={2} absoluteStrokeWidth={false} className={className} aria-hidden />;
+  return <C size={size} strokeWidth={2} absoluteStrokeWidth={false} className={`ic-l${className ? ` ${className}` : ''}`} aria-hidden />;
 }
 
 /** Miniatura do cartão (cor da marca ou a arte enviada) — no lugar do 💳 genérico. */

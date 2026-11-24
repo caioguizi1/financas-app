@@ -25,7 +25,7 @@ import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { exportar, importar } from './backup';
 import { Aviso } from '../ui/Aviso';
-import { CatGlyph, CatTile, useEstiloIco } from '../ui/CatIco';
+import { CatGlyph, useEstiloIco } from '../ui/CatIco';
 import { setEstiloIco } from '../lib/estiloIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
@@ -149,9 +149,9 @@ export function Ajustes() {
   const [confirm, setConfirm] = useState(false);
   const [tema, setT] = useState<Tema>(getTema);
   const estiloIco = useEstiloIco();
-  const Row = ({ ico, tile, t, s, onClick }: { ico?: React.ReactNode; tile?: React.ReactNode; t: string; s?: string; onClick: () => void }) => (
+  const Row = ({ ico, t, s, onClick }: { ico: React.ReactNode; t: string; s?: string; onClick: () => void }) => (
     <m.button variants={itemVariants} className="item" onClick={onClick}>
-      {tile ?? <div className="ico">{ico}</div>}<div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
+      <div className="ico">{ico}</div><div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
     </m.button>
   );
   return (
@@ -163,8 +163,8 @@ export function Ajustes() {
         {D.cartoes.length > 0 && <Row ico={<Ico n="carteira" size={20} />} t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
         <Row ico={<Ico n="importar" size={20} />} t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
         <Row ico={<Ico n="saldo" size={20} />} t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
-        <Row tile={<CatTile cat="salario" ico="💼" />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
-        <Row tile={<CatTile cat="extra" ico="🎁" />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
+        <Row ico={<CatGlyph cat="salario" ico="💼" size={20} />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
+        <Row ico={<CatGlyph cat="extra" ico="🎁" size={20} />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
       </Lista>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (

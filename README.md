@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.22** — revisão visual: todo ícone de interface já nasce com respiro antes do texto (nada encostado), emoji idem no modo emoji; ícones em botões primários ficam brancos; quadros informativos com o ícone na cor de destaque; Minha renda e Recebimentos extras nos Ajustes no mesmo formato da lista. Auditoria automática mede o espaço ícone↔texto em ~25 telas, nos dois modos.
 - **v2.21** — categorias com ícone na cor da categoria, em círculo tingido (extrato, fixos, parcelas, faturas, importação, filtros e lançamento); emoji continua disponível em Ajustes › Aparência › Figuras das categorias. Faturas mantêm a miniatura do próprio cartão, incluindo a imagem personalizada.
 - **v2.20** — seletor de tema com ícone e texto alinhados (Auto, Claro, Escuro); salário e 13º com a mesma figura do extrato no menu, nos Fixos e no aviso do 13º.
 - **v2.19** — avisos por gravidade (opção 3): ícone na cor do nível (vermelho grave, âmbar atenção, verde positivo, roxo informativo); só o saldo projetado negativo ganha a versão reforçada. Ver "Decisões de design".
