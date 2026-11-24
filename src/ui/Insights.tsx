@@ -37,11 +37,12 @@ export function InsightsStrip() {
           <m.div key={i.id} variants={itemVariants} className={`insight ${i.tom}`} whileTap={{ scale: 0.98 }} transition={springSnappy}
             onClick={(e) => {
               // texto cortado (3 linhas) e sem ação: o toque mostra a dica inteira
-              const x = (e.currentTarget as HTMLElement).querySelector('.in-x');
+              const el = e.currentTarget as HTMLElement;
+              const cortado = [...el.querySelectorAll('.in-x, .in-t')].some((x) => x.scrollHeight > x.clientHeight + 1);
               if (i.acao) agir(i);
-              else if (x && x.scrollHeight > x.clientHeight + 1) openSheet(<DicaSheet i={i} />);
+              else if (cortado) openSheet(<DicaSheet i={i} />);
             }}>
-            <div className="in-h"><span className="in-ico"><Ico n={icoDaDica(i.id)} size={19} /></span><span className="in-t">{i.titulo}</span></div>
+            <div className="in-h"><span className="in-ico"><Ico n={icoDaDica(i.id)} size={19} /></span><span className="in-t">{semQuebrarValor(i.titulo)}</span></div>
             <div className="in-x">{i.texto}</div>
             {i.acao && <button className="in-a">{i.acao.label} ›</button>}
           </m.div>
@@ -61,3 +62,6 @@ function DicaSheet({ i }: { i: Insight }) {
     </>
   );
 }
+
+/** "R$ 3.005,00" nunca quebra no meio: o valor inteiro vai pra linha de baixo. */
+const semQuebrarValor = (t: string) => t.replace(/([+−-]?R\$)\s(?=[\d.,]+)/g, '$1\u00a0');

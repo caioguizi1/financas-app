@@ -100,7 +100,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
                   const l = D.lancamentos.find((x) => x.id === e.ref);
                   return (
                     <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
-                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span><span className="num">{brl(e.valor)}</span>
+                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span>{e.adiado && <span className="tag" title="Compra adiada de uma fatura anterior">ADIADA</span>}<span className="num">{brl(e.valor)}</span>
                     </button>
                   );
                 })}

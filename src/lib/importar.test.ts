@@ -90,7 +90,7 @@ describe('análise (meses seguintes e padrões)', () => {
 
 // ---- faturas em PDF (formato real dos bancos, dados fictícios) ----
 import { linhasDosItens } from './pdfTexto';
-import { encaixar, lerArquivo, lerMeta } from './importar';
+import { encaixar, lerArquivo, lerMeta, marcarAdiados } from './importar';
 import { faturasAtuais } from './faturas';
 
 const ITAU = `Banco Itaú S.A.
@@ -133,6 +133,15 @@ describe('fatura em PDF', () => {
     expect(linhas.map((l) => [l.data, l.desc, l.valor, l.parcela ? `${l.parcela.i}/${l.parcela.n}` : ''])).toEqual([
       ['2026-09-30', 'Pagamento via conta', -100000, ''], ['2026-01-21', 'LOJA XPTO', 10000, '10/12'], ['2026-10-03', 'PADARIA BOA', 1100, ''], ['2026-10-19', 'CLINICA ABC', 10000, '1/2'],
     ]);
+  });
+  it('PicPay: "FIN" vira a marca de compra adiada (na mesma linha e na descrição quebrada)', () => {
+    const { linhas } = lerArquivo('f.pdf', PICPAY, '2026-11-23');
+    expect(linhas.filter((l) => l.adiado).map((l) => l.desc)).toEqual(['LOJA YZ', 'BAR LONGO NOME']);
+  });
+  it('reimportar recupera a marca de adiada sem duplicar', () => {
+    const l = { id: 'x', tipo: 'saida' as const, valor: 2500, cat: 'comida', desc: 'BAR LONGO NOME', data: '2026-09-18', criado: 1 };
+    const out = marcarAdiados([l, { ...l, id: 'y' }], [{ ...l, id: 'i1', valor: 2500, ico: '', incluir: false, motivo: 'duplicado', jaLancado: 'x', adiado: true }]);
+    expect(out.map((x) => [x.id, !!x.adiado])).toEqual([['x', true], ['y', false]]);
   });
   it('PicPay: duas colunas, "PARC02/04" colado, prefixo FIN e descrição quebrada', () => {
     const { linhas } = lerArquivo('f.pdf', PICPAY, '2026-11-23');

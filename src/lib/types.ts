@@ -56,6 +56,8 @@ export interface Lancamento {
   /** Veio de fatura/extrato importado: só esses têm o nome do banco limpo na exibição.
    *  O que você digita aparece exatamente como digitou. */
   importado?: boolean;
+  /** Compra adiada pra uma fatura seguinte (PicPay "FIN"/Pula Compra): gasto antigo, não compra nova. */
+  adiado?: boolean;
   criado: number;
 }
 
@@ -110,6 +112,8 @@ export interface Evento {
   venc?: ISODate;
   /** Estimativa de gasto típico (não é um lançamento real). */
   estimativa?: boolean;
+  /** Compra adiada de uma fatura anterior (ver Lancamento.adiado). */
+  adiado?: boolean;
   /** Item agrupado (fatura): as compras que o compõem. */
   itens?: Evento[];
   criado: number;

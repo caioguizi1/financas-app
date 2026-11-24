@@ -280,7 +280,7 @@ function Detalhes({ c }: { c: Cartao }) {
                     <Expande className="wcat-list">
                       {itens.map((e) => (
                         <div key={`${e.ref}${e.desc}`} className="wcat-it">
-                          <span className="t"><CatGlyph cat={e.cat} ico={e.ico} />{nomeExib(e.desc)}</span>
+                          <span className="t"><CatGlyph cat={e.cat} ico={e.ico} />{nomeExib(e.desc)}</span>{e.adiado && <span className="tag" title="Compra adiada de uma fatura anterior">ADIADA</span>}
                           <span className="num">{brl(-e.valor)}</span>
                         </div>
                       ))}

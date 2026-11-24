@@ -14,7 +14,11 @@ import type { Cartao, Data, ISODate, Lancamento } from './types';
 export type TipoImport = 'fatura' | 'extrato';
 
 /** Linha lida do arquivo. `valor` em centavos: > 0 = saída (gasto), < 0 = entrada/estorno. */
-export interface Linha { data: ISODate; desc: string; valor: number; parcela?: { i: number; n: number } }
+export interface Linha {
+  data: ISODate; desc: string; valor: number; parcela?: { i: number; n: number };
+  /** PicPay marca com "FIN" a compra que você adiou/pulou pra uma fatura seguinte (Pula Compra). */
+  adiado?: boolean;
+}
 
 // ---------------- leitura de valores e datas ----------------
 export function lerValor(s: string): number | null {
@@ -175,8 +179,9 @@ export function lerTextoPDF(texto: string, ref: ISODate, faturaDeBanco = false):
       achou = true;
       l = l.slice(m[0].length).trim();
       let desc = limparDesc(m[2] ?? '');
+      let fin = /^FIN\s/i.test((m[2] ?? '').trim());
       // descrição que quebrou pra linha de cima ("FIN MARINKOVIC COQUETELARI" / "18/09 . 313,01")
-      if (!desc || desc === '.') desc = limparDesc(anterior);
+      if (!desc || desc === '.') { desc = limparDesc(anterior); fin = /^FIN\s/i.test(anterior.trim()); }
       const valor = lerValor(m[3]);
       let data = lerData(m[1].replace(/(\d+ \w{3})\w*/, '$1'), r.getFullYear());
       if (!data || valor == null || !desc) continue;
@@ -184,7 +189,7 @@ export function lerTextoPDF(texto: string, ref: ISODate, faturaDeBanco = false):
       if (temAno && faturaDeBanco) continue; // em fatura, lançamento é "dd/mm"; data com ano é cabeçalho/boleto
       if (!temAno && data > addDays(ref, 5)) data = `${+data.slice(0, 4) - 1}${data.slice(4)}`; // compra de dez numa fatura de jan
       const p = detectarParcela(desc);
-      out.push({ data, desc: p.desc || desc, valor, parcela: p.parcela });
+      out.push({ data, desc: p.desc || desc, valor, parcela: p.parcela, ...(fin ? { adiado: true } : {}) });
       if (!/^\d{1,2}[/.]\d{1,2}\s/.test(l)) break; // o resto da linha não é outro lançamento
     }
     if (!achou) anterior = l;
@@ -217,7 +222,7 @@ export function lerArquivo(nome: string, texto: string, hoje: ISODate): { linhas
 
 // ---------------- revisão ----------------
 export type Motivo = 'duplicado' | 'parcela' | 'fixo' | 'pagamento' | 'entrada';
-export interface Item extends Linha { id: string; cat: string; ico: string; incluir: boolean; motivo?: Motivo }
+export interface Item extends Linha { id: string; cat: string; ico: string; incluir: boolean; motivo?: Motivo; /** lançamento já existente que é esta mesma compra */ jaLancado?: string }
 
 const PAGAMENTO = /pagamento (de )?fatura|pagamento recebido|pagamento via|pagamento em conta|pgto fatura|pag fatura|pagto fatura|pagamento efetuado|credito de pagamento|pagamento debito automatico/;
 
@@ -234,20 +239,21 @@ export function preparar(D: Data, linhas: Linha[], tipo: TipoImport, cartao?: Ca
     const it: Item = { ...l, id: uid(), cat: sug?.cat ?? (ehSaida ? 'outros' : 'outros_in'), ico: sug?.ico || catE(sug?.cat ?? 'outros'), incluir: true };
     const n = normalizar(l.desc);
     if (PAGAMENTO.test(n)) return { ...it, cat: 'fatura', ico: '💳', incluir: false, motivo: 'pagamento' };
-    if (tipo === 'fatura' && !ehSaida) return { ...it, motivo: 'entrada' }; // estorno: entra como crédito na fatura
     // parcela de uma compra já importada antes (fatura do mês passado traz a mesma compra como 2/10, 3/10…)
     if (l.parcela && cartao) {
-      const mesma = D.lancamentos.some((x) => x.cartaoId === cartao.id && x.parcelas === l.parcela!.n && Math.abs(Math.round(x.valor / x.parcelas!) - Math.abs(l.valor)) <= 2 * x.parcelas! && (x.data === l.data || normalizar(x.desc) === normalizar(l.desc)));
-      if (mesma) return { ...it, incluir: false, motivo: 'parcela' };
+      const mesma = D.lancamentos.find((x) => x.cartaoId === cartao.id && x.parcelas === l.parcela!.n && Math.abs(Math.round(x.valor / x.parcelas!) - Math.abs(l.valor)) <= 2 * x.parcelas! && (x.data === l.data || normalizar(x.desc) === normalizar(l.desc)));
+      if (mesma) return { ...it, incluir: false, motivo: 'parcela', jaLancado: mesma.id };
     }
     // duplicado: mesmo valor, ±3 dias, mesmo meio
-    const dup = D.lancamentos.some((x) => {
+    const dup = D.lancamentos.find((x) => {
       if ((tipo === 'fatura') !== !!x.cartaoId || (cartao && x.cartaoId && x.cartaoId !== cartao.id)) return false;
+      if (x.tipo !== (ehSaida ? 'saida' : 'entrada')) return false; // crédito só bate com crédito; compra com compra
       const v = x.parcelas && x.parcelas > 1 ? Math.round(x.valor / x.parcelas) : x.valor;
       const dd = Math.abs(parse(x.data).getTime() - parse(l.data).getTime()) / 86400000;
       return (v === Math.abs(l.valor) || x.valor === Math.abs(l.valor)) && dd <= 3 && x.cat !== 'fatura';
     });
-    if (dup) return { ...it, incluir: false, motivo: 'duplicado' };
+    if (dup) return { ...it, incluir: false, motivo: 'duplicado', jaLancado: dup.id };
+    if (tipo === 'fatura' && !ehSaida) return { ...it, motivo: 'entrada' }; // estorno: entra como crédito na fatura
     // extrato: o que já é fixo (mesmo valor ±1%, dia ±3) não entra de novo
     const fixo = D.recorrentes.some((r) => ativaEm(r, mk) && Math.abs(r.valor - Math.abs(l.valor)) <= r.valor * 0.01 && Math.abs(r.dia - parse(l.data).getDate()) <= 3 && (tipo === 'extrato' ? !r.cartaoId : r.cartaoId === cartao?.id));
     if (fixo) return { ...it, incluir: false, motivo: 'fixo' };
@@ -265,7 +271,7 @@ export function paraLancamentos(itens: Item[], tipo: TipoImport, cartao?: Cartao
   const agora = Date.now();
   return itens.filter((i) => i.incluir).map((i) => {
     const saida = i.valor > 0;
-    const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, importado: true, criado: agora };
+    const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, importado: true, ...(i.adiado ? { adiado: true } : {}), criado: agora };
     if (tipo !== 'fatura' || !cartao) return { ...base, meio: 'pix' };
     base.cartaoId = cartao.id; base.meio = 'credito';
     if (i.parcela) {
@@ -366,4 +372,14 @@ export function analisar(itens: Item[], ref: ISODate, cartao?: Cartao, meta: Met
     confProxima: meta.proximaFatura != null ? { banco: meta.proximaFatura, calc: proximosMeses[0]?.valor ?? 0 } : undefined,
     confRestante: meta.totalProximas != null ? { banco: meta.totalProximas, calc: restante } : undefined,
   };
+}
+
+/**
+ * Reimportar a mesma fatura não duplica nada, mas recupera a marca "FIN" (adiado) das compras
+ * que já estavam no app — importadas antes de o app guardar essa marca.
+ */
+export function marcarAdiados(lancamentos: Lancamento[], itens: Item[]): Lancamento[] {
+  const ids = new Set(itens.filter((i) => i.adiado && i.jaLancado).map((i) => i.jaLancado!));
+  if (!ids.size) return lancamentos;
+  return lancamentos.map((l) => (ids.has(l.id) && !l.adiado ? { ...l, adiado: true } : l));
 }

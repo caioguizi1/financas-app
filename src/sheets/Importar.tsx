@@ -2,7 +2,7 @@ import { AnimatePresence, m } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { dm, mesCurto, today } from '../lib/dates';
-import { analisar, encaixar, lerArquivo, paraLancamentos, preparar, type Item, type MetaFatura, type TipoImport } from '../lib/importar';
+import { analisar, encaixar, lerArquivo, marcarAdiados, paraLancamentos, preparar, type Item, type MetaFatura, type TipoImport } from '../lib/importar';
 import type { Cartao, Data } from '../lib/types';
 import { registrar } from '../lib/importacoes';
 import { brl } from '../lib/money';
@@ -85,6 +85,13 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
     return { novos, ...encaixar(base, novos, cartaoFinal, meta.vencimento) };
   }, [itens, tipo, cartaoFinal, meta.vencimento]);
 
+  // compras que já estavam no app e chegam agora com a marca FIN (adiada)
+  const recuperaveis = useMemo(() => {
+    if (!itens) return 0;
+    const ja = new Set(getData().lancamentos.filter((l) => l.adiado).map((l) => l.id));
+    return new Set(itens.filter((i) => i.adiado && i.jaLancado && !ja.has(i.jaLancado)).map((i) => i.jaLancado)).size;
+  }, [itens]);
+
   const importar = () => {
     if (!itens) return;
     if (!plano) return;
@@ -95,10 +102,11 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
       for (const l of novos) if (l.desc) mem = aprender(mem, l.desc, l.tipo, l.cat, l.ico);
       const nd: Data = {
         ...d,
-        lancamentos: plano.lancamentos,
+        lancamentos: marcarAdiados(plano.lancamentos, itens),
         aprendido: mem,
         cartoes: cartaoFinal ? d.cartoes.map((c) => (c.id === cartaoFinal.id ? { ...cartaoFinal, estimativa: c.estimativa ?? (usarTipico && a ? a.tipicoSugerido : undefined) } : c)) : d.cartoes,
       };
+      if (!novos.length) return nd; // só recuperou a marca de adiadas: não é uma importação nova
       // histórico: qual fatura foi enviada pra qual cartão, e se bateu com o banco
       const conf = a?.conferencia;
       return registrar(nd, {
@@ -108,7 +116,8 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
       });
     });
     closeSheet();
-    toast(`${novos.length} lançamentos importados`, () => restore(before));
+    const adiadas = recuperaveis ? ` · ${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como adiada${recuperaveis === 1 ? '' : 's'}` : '';
+    toast(novos.length ? `${novos.length} lançamentos importados${adiadas}` : `${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como adiada${recuperaveis === 1 ? '' : 's'}`, () => restore(before));
   };
 
   const alternar = (id: string) => setItens((xs) => xs!.map((i) => (i.id === id ? { ...i, incluir: !i.incluir } : i)));
@@ -215,7 +224,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               <button className="imp-chk" onClick={() => alternar(i.id)} aria-label={i.incluir ? 'Não importar' : 'Importar'}>{i.incluir ? '✓' : ''}</button>
               <CatTile cat={i.cat} ico={i.ico} onClick={() => setCatAberta(catAberta === i.id ? null : i.id)} />
               <div className="m">
-                <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
+                <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}{i.adiado && <span className="tag" title="Compra adiada de uma fatura anterior">ADIADA</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
                 <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}</div>
                 <AnimatePresence initial={false}>
                   {catAberta === i.id && (
@@ -231,7 +240,9 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
         </div>
       </div>
       <div className="sl-foot">
-        <Button disabled={!incluidos.length} onClick={importar}>Importar {incluidos.length} lançamentos</Button>
+        <Button disabled={!incluidos.length && !recuperaveis} onClick={importar}>
+          {incluidos.length ? `Importar ${incluidos.length} lançamentos` : `Marcar ${recuperaveis} ${recuperaveis === 1 ? 'compra adiada' : 'compras adiadas'}`}
+        </Button>
       </div>
     </div>
   );

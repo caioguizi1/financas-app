@@ -61,7 +61,7 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
       <div className="item">
         {e.cat === 'fatura' && cartaoDe(e) ? <CatTile cat="fatura"><CartaoMini c={cartaoDe(e)!} /></CatTile> : <CatTile cat={e.cat} ico={e.ico} />}
         <div className="m">
-          <div className="t">{nomeExib(e.desc)}{e.fixo && <span className="tag">FIXO</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
+          <div className="t">{nomeExib(e.desc)}{e.fixo && <span className="tag">FIXO</span>}{e.adiado && <span className="tag" title="Compra adiada de uma fatura anterior">ADIADA</span>}{e.itens?.some((x) => x.estimativa) && !e.estimativa && <span className="tag">+ESTIMATIVA</span>}</div>
           {sub && <div className="s">{sub}</div>}
         </div>
         <div className={`v num ${e.valor > 0 ? 'pos' : ''}`}>{brl(e.valor, true)}</div>
