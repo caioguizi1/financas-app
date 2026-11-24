@@ -38,6 +38,7 @@ npm run build      # build de produção
 ```
 
 ## Versões
+- **v2.26** — "FIN" do PicPay = compra pulada (Pula Compra): etiqueta PULADA só na fatura em que o FIN aparece; nas parcelas seguintes de uma compra pulada e parcelada no app, ela é parcela normal. Migração preenche em qual fatura o FIN apareceu, a partir da importação.
 - **v2.25.1** — correção de texto: o que veio da fatura anterior ("FIN", parcelada/adiada) não é mais chamado de Pula Compra; o Pula Compra continua sendo só o crédito.
 - **v2.25** — etiqueta das compras do Pula Compra passa a ser FATURA ANTERIOR, numa linha própria, sem cortar o nome. O histórico de faturas importadas mostra o valor líquido (o mesmo do extrato), com compras e créditos embaixo. As dicas da fatura deixam essas compras fora da comparação com o normal e explicam quanto veio da fatura anterior.
 - **v2.24** — compras adiadas do PicPay ("FIN"/Pula Compra) ganham a etiqueta ADIADA na prévia da importação, nas faturas, na carteira e no extrato; reimportar a mesma fatura recupera a marca das compras antigas sem duplicar nada (e créditos passam a ser reconhecidos como duplicados). Títulos dos cartões "Pra você" usam até duas linhas, com o valor sempre inteiro.

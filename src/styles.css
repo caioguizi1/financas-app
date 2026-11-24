@@ -726,7 +726,7 @@ html { touch-action: manipulation }
 .tec-ok { font-weight: 650; font-size: 15px; color: var(--acc-hi); padding: 6px 12px; border-radius: 10px; background: var(--card2) }
 .wcat-it > .t { flex: 1; min-width: 0 }
 .imp-reg-det { margin-top: 1px; color: var(--dim) }
-/* etiqueta "FATURA ANTERIOR" numa linha própria: o nome nunca é cortado por ela */
+/* etiqueta "PULADA" numa linha própria: o nome nunca é cortado por ela */
 .fat-it .m { white-space: normal }
 .fat-it .m-n, .wcat-it .m-n { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .tag.tag-l { display: table; margin: 3px 0 1px; font-size: 9.5px; letter-spacing: .02em }

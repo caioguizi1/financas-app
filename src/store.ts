@@ -23,7 +23,20 @@ function migrar(d: Data): Data {
     const c = d.cartoes.find((x) => l.desc === `Fatura ${x.nome} (já gasto)`);
     return c ? { ...l, cartaoId: c.id, meio: 'credito' as const, data: diaDoCiclo(c, l.data), ico: '💳' } : l;
   });
-  return marcarImportados(historicoImportacoes(corrigirCategorias({ ...d, lancamentos })));
+  return faturaDoPulo(marcarImportados(historicoImportacoes(corrigirCategorias({ ...d, lancamentos }))));
+}
+
+/**
+ * Uma vez (v2.26): compras puladas (FIN) marcadas antes de o app guardar EM QUAL fatura o FIN apareceu.
+ * Usa a importação que trouxe a marca (a fatura reimportada). Sem ela, a marca vale em todas as parcelas, como antes.
+ */
+function faturaDoPulo(d: Data): Data {
+  const ID = 'fatura-do-pulo';
+  if (d.migracoes?.includes(ID)) return d;
+  const vencDe = new Map<string, string>();
+  for (const r of d.importacoes ?? []) if (r.venc) for (const id of r.ids) if (!vencDe.has(id) || r.venc > vencDe.get(id)!) vencDe.set(id, r.venc);
+  const lancamentos = d.lancamentos.map((l) => (l.adiado && !l.adiadoEm && vencDe.has(l.id) ? { ...l, adiadoEm: vencDe.get(l.id)! } : l));
+  return { ...d, lancamentos, migracoes: [...(d.migracoes ?? []), ID] };
 }
 
 /**

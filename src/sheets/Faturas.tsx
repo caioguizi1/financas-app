@@ -102,7 +102,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
                   const l = D.lancamentos.find((x) => x.id === e.ref);
                   return (
                     <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
-                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m"><span className="m-n">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span>{e.adiado && <span className="tag tag-l" title="Veio da fatura anterior (parcelada/adiada) e é paga nesta">FATURA ANTERIOR</span>}</span><span className="num">{brl(e.valor)}</span>
+                      <span><CatGlyph cat={e.cat} ico={e.ico} /></span><span className="m"><span className="m-n">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span>{e.adiado && <span className="tag tag-l" title="Compra pulada (Pula Compra): paga nesta fatura">PULADA</span>}</span><span className="num">{brl(e.valor)}</span>
                     </button>
                   );
                 })}

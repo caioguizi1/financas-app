@@ -16,7 +16,7 @@ export type TipoImport = 'fatura' | 'extrato';
 /** Linha lida do arquivo. `valor` em centavos: > 0 = saída (gasto), < 0 = entrada/estorno. */
 export interface Linha {
   data: ISODate; desc: string; valor: number; parcela?: { i: number; n: number };
-  /** PicPay marca com "FIN" o que veio da fatura anterior (parcelada/adiada). Não confundir com o Pula Compra, que aparece como crédito. */
+  /** PicPay marca com "FIN" a compra pulada (Pula Compra): paga depois, às vezes parcelada no app. */
   adiado?: boolean;
 }
 
@@ -271,7 +271,7 @@ export function paraLancamentos(itens: Item[], tipo: TipoImport, cartao?: Cartao
   const agora = Date.now();
   return itens.filter((i) => i.incluir).map((i) => {
     const saida = i.valor > 0;
-    const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, importado: true, ...(i.adiado ? { adiado: true } : {}), criado: agora };
+    const base: Lancamento = { id: uid(), tipo: saida ? 'saida' : 'entrada', valor: Math.abs(i.valor), cat: i.cat, ico: i.ico !== catE(i.cat) ? i.ico : undefined, desc: i.desc, data: i.data, importado: true, ...(i.adiado ? { adiado: true, ...(venc ? { adiadoEm: venc } : {}) } : {}), criado: agora };
     if (tipo !== 'fatura' || !cartao) return { ...base, meio: 'pix' };
     base.cartaoId = cartao.id; base.meio = 'credito';
     if (i.parcela) {
@@ -375,11 +375,11 @@ export function analisar(itens: Item[], ref: ISODate, cartao?: Cartao, meta: Met
 }
 
 /**
- * Reimportar a mesma fatura não duplica nada, mas recupera a marca "FIN" (adiado) das compras
- * que já estavam no app — importadas antes de o app guardar essa marca.
+ * Reimportar a mesma fatura não duplica nada, mas recupera a marca "FIN" (compra pulada) das compras
+ * que já estavam no app — importadas antes de o app guardar essa marca — e em qual fatura ela apareceu.
  */
-export function marcarAdiados(lancamentos: Lancamento[], itens: Item[]): Lancamento[] {
+export function marcarAdiados(lancamentos: Lancamento[], itens: Item[], venc?: ISODate): Lancamento[] {
   const ids = new Set(itens.filter((i) => i.adiado && i.jaLancado).map((i) => i.jaLancado!));
   if (!ids.size) return lancamentos;
-  return lancamentos.map((l) => (ids.has(l.id) && !l.adiado ? { ...l, adiado: true } : l));
+  return lancamentos.map((l) => (ids.has(l.id) && (!l.adiado || (venc && !l.adiadoEm)) ? { ...l, adiado: true, ...(venc ? { adiadoEm: l.adiadoEm ?? venc } : {}) } : l));
 }

@@ -56,8 +56,10 @@ export interface Lancamento {
   /** Veio de fatura/extrato importado: só esses têm o nome do banco limpo na exibição.
    *  O que você digita aparece exatamente como digitou. */
   importado?: boolean;
-  /** Veio da fatura anterior (PicPay "FIN", parcelada/adiada): gasto antigo, não compra nova. Não é o Pula Compra. */
+  /** Compra pulada (PicPay "FIN" = Pula Compra): paga depois, às vezes parcelada no app. Gasto de outro mês, não compra nova. */
   adiado?: boolean;
+  /** Vencimento da fatura em que o "FIN" apareceu: só nela a compra conta como pulada; nas parcelas seguintes é parcela normal. */
+  adiadoEm?: ISODate;
   criado: number;
 }
 
@@ -112,7 +114,7 @@ export interface Evento {
   venc?: ISODate;
   /** Estimativa de gasto típico (não é um lançamento real). */
   estimativa?: boolean;
-  /** Compra adiada de uma fatura anterior (ver Lancamento.adiado). */
+  /** Compra pulada, na fatura em que o "FIN" apareceu (ver Lancamento.adiado). */
   adiado?: boolean;
   /** Item agrupado (fatura): as compras que o compõem. */
   itens?: Evento[];

@@ -126,3 +126,12 @@ describe('resumo dos meses (fecha a conta)', () => {
     expect([nov.inicio, nov.ent, nov.sai, nov.fim]).toEqual([100_000, 0, 300_000, -200_000]);
   });
 });
+
+describe('compra pulada (FIN) parcelada no app', () => {
+  it('a etiqueta vale só na fatura em que o FIN apareceu; as parcelas seguintes são normais', () => {
+    const pp = { id: 'pp', nome: 'PicPay', fechamento: 9, vencimento: 15 };
+    const D = base({ cartoes: [pp], lancamentos: [{ id: 'cs', tipo: 'saida', valor: 6792, cat: 'comida', desc: 'CACAU SHOW', data: '2026-09-30', cartaoId: 'pp', meio: 'credito', parcelas: 3, fatura: '2026-10-15', adiado: true, adiadoEm: '2026-11-15', criado: 1 }] });
+    const evs = eventosEntre(D, '2026-10-01', '2027-01-31').filter((e) => e.ref === 'cs');
+    expect(evs.map((e) => [e.venc, !!e.adiado])).toEqual([['2026-10-15', false], ['2026-11-15', true], ['2026-12-15', false]]);
+  });
+});

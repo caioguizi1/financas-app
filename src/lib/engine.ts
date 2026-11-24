@@ -87,7 +87,7 @@ function calcularEventos(D: Data, de: ISODate, ate: ISODate): Evento[] {
         out.push({
           data: cash, valor: l.tipo === 'entrada' ? v : -v,
           desc: (l.desc || catN(l.cat)) + (n > 1 ? ` ${i + 1}/${n}` : ''),
-          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, venc, ...(l.adiado ? { adiado: true } : {}), cartao: c?.nome ?? null, cartaoId: c?.id, criado: Math.max(l.criado || 0, pg?.ts ?? 0),
+          cat: l.cat, ico: l.ico, ref: l.id, lanc: true, venc, ...(l.adiado && (!l.adiadoEm || venc === l.adiadoEm) ? { adiado: true } : {}), cartao: c?.nome ?? null, cartaoId: c?.id, criado: Math.max(l.criado || 0, pg?.ts ?? 0),
         });
       }
     }

@@ -31,7 +31,7 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   const futura = previsto > 0;
   const out: DicaFatura[] = [];
 
-  // por categoria (nesta fatura) — sem o que veio da fatura anterior ("FIN", parcelada/adiada; não é o Pula Compra):
+  // por categoria (nesta fatura) — sem as compras puladas ("FIN"/Pula Compra), que são gasto de outro mês
   // elas são gasto de outro mês e inflariam a comparação com o normal
   const porCat = new Map<string, number>();
   for (const e of compras) if (!e.adiado) porCat.set(e.cat, (porCat.get(e.cat) ?? 0) - e.valor);
@@ -92,13 +92,13 @@ export function dicasDaFatura(D: Data, c: Cartao, venc: ISODate, itens: Evento[]
   if (!futura && maior && -maior.valor / total >= 0.2 && compras.length >= 3)
     out.push({ id: 'maior', tom: 'info', peso: 50, texto: `A maior compra, ${nomeVisivel(D, maior.desc.replace(PARC, '').trim())}, é ${pct(-maior.valor / total)} da fatura (${brl(-maior.valor)}).` });
 
-  // 6) o que veio da fatura anterior (adiado): explica por que a fatura tem gasto de outro mês
+  // 6) compras puladas (FIN): explica por que a fatura tem gasto de outro mês
   const adiadas = compras.filter((e) => e.adiado);
   const vAdiadas = -adiadas.reduce((a, e) => a + e.valor, 0);
   if (!futura && adiadas.length && vAdiadas >= 1000)
     out.push({ id: 'adiadas', tom: 'info', peso: 55, texto: adiadas.length === 1
-      ? `${brl(vAdiadas)} desta fatura é 1 compra que veio da fatura anterior e é paga nesta. Fica fora da comparação com o normal.`
-      : `${brl(vAdiadas)} desta fatura são ${adiadas.length} compras que vieram da fatura anterior e são pagas nesta. Ficam fora da comparação com o normal.` });
+      ? `${brl(vAdiadas)} desta fatura é 1 compra pulada (Pula Compra), de outro mês. Fica fora da comparação com o normal.`
+      : `${brl(vAdiadas)} desta fatura são ${adiadas.length} compras puladas (Pula Compra), de outros meses. Ficam fora da comparação com o normal.` });
 
   // 7) compromisso que já vem desta fatura
   const futuro = parc.reduce((a, x) => a + -x.e.valor * (x.p!.n - x.p!.i), 0);
