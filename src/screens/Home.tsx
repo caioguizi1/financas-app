@@ -21,6 +21,7 @@ import { EvItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { springSnappy } from '../ui/motion';
 import { Ico } from '../ui/Ico';
+import { Aviso } from '../ui/Aviso';
 import { nomeExib } from '../ui/nome';
 
 export function Home() {
@@ -82,12 +83,12 @@ export function Home() {
       </Lista>
 
       {vm.neg && (
-        <div className="alert"><span>⚠️</span><div>
+        <Aviso nivel="grave">
           Seu saldo fica <b>negativo a partir de {diaLabel(vm.neg.inicio.d).toLowerCase()}</b> ({brl(vm.neg.inicio.v)})
           {vm.neg.pior.d !== vm.neg.inicio.d && <> e chega a <b>{brl(vm.neg.pior.v)}</b> em {dm(vm.neg.pior.d)}</>}
           {vm.neg.volta ? <>. Volta ao positivo em {dm(vm.neg.volta.d)}{vm.neg.voltaPor ? ` (${vm.neg.voltaPor})` : ''}.</> : <> e não volta ao positivo nos próximos 90 dias.</>}
           {' '}Vale segurar gastos até lá.
-        </div></div>
+        </Aviso>
       )}
 
       <AnimatePresence initial={false}>

@@ -1,6 +1,6 @@
 /**
  * Ícones de interface (menus, botões, dicas) — Lucide, mesmo traço da barra de abas.
- * Emoji fica só onde identifica CATEGORIA de gasto e nos avisos (⚠️ 🔒 💡).
+ * Emoji fica só onde identifica CATEGORIA de gasto. Avisos usam <Aviso> (ui/Aviso.tsx).
  */
 import {
   Banknote, Barcode, BriefcaseBusiness, CalendarClock, CalendarDays, Camera, Coins, CreditCard, Download, FileDown,

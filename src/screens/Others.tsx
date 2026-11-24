@@ -24,6 +24,7 @@ import { EvItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { exportar, importar } from './backup';
+import { Aviso } from '../ui/Aviso';
 import { CartaoMini, Ico } from '../ui/Ico';
 
 /* ================= Extrato ================= */
@@ -115,7 +116,7 @@ export function Fixos() {
         <div className="stat"><div className="k">Entra por mês</div><div className="v num pos"><AnimatedBRL value={te} /></div></div>
         <div className="stat"><div className="k">Sai por mês</div><div className="v num"><AnimatedBRL value={-ts} /></div></div>
       </div>
-      <div className={`alert ${te - ts < 0 ? '' : 'ok'}`}><span>{te - ts < 0 ? '⚠️' : '💡'}</span><div>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</div></div>
+      <Aviso nivel={te - ts < 0 ? 'atencao' : 'bom'}>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</Aviso>
       <div className="mut small" style={{ margin: '14px 2px -6px' }}>Deslize um item pro lado pra editar ou apagar.</div>
       <h2>Entradas</h2>
       {ent.length > 0 && <Lista className="list"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}

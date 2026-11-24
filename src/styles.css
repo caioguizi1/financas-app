@@ -115,6 +115,21 @@ h2 { font-size: 19px; font-weight: 650; letter-spacing: -0.02em; margin: 28px 2p
 .alert > :first-child { flex: none; width: 1.5em; text-align: center; line-height: 1.35 }
 .alert > :last-child { flex: 1; line-height: 1.4 }
 .alert.ok { background: rgba(95, 227, 179, 0.07); border-color: rgba(95, 227, 179, 0.2) }
+/* avisos por gravidade (opção 3): cor do nível + só o grave reforçado */
+.alert.av { align-items: center }
+.alert.av > .ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; line-height: 1 }
+.alert.av.grave { background: color-mix(in srgb, var(--out) 10%, transparent); border-color: color-mix(in srgb, var(--out) 30%, transparent) }
+.alert.av.atencao { background: color-mix(in srgb, var(--warn) 8%, transparent); border-color: color-mix(in srgb, var(--warn) 26%, transparent) }
+.alert.av.bom { background: color-mix(in srgb, var(--in) 7%, transparent); border-color: color-mix(in srgb, var(--in) 22%, transparent) }
+.alert.av.info { background: color-mix(in srgb, var(--acc-hi) 8%, transparent); border-color: color-mix(in srgb, var(--acc-hi) 24%, transparent) }
+.alert.av.grave > .ic { color: var(--out); background: color-mix(in srgb, var(--out) 16%, transparent) }
+.alert.av.atencao > .ic { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent) }
+.alert.av.bom > .ic { color: var(--in); background: color-mix(in srgb, var(--in) 14%, transparent) }
+.alert.av.info > .ic { color: var(--acc-hi); background: color-mix(in srgb, var(--acc-hi) 16%, transparent) }
+.alert.av.forte { background: linear-gradient(135deg, color-mix(in srgb, var(--out) 22%, transparent), rgba(122, 31, 61, 0.28));
+  border: 1.5px solid color-mix(in srgb, var(--out) 70%, transparent); box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--out) 45%, transparent) }
+.alert.av.forte > .ic { color: #fff; background: linear-gradient(135deg, #ef6f95, #a83358); box-shadow: 0 4px 12px -4px rgba(224, 87, 127, 0.7) }
+[data-theme='light'] .alert.av.forte { background: linear-gradient(135deg, color-mix(in srgb, var(--out) 12%, #fff), color-mix(in srgb, var(--out) 6%, #fff)) }
 
 /* ===== meses ===== */
 .months { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -18px; padding: 0 18px 4px; scrollbar-width: none; scroll-padding-inline: 18px }

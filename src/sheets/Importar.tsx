@@ -13,6 +13,7 @@ import { SheetHeader } from '../ui/Sheet';
 import { Expande } from '../ui/Expande';
 import { spring } from '../ui/motion';
 import { CartaoMini, Ico } from '../ui/Ico';
+import { Aviso } from '../ui/Aviso';
 import { nomeExib } from '../ui/nome';
 
 const MOTIVO: Record<string, string> = { duplicado: 'já lançado', parcela: 'parcela de compra já importada', fixo: 'já é fixo', pagamento: 'pagamento da fatura', entrada: 'estorno/crédito' };
@@ -133,7 +134,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
             <b>{lendo ? 'Lendo o arquivo…' : 'Escolher arquivo'}</b>
             <span className="mut small">CSV, OFX ou PDF exportado do app do banco</span>
           </button>
-          {erro && <div className="alert" style={{ marginTop: 12 }}><span>⚠️</span><div>{erro}</div></div>}
+          {erro && <Aviso nivel="atencao" style={{ marginTop: 12 }}>{erro}</Aviso>}
           <div className="imp-dicas">
             <div><Ico n="privado" size={16} />O arquivo é lido só no seu celular — nada é enviado.</div>
             <div><Ico n="parcelas" size={16} />Parcelas como "PARC 03/10" viram as 7 parcelas restantes nos meses seguintes.</div>

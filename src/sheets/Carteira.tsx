@@ -21,6 +21,7 @@ import { EditCartao } from './EditCartao';
 import { FaturasSheet } from './Faturas';
 import { ImportarSheet } from './Importar';
 import { Ico } from '../ui/Ico';
+import { Aviso } from '../ui/Aviso';
 import { nomeExib } from '../ui/nome';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
@@ -311,7 +312,7 @@ function Detalhes({ c }: { c: Cartao }) {
       <AnimatePresence initial={false}>
         {imgAberta && (
           <Expande className="wimg" chave={fonte ? `rec${fonte.w}x${fonte.h}` : 'opcoes'}>
-            <div className="alert"><span>🔒</span><div>Use só a <b>arte</b> do cartão (a imagem do site do banco ou uma foto do verso liso). <b>Nunca</b> uma foto com número, nome, validade ou CVV. A imagem fica só neste aparelho.</div></div>
+            <Aviso nivel="info">Use só a <b>arte</b> do cartão (a imagem do site do banco ou uma foto do verso liso). <b>Nunca</b> uma foto com número, nome, validade ou CVV. A imagem fica só neste aparelho.</Aviso>
             {fonte && caixa ? (
               <>
                 <div className="lab">Recortei sozinho — ajuste se precisar:</div>
