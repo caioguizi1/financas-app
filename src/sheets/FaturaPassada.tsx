@@ -40,8 +40,8 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
   const dataDe = (x: (typeof linhas)[number]) => x.l?.data ?? x.e.data;
   const vis = doFiltro.filter((x) => !catOk || x.e.cat === catOk).sort((a, b) =>
     ordem === 'data-' ? dataDe(b).localeCompare(dataDe(a)) || a.e.valor - b.e.valor
-    : ordem === 'valor' ? a.e.valor - b.e.valor
-    : ordem === 'valor-' ? b.e.valor - a.e.valor
+    : ordem === 'valor' ? Math.abs(b.e.valor) - Math.abs(a.e.valor)
+    : ordem === 'valor-' ? Math.abs(a.e.valor) - Math.abs(b.e.valor)
     : dataDe(a).localeCompare(dataDe(b)) || a.e.valor - b.e.valor);
   const somaVis = -vis.reduce((s, x) => s + x.e.valor, 0);
   const hoje = today();

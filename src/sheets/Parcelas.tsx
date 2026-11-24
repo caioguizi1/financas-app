@@ -88,7 +88,11 @@ export function ParcelasSheet() {
                 <div className="s">{p.pagas}/{p.total} pagas · {brl(p.valorParcela)}/mês{c ? ` · ${c.nome}` : ''} · até {dm(p.ultima)}/{p.ultima.slice(2, 4)}</div>
                 <div className="parc-bar"><m.i initial={{ width: 0 }} animate={{ width: `${(p.pagas / p.total) * 100}%` }} transition={{ type: 'spring', stiffness: 140, damping: 22, delay: 0.15 }} /></div>
               </div>
-              <div className="v num">{brl(-p.restante)}</div>
+              <div className="v pv">
+                {ordem === 'parcela'
+                  ? <><b className="num">{brl(p.valorParcela)}</b><span className="dim">por mês</span></>
+                  : <><b className="num">{brl(-p.restante)}</b><span className="dim">{ordem === 'fim' || ordem === 'fim-' ? `até ${dm(p.ultima)}/${p.ultima.slice(2, 4)}` : ordem === 'compra' || ordem === 'compra-' ? `compra ${dm(p.lanc.data)}/${p.lanc.data.slice(2, 4)}` : 'restante'}</span></>}
+              </div>
             </m.button>
           );
         })}
