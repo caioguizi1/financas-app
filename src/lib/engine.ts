@@ -1,6 +1,7 @@
 import { addDays, dateOf, monthKey, parse, today } from './dates';
 import { catN } from './categories';
-import type { Cartao, Data, Evento, ISODate } from './types';
+import { ocorrencias } from './recorrencia';
+import type { Cartao, Data, Evento, ISODate, Recorrente } from './types';
 
 /** Data em que uma compra no cartão sai da conta: o vencimento da fatura em que ela cai. */
 export function pagamentoCartao(c: Cartao, compra: ISODate): ISODate {
@@ -47,7 +48,18 @@ function calcularEventos(D: Data, de: ISODate, ate: ISODate): Evento[] {
   const d1 = parse(ate);
   const end = d1.getFullYear() * 12 + d1.getMonth();
 
+  const pushRec = (r: Recorrente, occ: ISODate) => {
+    const c = cartao(r.cartaoId);
+    const venc = c ? pagamentoCartao(c, occ) : undefined;
+    const pg = c ? pagamentoFatura(D, c, venc!) : undefined;
+    const cash = pg ? pg.data : occ;
+    if (cash >= de && cash <= ate) {
+      out.push({ venc, ...(pg?.ts ? { lanc: true, criado: pg.ts } : {}), data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: pg?.ts ?? 0 });
+    }
+  };
   for (const r of D.recorrentes) {
+    // semanal/anual: regras próprias (o caminho mensal abaixo fica como sempre foi)
+    if (r.freq) { for (const occ of ocorrencias(r, addDays(de, -62), ate)) pushRec(r, occ); continue; }
     // começa 2 meses antes: compras recorrentes no cartão pagam no mês seguinte
     let y = d0.getFullYear();
     let m = d0.getMonth() - 2;

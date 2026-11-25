@@ -18,6 +18,8 @@ import { nomeExib } from '../ui/nome';
 import { ehBruto } from '../lib/lojas';
 import { CatGlyph } from '../ui/CatIco';
 import { normalizar } from '../lib/smart';
+import { DIAS_SEMANA, MES_CURTO, quando, type Freq } from '../lib/recorrencia';
+import { Aviso } from '../ui/Aviso';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const novo = !lanc;
@@ -70,6 +72,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   // "Repete todo mês": vira um fixo no dia da data escolhida (só lançamentos seus, não os importados da fatura)
   const podeFixo = novo || !lanc?.importado;
   const [fixo, setFixo] = useState(false);
+  const [freqFixo, setFreqFixo] = useState<Freq>('mensal');
   const podeParcelar = !fixo && (meio === 'boleto' || meio === 'credito');
   const parcelado = !fixo && (meio === 'pixparc' || (podeParcelar && parcEscolha));
   const parcelas = l.tipo === 'saida' && parcelado ? nParc : 1;
@@ -88,11 +91,17 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const datas: [string, string][] = [[t, 'Hoje'], [addDays(t, -1), 'Ontem'], [addDays(t, -2), diaLabel(addDays(t, -2))]];
   const outraData = !datas.some(([d]) => d === l.data);
 
-  const diaFixo = parse(l.data).getDate();
+  const dFixo = parse(l.data);
+  const diaFixo = dFixo.getDate();
+  const recQuando = { freq: freqFixo === 'mensal' ? undefined : freqFixo, dia: diaFixo, semana: dFixo.getDay(), mes: dFixo.getMonth() + 1 } as const;
+  const rotuloFixo = quando(recQuando);
+  // já existe um fixo com esse nome? (evita contar duas vezes)
+  const dupFixo = fixo && l.desc.trim() ? getData().recorrentes.find((x) => x.tipo === l.tipo && normalizar(x.desc) === normalizar(l.desc) && (!x.fim || x.fim >= monthKey(today()))) : undefined;
   const salvarFixo = () => {
     const meioRec: Meio = l.tipo !== 'saida' ? 'pix' : meio === 'credito' && l.cartaoId ? 'credito' : meio === 'boleto' ? 'boleto' : 'pix';
     const desc = l.desc.trim();
     const rec: Recorrente = { id: uid(), tipo: l.tipo, desc: desc || catN(cat), cat, ico: ico !== catE(cat) ? ico : undefined, valor: l.valor, dia: diaFixo,
+      ...(freqFixo === 'semanal' ? { freq: 'semanal', semana: recQuando.semana } : freqFixo === 'anual' ? { freq: 'anual', mes: recQuando.mes } : {}),
       inicio: monthKey(l.data), ...(l.tipo === 'saida' ? { meio: meioRec, cartaoId: meioRec === 'credito' ? l.cartaoId : null } : {}) };
     const before = getData();
     closeSheet();
@@ -102,7 +111,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       recorrentes: [...d.recorrentes, rec],
       uso: { ...d.uso, [cat]: (d.uso[cat] ?? 0) + 1 },
       aprendido: desc ? aprender(d.aprendido ?? {}, desc, l.tipo, cat, rec.ico) : d.aprendido }));
-    toast(`Fixo criado · todo dia ${diaFixo}`, () => restore(before));
+    toast(`Fixo criado · ${rotuloFixo.toLowerCase()}`, () => restore(before));
   };
   const salvar = () => {
     if (!l.valor) return;
@@ -170,7 +179,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
             {podeParcelar ? (
               <Segmented value={parcEscolha ? 'p' : 'v'} onChange={(v) => setParcEscolha(v === 'p')} options={[{ v: 'v', label: 'À vista' }, { v: 'p', label: 'Parcelado' }]} />
             ) : (
-              <div className="pay-info">{fixo ? <><Ico n="fixo" size={16} />{meio === 'credito' && cartao ? `Todo mês na fatura do ${cartao.nome}` : meio === 'boleto' ? 'Boleto todo mês' : 'Sai da sua conta todo mês'}</> : meio === 'pix' ? <><Ico n="pix" size={16} />Sai na hora da sua conta · sem parcelas</> : <><Ico n="pixparc" size={16} />Cobrado mês a mês, fora do cartão</>}</div>
+              <div className="pay-info">{fixo ? <><Ico n="fixo" size={16} />{meio === 'credito' && cartao ? `${rotuloFixo} na fatura do ${cartao.nome}` : meio === 'boleto' ? `Boleto · ${rotuloFixo.toLowerCase()}` : `Sai da sua conta · ${rotuloFixo.toLowerCase()}`}</> : meio === 'pix' ? <><Ico n="pix" size={16} />Sai na hora da sua conta · sem parcelas</> : <><Ico n="pixparc" size={16} />Cobrado mês a mês, fora do cartão</>}</div>
             )}
           </div>
           <AnimatePresence presenceAffectsLayout={false} initial={false}>
@@ -223,15 +232,21 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         <div className="ent-extra">
           <div className="lab">Isso se repete?</div>
           <div className="chips">
-            <Chip on={fixo} onClick={() => { if (!fixo && meio === 'pixparc') setMeio('pix'); setFixo((v) => !v); }}><Ico n="fixo" size={16} />{fixo ? `Todo mês, dia ${diaFixo}` : 'Repete todo mês'}</Chip>
+            <Chip on={fixo} onClick={() => { if (!fixo && meio === 'pixparc') setMeio('pix'); setFixo((v) => !v); }}><Ico n="fixo" size={16} />{fixo ? rotuloFixo : 'Repete (fixo)'}</Chip>
             {l.tipo === 'entrada' && <Chip onClick={() => openSheet(<ExtraSheet />)}><CatGlyph cat="extra" ico="🎁" />13º, PLR, férias…</Chip>}
           </div>
           {fixo && (
-            <div className="dim hint">
-              Vira {l.tipo === 'saida' ? 'gasto' : 'recebimento'} fixo: todo dia <b>{diaFixo}</b> (o dia da data acima), a partir de {mesCurto(monthKey(l.data))}
-              {l.tipo === 'saida' && (meio === 'credito' && cartao ? `, na fatura do ${cartao.nome}` : meio === 'boleto' ? ', por boleto' : ', saindo da conta')}.
-              {diaFixo > 28 && ' Nos meses mais curtos, cai no último dia.'} Você edita ou encerra em Fixos.
-            </div>
+            <>
+              <div style={{ marginTop: 10 }}>
+                <Segmented<Freq> value={freqFixo} onChange={setFreqFixo} options={[{ v: 'mensal', label: 'Todo mês' }, { v: 'semanal', label: 'Toda semana' }, { v: 'anual', label: 'Todo ano' }]} />
+              </div>
+              <div className="dim hint">
+                Vira {l.tipo === 'saida' ? 'gasto' : 'recebimento'} fixo: {freqFixo === 'semanal' ? <>toda <b>{DIAS_SEMANA[recQuando.semana]}</b></> : freqFixo === 'anual' ? <>todo ano em <b>{diaFixo}/{MES_CURTO[recQuando.mes - 1]}</b></> : <>todo dia <b>{diaFixo}</b></>} (pela data acima), a partir de {mesCurto(monthKey(l.data))}
+                {l.tipo === 'saida' && (meio === 'credito' && cartao ? `, na fatura do ${cartao.nome}` : meio === 'boleto' ? ', por boleto' : ', saindo da conta')}.
+                {freqFixo !== 'semanal' && diaFixo > 28 && ' Nos meses mais curtos, cai no último dia.'} Você edita ou encerra em Fixos.
+              </div>
+              {dupFixo && <Aviso nivel="atencao" style={{ marginTop: 10 }}>Você já tem <b>{dupFixo.desc}</b> em Fixos ({brl(dupFixo.valor)}, {quando(dupFixo).toLowerCase()}). Se for o mesmo, não precisa criar outro: ele já conta todo período.</Aviso>}
+            </>
           )}
         </div>
       )}
@@ -239,7 +254,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       <div className="sl-foot">
       <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar={!novo} small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="actions tight">
-        <Button disabled={!l.valor} onClick={salvar}>{fixo ? 'Salvar como fixo' : novo ? 'Lançar' : 'Salvar'}</Button>
+        <Button disabled={!l.valor} onClick={salvar}>{fixo ? (dupFixo ? 'Salvar outro fixo mesmo assim' : 'Salvar como fixo') : novo ? 'Lançar' : 'Salvar'}</Button>
       </div>
       </div>
     </div>

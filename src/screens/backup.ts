@@ -1,13 +1,14 @@
 import { today } from '../lib/dates';
+export { diasSemBackup, lembrarBackup } from '../lib/backupInfo';
 import { salvarImagem, todasImagens } from '../lib/imagens';
-import { blank, getData, restore, toast } from '../store';
+import { blank, getData, mutate, restore, toast } from '../store';
 
 export async function exportar() {
   const name = `fluxo-backup-${today()}.json`;
   const blob = new Blob([JSON.stringify({ ...getData(), imagens: await todasImagens() }, null, 2)], { type: 'application/json' });
   try {
     const f = new File([blob], name, { type: 'application/json' });
-    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'Backup Fluxo' }); return; }
+    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'Backup Fluxo' }); marcar(); return; }
   } catch (e) {
     if ((e as Error).name === 'AbortError') return;
   }
@@ -16,6 +17,13 @@ export async function exportar() {
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  marcar();
+}
+
+/** Guarda o dia do backup (o lembrete some por 30 dias). */
+function marcar() {
+  mutate((d) => ({ ...d, backupEm: today() }));
+  toast('Backup salvo');
 }
 
 export function importar() {

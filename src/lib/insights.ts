@@ -8,6 +8,8 @@ import { eventosEntre, projecao, type Ponto } from './engine';
 import { faturasAtuais } from './faturas';
 import { brl } from './money';
 import { normalizar } from './smart';
+import { porMes as mediaMes } from './recorrencia';
+import { diasSemBackup, lembrarBackup } from './backupInfo';
 import { ativaEm } from './versions';
 import type { Data, ISODate, Lancamento } from './types';
 import { nomeVisivel } from './nomes';
@@ -20,7 +22,7 @@ export interface Insight {
   texto: string;
   tom: Tom;
   peso: number;
-  acao?: { label: string; tipo: 'virarFixo'; lancId: string } | { label: string; tipo: 'parcelas' };
+  acao?: { label: string; tipo: 'virarFixo'; lancId: string } | { label: string; tipo: 'parcelas' } | { label: string; tipo: 'backup' };
 }
 
 const dias = (a: ISODate, b: ISODate) => Math.round((parse(b).getTime() - parse(a).getTime()) / 86400000);
@@ -102,7 +104,7 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
   }
 
   // 2) dia apertado nos próximos 30 dias (sem ficar negativo)
-  const renda = D.recorrentes.filter((r) => r.tipo === 'entrada' && ativaEm(r, mk)).reduce((a, r) => a + r.valor, 0);
+  const renda = D.recorrentes.filter((r) => r.tipo === 'entrada' && ativaEm(r, mk)).reduce((a, r) => a + mediaMes(r), 0);
   const prox30 = p.pts.filter((x) => x.d > hoje && x.d <= addDays(hoje, 30));
   if (prox30.length) {
     const min = prox30.reduce((a, b) => (b.v < a.v ? b : a));
@@ -182,9 +184,16 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
   // 7) assinaturas
   const ass = D.recorrentes.filter((r) => r.cat === 'assinaturas' && r.tipo === 'saida' && ativaEm(r, mk));
   if (ass.length) {
-    const tot = ass.reduce((a, r) => a + r.valor, 0);
+    const tot = ass.reduce((a, r) => a + mediaMes(r), 0);
     out.push({ id: 'ass', ico: '📺', tom: 'info', peso: 40, titulo: `Assinaturas: ${brl(tot)}/mês`,
       texto: `${ass.length} ${ass.length === 1 ? 'serviço' : 'serviços'} · ${brl(tot * 12)} por ano. Vale revisar o que você não usa.` });
+  }
+
+  // 8) backup (tudo fica só no aparelho)
+  if (lembrarBackup(D, hoje)) {
+    const n = diasSemBackup(D.backupEm, hoje);
+    out.push({ id: 'backup', ico: '💾', tom: 'alerta', peso: 35, titulo: n === null ? 'Faça seu primeiro backup' : `Último backup há ${n} dias`,
+      texto: 'Seus dados ficam só neste iPhone. Em Ajustes → Exportar backup, salve uma cópia no iCloud.', acao: { label: 'Fazer backup', tipo: 'backup' } });
   }
 
   return out.sort((a, b) => b.peso - a.peso);

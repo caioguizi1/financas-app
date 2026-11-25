@@ -26,5 +26,5 @@ export default defineConfig({
       workbox: { globPatterns: ['**/*.{js,mjs,css,html,png,svg,webmanifest,woff2}'], globIgnores: ['**/pdf*'], runtimeCaching: [{ urlPattern: /\/assets\/pdf/, handler: 'CacheFirst', options: { cacheName: 'pdfjs' } }] },
     }),
   ],
-  test: { environment: 'node' },
+  test: { environment: 'node', include: ['src/**/*.test.ts'] }, // e2e/ é do Playwright (npm run e2e)
 });

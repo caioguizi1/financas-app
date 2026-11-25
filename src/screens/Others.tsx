@@ -1,4 +1,5 @@
 import { AnimatePresence, m } from 'motion/react';
+import { porMes } from '../lib/recorrencia';
 import { useState } from 'react';
 import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
@@ -23,7 +24,7 @@ import { Lista } from '../ui/Lista';
 import { CompraCartaoItem, EvItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
-import { exportar, importar } from './backup';
+import { diasSemBackup, exportar, importar, lembrarBackup } from './backup';
 import { Aviso } from '../ui/Aviso';
 import { CatGlyph, useEstiloIco } from '../ui/CatIco';
 import { setEstiloIco } from '../lib/estiloIco';
@@ -122,19 +123,20 @@ export function Fixos() {
   });
   const ent = linhas.filter((x) => x.r.tipo === 'entrada').sort((a, b) => a.r.dia - b.r.dia);
   const sai = linhas.filter((x) => x.r.tipo === 'saida').sort((a, b) => a.r.dia - b.r.dia);
-  const soma = (xs: typeof linhas) => xs.reduce((a, x) => a + (ativaEm(x.r, mk) ? x.r.valor : 0), 0);
+  const soma = (xs: typeof linhas) => xs.reduce((a, x) => a + (ativaEm(x.r, mk) ? porMes(x.r) : 0), 0);
+  const temNaoMensal = linhas.some((x) => x.r.freq && ativaEm(x.r, mk));
   const te = soma(ent);
   const ts = soma(sai);
   const t = today();
   const extras = D.lancamentos.filter((l) => l.tipo === 'entrada' && l.data >= t).sort((a, b) => (a.data < b.data ? -1 : 1));
   return (
     <>
-      <h1>Fixos</h1><div className="mut" style={{ marginTop: 4 }}>Tudo que se repete todo mês, automático.</div>
+      <h1>Fixos</h1><div className="mut" style={{ marginTop: 4 }}>Tudo que se repete (todo mês, semana ou ano), automático.</div>
       <div className="stats">
         <div className="stat"><div className="k">Entra por mês</div><div className="v num pos"><AnimatedBRL value={te} /></div></div>
         <div className="stat"><div className="k">Sai por mês</div><div className="v num"><AnimatedBRL value={-ts} /></div></div>
       </div>
-      <Aviso nivel={te - ts < 0 ? 'atencao' : 'bom'}>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</Aviso>
+      <Aviso nivel={te - ts < 0 ? 'atencao' : 'bom'}>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.{temNaoMensal && ' Semanais e anuais entram pela média do mês.'}</Aviso>
       <div className="mut small" style={{ margin: '14px 2px -6px' }}>Deslize um item pro lado pra editar ou apagar.</div>
       <h2>Entradas</h2>
       {ent.length > 0 && <Lista className="list"><AnimatePresence presenceAffectsLayout={false}>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
@@ -196,8 +198,9 @@ export function Ajustes() {
       <Segmented value={estiloIco} onChange={setEstiloIco} options={[{ v: 'icone', label: <><CatGlyph cat="comida" ico="🍔" forcar="icone" />Ícones</> }, { v: 'emoji', label: <><CatGlyph cat="comida" ico="🍔" forcar="emoji" />Emoji</> }]} />
       <h2>Seus dados</h2>
       <div className="mut small" style={{ margin: '-4px 2px 10px' }}>Tudo fica salvo só neste aparelho. Faça backup de vez em quando.</div>
+      {lembrarBackup(D) && <Aviso nivel="atencao" style={{ marginBottom: 10 }}>{D.backupEm ? <>Seu último backup foi há <b>{diasSemBackup(D.backupEm)} dias</b>.</> : <>Você ainda não fez nenhum backup.</>} Se o iPhone for trocado ou o app apagado, os dados vão junto. Leva 10 segundos: toque em <b>Exportar backup</b> e salve no iCloud.</Aviso>}
       <Lista className="list">
-        <Row ico={<Ico n="exportar" size={20} />} t="Exportar backup" s="Salvar arquivo no Arquivos/iCloud" onClick={exportar} />
+        <Row ico={<Ico n="exportar" size={20} />} t="Exportar backup" s={D.backupEm ? `Último: ${diasSemBackup(D.backupEm) === 0 ? 'hoje' : diasSemBackup(D.backupEm) === 1 ? 'ontem' : `há ${diasSemBackup(D.backupEm)} dias`} · salve no Arquivos/iCloud` : 'Nunca feito · salve no Arquivos/iCloud'} onClick={exportar} />
         <Row ico={<Ico n="restaurar" size={20} />} t="Restaurar backup" s="Substitui os dados atuais" onClick={importar} />
       </Lista>
       <Button kind="danger" style={{ marginTop: 22 }} onClick={() => { if (!confirm) return setConfirm(true); resetData(); useUI.getState().setTab('home'); }}>

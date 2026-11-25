@@ -272,7 +272,7 @@ button.item:active { background: var(--card2) }
 .toast button { color: var(--acc-hi); font-weight: 700 }
 
 /* ===== cadastro inicial ===== */
-.ob { min-height: 100dvh; display: flex; flex-direction: column; padding: calc(var(--sat) + 14px) 22px calc(var(--sab) + 18px) }
+.ob { overflow-x: clip; min-height: 100dvh; display: flex; flex-direction: column; padding: calc(var(--sat) + 14px) 22px calc(var(--sab) + 18px) }
 .ob .head { display: flex; align-items: center; gap: 10px; height: 40px }
 .ob .back { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--card2); border: 1px solid var(--line) }
 .ob .bar { height: 4px; background: var(--card2); border-radius: 3px; overflow: hidden; margin: 6px 0 0 }
@@ -834,3 +834,13 @@ html { touch-action: manipulation }
 .fab svg { transition: transform .32s cubic-bezier(.2, .9, .3, 1.15) }
 .fab.x svg { transform: rotate(45deg) }
 @media (prefers-reduced-motion: reduce) { .fab, .fab svg { transition: none } }
+
+/* v2.37 — nota de estimativa na Home */
+.est-nota{display:flex;gap:8px;align-items:flex-start;margin:10px 2px 0;font-size:13px;line-height:1.4;color:var(--mut)}
+.est-nota svg{flex:none;margin-top:2px;opacity:.8}
+.est-nota b{color:var(--text);font-weight:600}
+/* dias da semana e meses (fixos semanais/anuais) */
+.chips.sem,.chips.meses{display:grid;gap:6px}
+.chips.sem{grid-template-columns:repeat(7,1fr)}
+.chips.meses{grid-template-columns:repeat(6,1fr)}
+.chips.sem .chip,.chips.meses .chip{justify-content:center;padding-left:0;padding-right:0;min-width:0}

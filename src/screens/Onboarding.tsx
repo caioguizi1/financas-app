@@ -23,7 +23,7 @@ interface Ob { renda: number; freq: 1 | 2; adDia: number | null; adValor: number
 const slide = {
   enter: (dir: number) => ({ x: dir * 44, opacity: 0, scale: 0.985 }),
   center: { x: 0, opacity: 1, scale: 1 },
-  exit: (dir: number) => ({ x: dir * -44, opacity: 0, scale: 0.985 }),
+  exit: (dir: number) => ({ x: dir * -24, opacity: 0, scale: 0.99, transition: { duration: 0.09, ease: 'easeIn' as const } }),
 };
 
 export function Onboarding() {
@@ -79,7 +79,7 @@ export function Onboarding() {
           <div className="h">Em menos de 2 minutos eu monto o seu mapa: quanto entra, quanto sai e quanto sobra em cada dia dos próximos meses.</div>
         </div>
       );
-      foot = <><Button onClick={() => next()}>Começar</Button><Button kind="link" onClick={importar}>Já tenho backup</Button></>;
+      foot = <><Button onClick={() => next()}>Começar</Button><Button kind="link" onClick={importar}>Já tenho um backup · restaurar</Button></>;
       break;
     case 'nome':
       body = <NomeStep onEnter={() => nome.trim() && next()} />;

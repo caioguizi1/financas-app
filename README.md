@@ -11,6 +11,7 @@ App pessoal de finanças (PWA): controle de gastos e projeção do saldo futuro,
 - **Zustand** — estado; dados salvos no aparelho (`localStorage`, chave `fluxo.v1`)
 - **vite-plugin-pwa / Workbox** — instalável e funciona offline, atualiza sozinho
 - **Vitest** — testes do motor financeiro (datas de fatura, parcelas, projeção)
+- **Playwright Test** — testes de ponta a ponta no app de verdade (navegador), com prints como evidência
 
 ## Estrutura
 ```
@@ -24,7 +25,8 @@ src/
               importar.ts · pdfTexto.ts · importacoes.ts   leitura de CSV/OFX/PDF (Itaú, PicPay), duplicados, histórico
               lojas.ts · nomes.ts   nome legível de loja (só do que veio do banco) e correções suas
               smart.ts       dicionário inteligente + aprendizado local
-              versions.ts    vigência dos fixos · extras.ts 13º, PLR, férias · folha.ts INSS/IRRF/Lei 15.270
+              versions.ts    vigência dos fixos · recorrencia.ts todo mês/semana/ano · extras.ts 13º, PLR, férias
+              folha.ts INSS/IRRF/Lei 15.270 · backupInfo.ts lembrete de backup
               imagens.ts     imagem do cartão (recorte automático) · estiloIco.ts ícone x emoji
   store.ts    dados persistidos (+ migrações únicas) e estado de interface (abas, janelas, toasts)
   ui/         componentes base: Sheet, teclado (Money), controles, SwipeRow, Aviso, CatIco (figura de
@@ -33,11 +35,13 @@ src/
               fatura completa (FaturaPassada), parcelas, importação, cartão, saldo
   screens/    cadastro inicial, Início, Extrato, Fixos, Ajustes
 legacy/       v1 (HTML único), mantida só como referência
+e2e/          testes de ponta a ponta (Playwright) com dados fictícios · dados.ts · util.ts
+docs/evidencias/  resumo dos testes E2E de cada versão (GMUD)
 ```
 
 ## Controle de mudanças
-Todo push na `main` passa pelo GitHub Actions: **checagem de tipos → testes → build → publicação**.
-Se qualquer etapa falhar, nada é publicado e a versão anterior continua no ar.
+Todo push na `main` passa pelo GitHub Actions: **checagem de tipos → testes unitários → build → testes E2E →
+publicação**. Se qualquer etapa falhar, nada é publicado e a versão anterior continua no ar.
 
 - **Cada versão é uma GMUD**: commit `GMUD vX.Y — título` com *o que muda*, *evidência* (testes) e *rollback*.
 - **Tags e releases automáticas**: o workflow *Versões* (`scripts/versoes.mjs`) cria a tag `vX.Y.Z` no commit
@@ -47,10 +51,20 @@ Se qualquer etapa falhar, nada é publicado e a versão anterior continua no ar.
 - **Antes de publicar**: testes unitários (Vitest), regressão de ponta a ponta (Playwright, inclusive com
   faturas reais que **não** são versionadas) e auditoria de espaçamento ícone↔texto.
 
+### Evidências dos testes
+- **No repositório (permanente):** `docs/evidencias/vX.Y.Z.md`, um resumo por versão com cada teste, resultado,
+  tempo, quantidade de prints e cobertura. Gerado por `node scripts/resumo-e2e.mjs` e incluído no commit da GMUD.
+- **No GitHub Actions (cada execução):** o resumo aparece no *Summary* da execução de "Testar e publicar", e o
+  relatório HTML completo, com **print de cada etapa** e o *trace* (passo a passo) de qualquer falha, fica no
+  artefato `evidencias-e2e` por 90 dias (o máximo do GitHub para repositório público).
+- **Dados dos testes:** sempre fictícios (`e2e/dados.ts`), com data fixa (25/11/2026) para a evidência ser
+  reproduzível. Faturas reais nunca entram no repositório.
+
 ```bash
 npm install
 npm run dev        # desenvolvimento
-npm test           # testes
+npm test           # testes unitários
+npm run e2e        # testes de ponta a ponta (sobe o build com vite preview; relatório em relatorio-e2e/)
 npm run build      # build de produção
 ```
 
@@ -66,6 +80,7 @@ Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5
 - Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
 
 ## Versões
+- **v2.37.0** — fixos que se repetem **toda semana** ou **todo ano** (além de todo mês), no ＋ e em Fixos, com a média mensal nos totais; aviso quando já existe um fixo com o mesmo nome; **lembrete de backup** (Ajustes e Início) quando nunca fez ou faz mais de 30 dias; nota quando boa parte da projeção é **estimativa** dos cartões; cadastro sem a piscada em branco entre etapas (317 → 66 ms). **Testes E2E no repositório** (Playwright, dados fictícios) rodando no GitHub antes de publicar, com evidência em `docs/evidencias/`.
 - **v2.36.0** — "Repete todo mês" no ＋: transforma o lançamento (saída ou entrada) em fixo no dia da data escolhida, com a mesma forma de pagamento (Pix/débito, cartão ou boleto), a partir daquele mês. Também converte um lançamento seu já salvo (sem contar duas vezes). Dicionário: "Assinatura"/IPTV vai para Assinaturas, mesmo com "TV" no nome.
 - **v2.35.0** — dicionário ampliado: utensílios de cozinha, iluminação e casa inteligente (lâmpadas, LED, Alexa), cama/mesa/banho, limpeza, ferramentas, móveis e plantas vão para Casa; itens de mercado (arroz, leite, água mineral, óleo de soja…) e de higiene (desodorante, fio dental…) também. Correção: "Lâmpadas Smart" caía em Saúde porque "smart" era lido como começo de "Smart Fit".
 - **v2.34.0** — tela do ＋ mais leve: o teclado numérico só aparece quando você toca no valor (também no lançamento novo) e some ao tocar fora ou no OK; miniaturas dos cartões viram imagens pequenas pré-carregadas em segundo plano (antes cada chip carregava a foto inteira); animação do botão ＋ em CSS. Medido com CPU 4x: travada ao abrir 89 → 57 ms, tarefa longa 76 → 0 ms.

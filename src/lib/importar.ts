@@ -9,6 +9,7 @@ import { eventosEntre, pagamentoCartao } from './engine';
 import { uid } from './money';
 import { normalizar, sugerir } from './smart';
 import { ativaEm } from './versions';
+import { bateComFixo } from './recorrencia';
 import type { Cartao, Data, ISODate, Lancamento } from './types';
 
 export type TipoImport = 'fatura' | 'extrato';
@@ -255,7 +256,7 @@ export function preparar(D: Data, linhas: Linha[], tipo: TipoImport, cartao?: Ca
     if (dup) return { ...it, incluir: false, motivo: 'duplicado', jaLancado: dup.id };
     if (tipo === 'fatura' && !ehSaida) return { ...it, motivo: 'entrada' }; // estorno: entra como crédito na fatura
     // extrato: o que já é fixo (mesmo valor ±1%, dia ±3) não entra de novo
-    const fixo = D.recorrentes.some((r) => ativaEm(r, mk) && Math.abs(r.valor - Math.abs(l.valor)) <= r.valor * 0.01 && Math.abs(r.dia - parse(l.data).getDate()) <= 3 && (tipo === 'extrato' ? !r.cartaoId : r.cartaoId === cartao?.id));
+    const fixo = D.recorrentes.some((r) => ativaEm(r, mk) && Math.abs(r.valor - Math.abs(l.valor)) <= r.valor * 0.01 && bateComFixo(r, l.data) && (tipo === 'extrato' ? !r.cartaoId : r.cartaoId === cartao?.id));
     if (fixo) return { ...it, incluir: false, motivo: 'fixo' };
     return it;
   });

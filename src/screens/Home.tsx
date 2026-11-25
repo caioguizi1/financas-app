@@ -22,6 +22,7 @@ import { AnimatedBRL } from '../ui/Money';
 import { springSnappy } from '../ui/motion';
 import { Aviso } from '../ui/Aviso';
 import { CatTile } from '../ui/CatIco';
+import { Ico } from '../ui/Ico';
 import { nomeExib } from '../ui/nome';
 
 export function Home() {
@@ -47,7 +48,12 @@ export function Home() {
     const voltaPor = tn?.volta ? p.evs.filter((e) => e.data === tn.volta!.d && e.valor > 0).sort((a, b) => b.valor - a.valor)[0]?.desc : undefined;
     const neg = tn ? { ...tn, voltaPor } : null;
     const prox = agruparFaturas(p.evs.filter((e) => e.data >= t), D.cartoes).slice(0, 8);
-    return { p, fut, hoje, pendV, fimMes, min, months, prox, neg };
+    // quanto das saídas dos próximos 90 dias é só estimativa ("gasto típico" dos cartões), não compra lançada
+    const saiFut = p.evs.filter((e) => e.data >= t && e.valor < 0);
+    const est = -saiFut.filter((e) => e.estimativa).reduce((a, e) => a + e.valor, 0);
+    const saiTot = -saiFut.reduce((a, e) => a + e.valor, 0);
+    const estPct = saiTot ? Math.round((est / saiTot) * 100) : 0;
+    return { p, fut, hoje, pendV, fimMes, min, months, prox, neg, est, estPct };
   }, [D, t]);
 
   // nov/dez: lembrar do 13º se ainda não está na previsão
@@ -81,6 +87,13 @@ export function Home() {
         <m.div variants={itemVariants} className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${vm.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={vm.fimMes} /></div></m.div>
         <m.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
       </Lista>
+
+      {vm.estPct >= 25 && (
+        <div className="est-nota">
+          <Ico n="info" size={15} />
+          <span><b>{brl(vm.est)}</b> ({vm.estPct}%) das saídas dos próximos 90 dias são <b>estimativa</b> do gasto típico dos cartões, não compras lançadas. Conforme você lança ou importa a fatura, a estimativa vai sendo trocada pelo real.</span>
+        </div>
+      )}
 
       {vm.neg && (
         <Aviso nivel="grave">

@@ -36,9 +36,41 @@ jobs:
         with:
           path: dist
 
+  # Testes de ponta a ponta no app de verdade (navegador). Publicar depende deles passarem.
+  # Evidência: relatório HTML com prints de cada etapa (artefato "evidencias-e2e", 90 dias)
+  # e o resumo no Summary da execução.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npx vite build
+      - name: Navegador dos testes
+        run: npx playwright install --with-deps chromium
+      - name: Testes E2E
+        run: npx playwright test
+        env:
+          CI: '1'
+      - name: Resumo da evidência
+        if: always()
+        run: node scripts/resumo-e2e.mjs >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Guardar evidência
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-e2e
+          path: relatorio-e2e/
+          retention-days: 90
+
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, e2e]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -10,10 +10,12 @@ import { ParcelasSheet } from '../sheets/Parcelas';
 import { Button, itemVariants } from './Controls';
 import { springSnappy } from './motion';
 import { Ico, icoDaDica } from './Ico';
+import { exportar } from '../screens/backup';
 
 function agir(i: Insight) {
   if (!i.acao) return;
   if (i.acao.tipo === 'parcelas') return openSheet(<ParcelasSheet />);
+  if (i.acao.tipo === 'backup') return void exportar();
   const id = i.acao.lancId;
   const l = getData().lancamentos.find((x) => x.id === id);
   if (!l) return;

@@ -43,5 +43,6 @@ export function icoDaDica(id: string): NomeIcone {
   if (id.startsWith('fat-')) return 'cartao';
   if (id === 'parc') return 'parcelas';
   if (id === 'ass') return 'assinatura';
+  if (id === 'backup') return 'exportar';
   return 'info';
 }

@@ -90,7 +90,7 @@ export function MoneyField({ value, onChange }: { value: number; onChange: (v: n
 
 /**
  * Teclado que só aparece quando você toca no valor (edição). Some ao tocar fora dele
- * ou em "OK". Num lançamento novo ele já abre, pra digitar direto.
+ * ou em "OK". Fica fechado até tocar no valor (também no lançamento novo).
  */
 export function useTeclado(inicial: boolean) {
   const [aberto, setAberto] = useState(inicial);

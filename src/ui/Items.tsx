@@ -1,5 +1,6 @@
 
 import { diaLabel, dm, MES, mesCurto, monthKey, today } from '../lib/dates';
+import { freqDe, porMes, quando } from '../lib/recorrencia';
 import { serieDe } from '../lib/versions';
 import { brl } from '../lib/money';
 import type { Cartao, Evento, ISODate, Lancamento, Recorrente } from '../lib/types';
@@ -32,7 +33,7 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
         <CatTile cat={r.cat} ico={r.ico} />
         <div className="m">
           <div className="t">{nomeExib(r.desc)}</div>
-          <div className="s">Todo dia {r.dia}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{ate}</div>
+          <div className="s">{quando(r)}{freqDe(r) !== 'mensal' ? ` · ≈ ${brl(porMes(r))}/mês` : ''}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{ate}</div>
         </div>
         <div className={`v num ${r.tipo === 'entrada' ? 'pos' : ''}`}>{brl(r.tipo === 'entrada' ? r.valor : -r.valor)}</div>
       </div>

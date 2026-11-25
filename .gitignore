@@ -2,3 +2,5 @@ node_modules
 dist
 *.local
 *.local.test.ts
+relatorio-e2e/
+test-results/

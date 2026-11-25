@@ -24,6 +24,12 @@ export interface Recorrente {
   onb?: string;
   /** Versões do mesmo fixo compartilham a série (histórico de valores). Padrão: o próprio id. */
   serie?: string;
+  /** Frequência: sem campo = todo mês (como sempre foi). */
+  freq?: 'semanal' | 'anual';
+  /** Semanal: dia da semana (0 = domingo … 6 = sábado). */
+  semana?: number;
+  /** Anual: mês (1–12); o dia fica em `dia`. */
+  mes?: number;
 }
 
 export interface Cartao {
@@ -89,6 +95,8 @@ export interface Data {
   /** Fatura paga/agendada fora do vencimento: 'cartaoId|vencimento' → data e momento. */
   /** Correções únicas já aplicadas aos dados. */
   migracoes?: string[];
+  /** Dia do último backup exportado (pro lembrete em Ajustes). */
+  backupEm?: ISODate;
   /** Nomes de loja corrigidos pelo usuário (descritor normalizado → nome). */
   nomes?: Record<string, string>;
   /** Faturas/extratos importados (histórico por cartão). */
