@@ -42,7 +42,7 @@ Se qualquer etapa falhar, nada é publicado e a versão anterior continua no ar.
 - **Cada versão é uma GMUD**: commit `GMUD vX.Y — título` com *o que muda*, *evidência* (testes) e *rollback*.
 - **Tags e releases automáticas**: o workflow *Versões* (`scripts/versoes.mjs`) cria a tag `vX.Y.Z` no commit
   que publicou cada versão e a release no GitHub com a nota da lista abaixo. É idempotente (pula o que já
-  existe; `DRY=1` mostra o plano). As versões antes da v2.2.1 são anteriores a este repositório (`legacy/`).
+  existe; `DRY=1` mostra o plano). As v1.x são da versão antiga em HTML único (`legacy/`), sem tag.
 - **Versão**: `package.json` + a linha em *Versões* abaixo, no mesmo commit.
 - **Antes de publicar**: testes unitários (Vitest), regressão de ponta a ponta (Playwright, inclusive com
   faturas reais que **não** são versionadas) e auditoria de espaçamento ícone↔texto.
@@ -66,7 +66,7 @@ Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5
 - Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
 
 ## Versões
-- **v2.33.1** — tags e releases automáticas: o workflow "Versões" cria, a cada push na `main`, a tag `vX.Y.Z` e a release no GitHub de toda versão desta lista que ainda não tem (na 1ª execução, todas as antigas desde a v2.2.1).
+- **v2.33.1** — tags e releases automáticas: o workflow "Versões" cria, a cada push na `main`, a tag `vX.Y.Z` e a release no GitHub de toda versão desta lista que ainda não tem (na 1ª execução, todas as antigas desde a v2.0).
 - **v2.33** — desempenho: abrir/fechar janelas não re-renderiza mais as telas de fundo (antes, cada linha animada de todas as telas era refeita); trocar de aba ficou ~10x mais leve. Menus abrem 40–60% mais rápido (Novo lançamento 148→67 ms, Editar fixo 133→45 ms, Fatura completa 184→105 ms, com CPU 4x mais lenta). Histórico de faturas numa passada só; análise da fatura e nomes de loja memoizados; listas longas montam aos poucos; conteúdo chega junto com a janela (sem cascata); a fileira de categorias já abre posicionada. README com estrutura, desempenho e controle de mudanças atualizados; tags e releases de todas as versões.
 - **v2.32** — extrato: compras no cartão em bloco próprio no dia ("No cartão · sai na fatura"), com deslizar para editar/apagar e nome da categoria quando a compra não tem nome. Edição: trocar o nome aplica a sugestão do nome novo, e a dica "Sugestão" ganhou o botão Usar. O teclado numérico fecha depois do toque, sem deslocar a tela.
 - **v2.31** — extrato: compras lançadas no cartão aparecem no dia da compra, marcadas "no cartão" e com a fatura em que caem. Não entram nos totais (o dinheiro sai no vencimento da fatura) e tocar abre a edição. As compras importadas continuam só na fatura, pra não lotar o extrato.
