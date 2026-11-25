@@ -149,11 +149,13 @@ for (const t of TERMOS) if (!t.frase) {
  * - 99Pay é pagamento (Pix pelo cartão), não corrida de 99.
  * - Love Suites / motel é lazer, não hospedagem de viagem.
  * - Hospital veterinário é Pets, não Saúde (a palavra "hospital" enganava).
+ * - "Assinatura"/IPTV é Assinaturas, mesmo com "TV" no nome (que é Compras).
  */
 export const REGRAS_FIXAS: { re: RegExp; tipo: Tipo; cat: string; ico: string }[] = [
   { re: /99 ?pay/, tipo: 'saida', cat: 'outros', ico: '💸' },
   { re: /\bmotel|\blove ?suite|\bdrive in\b/, tipo: 'saida', cat: 'lazer', ico: '🏩' },
   { re: /\bhospital vet|\bclinica vet|\bhosp vet/, tipo: 'saida', cat: 'pets', ico: '🐾' },
+  { re: /\biptv\b|\bassinatura\b/, tipo: 'saida', cat: 'assinaturas', ico: '📺' }, // "TV - Assinatura IPTV" não é compra de TV
 ];
 export const regraFixa = (desc: string, tipo: Tipo) => {
   const n = normalizar(desc);

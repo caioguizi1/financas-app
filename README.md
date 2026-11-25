@@ -66,6 +66,7 @@ Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5
 - Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
 
 ## Versões
+- **v2.36.0** — "Repete todo mês" no ＋: transforma o lançamento (saída ou entrada) em fixo no dia da data escolhida, com a mesma forma de pagamento (Pix/débito, cartão ou boleto), a partir daquele mês. Também converte um lançamento seu já salvo (sem contar duas vezes). Dicionário: "Assinatura"/IPTV vai para Assinaturas, mesmo com "TV" no nome.
 - **v2.35.0** — dicionário ampliado: utensílios de cozinha, iluminação e casa inteligente (lâmpadas, LED, Alexa), cama/mesa/banho, limpeza, ferramentas, móveis e plantas vão para Casa; itens de mercado (arroz, leite, água mineral, óleo de soja…) e de higiene (desodorante, fio dental…) também. Correção: "Lâmpadas Smart" caía em Saúde porque "smart" era lido como começo de "Smart Fit".
 - **v2.34.0** — tela do ＋ mais leve: o teclado numérico só aparece quando você toca no valor (também no lançamento novo) e some ao tocar fora ou no OK; miniaturas dos cartões viram imagens pequenas pré-carregadas em segundo plano (antes cada chip carregava a foto inteira); animação do botão ＋ em CSS. Medido com CPU 4x: travada ao abrir 89 → 57 ms, tarefa longa 76 → 0 ms.
 - **v2.33.1** — tags e releases automáticas: o workflow "Versões" cria, a cada push na `main`, a tag `vX.Y.Z` e a release no GitHub de toda versão desta lista que ainda não tem (na 1ª execução, todas as antigas desde a v2.0).

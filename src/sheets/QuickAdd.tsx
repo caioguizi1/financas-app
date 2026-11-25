@@ -1,18 +1,17 @@
 import { AnimatePresence } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CAT_IN, CAT_OUT, catE } from '../lib/categories';
+import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { aprender, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
-import { addDays, dateOf, diaLabel, dm, parse, today } from '../lib/dates';
+import { addDays, dateOf, diaLabel, dm, mesCurto, monthKey, parse, today } from '../lib/dates';
 import { pagamentoCartao } from '../lib/engine';
 import { brl, uid } from '../lib/money';
-import type { Lancamento, Meio } from '../lib/types';
+import type { Lancamento, Meio, Recorrente } from '../lib/types';
 import { closeSheet, getData, mutate, openSheet, restore, toast, withUndo } from '../store';
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
 import { AmountDisplay, Keypad, TecladoRecolhivel, useTeclado } from '../ui/Money';
 import { SheetHeader } from '../ui/Sheet';
 import { Expande } from '../ui/Expande';
-import { EditRec } from './EditRec';
 import { ExtraSheet } from './Extras';
 import { CartaoMini, Ico } from '../ui/Ico';
 import { nomeExib } from '../ui/nome';
@@ -68,8 +67,11 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const [nParc, setNParc] = useState(Math.max(2, lanc?.parcelas ?? 2));
   const [adiar, setAdiar] = useState(lanc?.adiar ?? 1);
   const [modoValor, setModoValor] = useState<'total' | 'parcela'>('total');
-  const podeParcelar = meio === 'boleto' || meio === 'credito';
-  const parcelado = meio === 'pixparc' || (podeParcelar && parcEscolha);
+  // "Repete todo mês": vira um fixo no dia da data escolhida (só lançamentos seus, não os importados da fatura)
+  const podeFixo = novo || !lanc?.importado;
+  const [fixo, setFixo] = useState(false);
+  const podeParcelar = !fixo && (meio === 'boleto' || meio === 'credito');
+  const parcelado = !fixo && (meio === 'pixparc' || (podeParcelar && parcEscolha));
   const parcelas = l.tipo === 'saida' && parcelado ? nParc : 1;
   const escolherMeio = (m: Meio, cartaoId: string | null = null) => { setMeio(m); set({ cartaoId }); };
   const total = parcelas > 1 && modoValor === 'parcela' ? l.valor * parcelas : l.valor;
@@ -86,8 +88,25 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const datas: [string, string][] = [[t, 'Hoje'], [addDays(t, -1), 'Ontem'], [addDays(t, -2), diaLabel(addDays(t, -2))]];
   const outraData = !datas.some(([d]) => d === l.data);
 
+  const diaFixo = parse(l.data).getDate();
+  const salvarFixo = () => {
+    const meioRec: Meio = l.tipo !== 'saida' ? 'pix' : meio === 'credito' && l.cartaoId ? 'credito' : meio === 'boleto' ? 'boleto' : 'pix';
+    const desc = l.desc.trim();
+    const rec: Recorrente = { id: uid(), tipo: l.tipo, desc: desc || catN(cat), cat, ico: ico !== catE(cat) ? ico : undefined, valor: l.valor, dia: diaFixo,
+      inicio: monthKey(l.data), ...(l.tipo === 'saida' ? { meio: meioRec, cartaoId: meioRec === 'credito' ? l.cartaoId : null } : {}) };
+    const before = getData();
+    closeSheet();
+    mutate((d) => ({ ...d,
+      // editando um lançamento seu: ele vira o fixo (a ocorrência deste mês já é a do fixo, sem contar duas vezes)
+      lancamentos: novo ? d.lancamentos : d.lancamentos.filter((x) => x.id !== l.id),
+      recorrentes: [...d.recorrentes, rec],
+      uso: { ...d.uso, [cat]: (d.uso[cat] ?? 0) + 1 },
+      aprendido: desc ? aprender(d.aprendido ?? {}, desc, l.tipo, cat, rec.ico) : d.aprendido }));
+    toast(`Fixo criado · todo dia ${diaFixo}`, () => restore(before));
+  };
   const salvar = () => {
     if (!l.valor) return;
+    if (fixo) return salvarFixo();
     const final: Lancamento = { ...l, valor: total, cat, ico: ico !== catE(cat) ? ico : undefined, desc: l.desc.trim(), cartaoId: l.tipo === 'saida' && meio === 'credito' ? l.cartaoId : null, parcelas,
       meio: l.tipo === 'saida' ? meio : undefined, adiar: !cartao && parcelas > 1 ? desloc : undefined };
     closeSheet();
@@ -144,14 +163,14 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
             <Chip on={meio === 'pix'} onClick={() => escolherMeio('pix')}><Ico n="pix" size={16} />Pix / débito</Chip>
             {D.cartoes.map((c) => <Chip key={c.id} on={meio === 'credito' && l.cartaoId === c.id} onClick={() => escolherMeio('credito', c.id)}><CartaoMini c={c} />{c.nome}</Chip>)}
             <Chip on={meio === 'boleto'} onClick={() => escolherMeio('boleto')}><Ico n="boleto" size={16} />Boleto</Chip>
-            <Chip on={meio === 'pixparc'} onClick={() => escolherMeio('pixparc')}><Ico n="pixparc" size={16} />Pix parcelado</Chip>
+            <Chip on={meio === 'pixparc'} onClick={() => { setFixo(false); escolherMeio('pixparc'); }}><Ico n="pixparc" size={16} />Pix parcelado</Chip>
           </div>
           {/* linha de altura fixa: troca de forma de pagamento não faz a janela pular */}
           <div className="pay-row">
             {podeParcelar ? (
               <Segmented value={parcEscolha ? 'p' : 'v'} onChange={(v) => setParcEscolha(v === 'p')} options={[{ v: 'v', label: 'À vista' }, { v: 'p', label: 'Parcelado' }]} />
             ) : (
-              <div className="pay-info">{meio === 'pix' ? <><Ico n="pix" size={16} />Sai na hora da sua conta · sem parcelas</> : <><Ico n="pixparc" size={16} />Cobrado mês a mês, fora do cartão</>}</div>
+              <div className="pay-info">{fixo ? <><Ico n="fixo" size={16} />{meio === 'credito' && cartao ? `Todo mês na fatura do ${cartao.nome}` : meio === 'boleto' ? 'Boleto todo mês' : 'Sai da sua conta todo mês'}</> : meio === 'pix' ? <><Ico n="pix" size={16} />Sai na hora da sua conta · sem parcelas</> : <><Ico n="pixparc" size={16} />Cobrado mês a mês, fora do cartão</>}</div>
             )}
           </div>
           <AnimatePresence presenceAffectsLayout={false} initial={false}>
@@ -200,20 +219,27 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         </label>
       </div>
 
-      {l.tipo === 'entrada' && (
+      {podeFixo && (
         <div className="ent-extra">
           <div className="lab">Isso se repete?</div>
           <div className="chips">
-            <Chip onClick={() => openSheet(<EditRec tipo="entrada" rec={{ tipo: 'entrada', desc: l.desc, cat, valor: l.valor, dia: parse(l.data).getDate() }} />)}><Ico n="fixo" size={16} />É fixo todo mês</Chip>
-            <Chip onClick={() => openSheet(<ExtraSheet />)}><CatGlyph cat="extra" ico="🎁" />13º, PLR, férias…</Chip>
+            <Chip on={fixo} onClick={() => { if (!fixo && meio === 'pixparc') setMeio('pix'); setFixo((v) => !v); }}><Ico n="fixo" size={16} />{fixo ? `Todo mês, dia ${diaFixo}` : 'Repete todo mês'}</Chip>
+            {l.tipo === 'entrada' && <Chip onClick={() => openSheet(<ExtraSheet />)}><CatGlyph cat="extra" ico="🎁" />13º, PLR, férias…</Chip>}
           </div>
+          {fixo && (
+            <div className="dim hint">
+              Vira {l.tipo === 'saida' ? 'gasto' : 'recebimento'} fixo: todo dia <b>{diaFixo}</b> (o dia da data acima), a partir de {mesCurto(monthKey(l.data))}
+              {l.tipo === 'saida' && (meio === 'credito' && cartao ? `, na fatura do ${cartao.nome}` : meio === 'boleto' ? ', por boleto' : ', saindo da conta')}.
+              {diaFixo > 28 && ' Nos meses mais curtos, cai no último dia.'} Você edita ou encerra em Fixos.
+            </div>
+          )}
         </div>
       )}
       </div>
       <div className="sl-foot">
       <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar={!novo} small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="actions tight">
-        <Button disabled={!l.valor} onClick={salvar}>{novo ? 'Lançar' : 'Salvar'}</Button>
+        <Button disabled={!l.valor} onClick={salvar}>{fixo ? 'Salvar como fixo' : novo ? 'Lançar' : 'Salvar'}</Button>
       </div>
       </div>
     </div>
