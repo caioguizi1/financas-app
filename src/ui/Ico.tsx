@@ -7,7 +7,7 @@ import {
   ArrowUpDown, Banknote, Barcode, BriefcaseBusiness, CalendarClock, CalendarDays, Camera, Coins, CreditCard, Download, FileDown, FileUp, Gift, Info, Landmark, ListFilter, LoaderCircle, Lock, Moon, PenLine, Receipt, RefreshCw, Repeat, RotateCcw, RotateCw, Sparkles, Sun, SunMoon, TrendingUp, TriangleAlert, Tv, Upload, UserRound, WalletCards, Zap, type LucideIcon,
 } from 'lucide-react';
 import type { Cartao } from '../lib/types';
-import { corDoCartao, useImagem } from '../lib/imagens';
+import { corDoCartao, useImagemUrl } from '../lib/imagens';
 
 export const ICONES = {
   nome: UserRound, carteira: WalletCards, importar: FileDown, saldo: Landmark, renda: BriefcaseBusiness, extras: Gift,
@@ -29,7 +29,7 @@ export function Ico({ n, size = 18, className }: { n: NomeIcone; size?: number; 
 
 /** Miniatura do cartão (cor da marca ou a arte enviada) — no lugar do 💳 genérico. */
 export function CartaoMini({ c }: { c: Cartao }) {
-  const img = useImagem(c.id);
+  const img = useImagemUrl(c.id, true);
   const [a, b] = corDoCartao(c.nome);
   return <span className="cmini" style={img ? { backgroundImage: `url(${img})` } : { background: `linear-gradient(135deg, ${a}, ${b})` }} aria-hidden />;
 }

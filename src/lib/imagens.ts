@@ -32,6 +32,7 @@ export async function lerImagem(id: string): Promise<string | null> {
 }
 export async function salvarImagem(id: string, dataUrl: string | null) {
   cache.set(id, dataUrl);
+  for (const k of [`${id}|mini`, `${id}|full`]) { const u = urls.get(k); if (u) URL.revokeObjectURL(u); urls.delete(k); gerando.delete(k); }
   avisar();
   try { await tx<unknown>('readwrite', (s) => (dataUrl ? s.put(dataUrl, id) : s.delete(id)) as IDBRequest<unknown>); } catch { /* sem IndexedDB: fica só na sessão */ }
 }
@@ -45,6 +46,51 @@ export async function todasImagens(): Promise<Record<string, string>> {
       cur.onerror = () => ok(out);
     });
   } catch { return {}; }
+}
+
+/*
+ * Pra MOSTRAR a imagem: endereço curto (blob:) em vez do texto base64 de ~100 mil caracteres no estilo
+ * de cada elemento, e uma miniatura pequena pros chips — antes cada chip de cartão fazia o navegador
+ * processar a imagem inteira (856×540) a cada abertura de janela, pesado no iPhone.
+ */
+const urls = new Map<string, string>();
+const gerando = new Map<string, Promise<string | null>>();
+async function gerarUrl(id: string, mini: boolean): Promise<string | null> {
+  const dataUrl = await lerImagem(id);
+  if (!dataUrl) return null;
+  try {
+    let blob: Blob | null;
+    if (!mini) blob = await (await fetch(dataUrl)).blob();
+    else {
+      const img = new Image(); img.src = dataUrl; await img.decode();
+      const cv = document.createElement('canvas'); cv.width = 132; cv.height = 84; // 3x de 44×28
+      const g = cv.getContext('2d')!; g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, cv.width, cv.height);
+      blob = await new Promise<Blob | null>((ok) => cv.toBlob(ok, 'image/jpeg', 0.85));
+    }
+    return blob ? URL.createObjectURL(blob) : dataUrl;
+  } catch { return dataUrl; }
+}
+function urlDe(id: string, mini: boolean): Promise<string | null> {
+  const k = `${id}|${mini ? 'mini' : 'full'}`;
+  if (urls.has(k)) return Promise.resolve(urls.get(k)!);
+  let p = gerando.get(k);
+  if (!p) { p = gerarUrl(id, mini).then((u) => { if (u) urls.set(k, u); gerando.delete(k); return u; }); gerando.set(k, p); }
+  return p;
+}
+/** Deixa as miniaturas prontas antes da 1ª abertura (chamado no tempo ocioso). */
+export function preaquecerImagens(ids: string[]) { ids.forEach((id) => { void urlDe(id, true); void urlDe(id, false); }); }
+
+/** Endereço leve pra exibir (mini = miniatura dos chips). */
+export function useImagemUrl(id: string, mini = false) {
+  const k = `${id}|${mini ? 'mini' : 'full'}`;
+  const [v, setV] = useState<string | null>(urls.get(k) ?? null);
+  useEffect(() => {
+    let vivo = true;
+    const f = () => { const u = urls.get(k); if (u) setV(u); else urlDe(id, mini).then((x) => vivo && setV(x)); };
+    f(); ouvintes.add(f);
+    return () => { vivo = false; ouvintes.delete(f); };
+  }, [id, mini, k]);
+  return v;
 }
 
 export function useImagem(id: string) {

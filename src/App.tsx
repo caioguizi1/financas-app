@@ -5,11 +5,11 @@ import { Home } from './screens/Home';
 import { Onboarding } from './screens/Onboarding';
 import { Ajustes, Extrato, Fixos } from './screens/Others';
 import { QuickAdd } from './sheets/QuickAdd';
-import { openSheet, useData, useUI, type Tab } from './store';
+import { getData, openSheet, useData, useUI, type Tab } from './store';
+import { preaquecerImagens } from './lib/imagens';
 import { IGear, IHome, IList, IPlus, IRepeat } from './ui/Icons';
 import { SheetHost } from './ui/Sheet';
 import { Toasts } from './ui/Toasts';
-import { spring } from './ui/motion';
 
 const TABS: { id: Tab; label: string; Icon: () => React.ReactElement }[] = [
   { id: 'home', label: 'Início', Icon: IHome },
@@ -51,7 +51,9 @@ export default function App() {
       id = ocioso(proxima); // uma tela por vez, sem competir com o que o usuário está fazendo
     };
     id = ocioso(proxima);
-    return () => cancelar(id);
+    // miniaturas dos cartões prontas antes do 1º toque no ＋ (chips de cartão sem custo na abertura)
+    const img = ocioso(() => preaquecerImagens(getData().cartoes.map((c) => c.id)));
+    return () => { cancelar(id); cancelar(img); };
   }, [onboarded]);
 
   // Ao voltar pro app (ex.: no dia seguinte), recalcula "hoje".
@@ -181,9 +183,10 @@ function TabBtn({ id, label, Icon }: (typeof TABS)[number]) {
 function Fab() {
   const sheetOpen = useUI((s) => !!s.sheet);
   return (
-    <m.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
+    // giro e toque em CSS (compositor): nada de JS por quadro competindo com a abertura da janela
+    <button className={`fab ${sheetOpen ? 'x' : ''}`} aria-label={sheetOpen ? 'Fechar' : 'Lançar'}
       onClick={() => (sheetOpen ? useUI.getState().closeSheet() : openSheet(<QuickAdd />))}>
       <IPlus />
-    </m.button>
+    </button>
   );
 }

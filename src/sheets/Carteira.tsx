@@ -4,7 +4,7 @@ import { catN } from '../lib/categories';
 import { dm, mesCurto, monthKey, today } from '../lib/dates';
 import { projecao } from '../lib/engine';
 import { agruparFaturas, faturasAtuais } from '../lib/faturas';
-import { abrirImagem, corDoCartao, recortar, salvarImagem, useImagem, type Caixa, type FonteRecorte } from '../lib/imagens';
+import { abrirImagem, corDoCartao, recortar, salvarImagem, useImagem, type Caixa, type FonteRecorte, useImagemUrl } from '../lib/imagens';
 import { Recorte } from '../ui/Recorte';
 import { IFile, IImage, IImport, IPencil, IReceipt } from '../ui/Icons';
 import { dicasDaFatura } from '../lib/insightsFatura';
@@ -29,7 +29,7 @@ const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
 /** A "face" do cartão: arte enviada pelo usuário ou gradiente da marca. */
 export function CardFace({ c, mini, valor, src }: { c: Cartao; mini?: boolean; valor?: number; src?: string }) {
-  const salva = useImagem(c.id);
+  const salva = useImagemUrl(c.id);
   const img = src ?? salva;
   const [a, b] = corDoCartao(c.nome);
   return (

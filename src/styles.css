@@ -720,7 +720,8 @@ html { touch-action: manipulation }
 .amount.tap .v::after { content: ''; display: inline-block; width: 2px; height: .72em; margin-left: 4px; vertical-align: -0.02em; border-radius: 2px; background: var(--acc-hi); opacity: 0 }
 .amount.tap.ativo .v::after { opacity: 1; animation: caret 1s steps(1) infinite }
 @keyframes caret { 50% { opacity: 0 } }
-.amount.tap:not(.ativo)::after { content: 'Toque no valor para alterar'; display: block; font-size: 12px; color: var(--dim); margin-top: 2px; letter-spacing: 0 }
+.amount.tap.zero:not(.ativo)::after { content: 'Toque para digitar o valor'; display: block; font-size: 12px; color: var(--dim); margin-top: 2px; letter-spacing: 0 }
+.amount.tap:not(.ativo):not(.zero)::after { content: 'Toque no valor para alterar'; display: block; font-size: 12px; color: var(--dim); margin-top: 2px; letter-spacing: 0 }
 .tec { overflow: hidden }
 .tec-bar { display: flex; justify-content: flex-end; padding: 2px 2px 6px }
 .tec-ok { font-weight: 650; font-size: 15px; color: var(--acc-hi); padding: 6px 12px; border-radius: 10px; background: var(--card2) }
@@ -826,3 +827,10 @@ html { touch-action: manipulation }
 .smart-ico .pula { display: inline-flex; animation: pula-ico .34s cubic-bezier(.2, .9, .3, 1.2) }
 .smart-ico > span { display: inline-flex }
 @media (prefers-reduced-motion: reduce) { .amount .v.pulse, .smart-ico .pula { animation: none } }
+
+/* ＋: giro e toque em CSS (v2.34) */
+.fab { transition: transform .18s cubic-bezier(.2, .9, .3, 1.3) }
+.fab:active { transform: scale(.88); transition-duration: .08s }
+.fab svg { transition: transform .32s cubic-bezier(.2, .9, .3, 1.15) }
+.fab.x svg { transform: rotate(45deg) }
+@media (prefers-reduced-motion: reduce) { .fab, .fab svg { transition: none } }

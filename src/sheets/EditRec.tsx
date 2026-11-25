@@ -25,7 +25,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const D = getData();
   const cartoes = D.cartoes;
   // existente ou sugestão do cadastro (com ícone) = já escolhido; senão o dicionário decide até a pessoa tocar numa categoria
-  const tec = useTeclado(novo);
+  const tec = useTeclado(false); // teclado só aparece ao tocar no valor (novo e edição)
   // editando: a categoria salva vale até você trocar o nome; aí a sugestão do nome novo entra
   const [manual, setManual] = useState(novo && !!rec?.ico);
   const sug = useMemo(() => sugerir(r.desc, r.tipo, D.aprendido), [r.desc, r.tipo, D.aprendido]);
@@ -63,10 +63,8 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <div className="sl-mid" data-scroll>
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} onUsar={() => { setManual(true); set({ cat: sug!.cat, ico: sug!.ico }); }} />
-      <AmountDisplay value={r.valor} onClick={novo ? undefined : tec.abrir} ativo={tec.aberto} />
-      {novo ? <Keypad value={r.valor} onChange={(valor) => set({ valor })} /> : (
-        <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
-      )}
+      <AmountDisplay value={r.valor} onClick={tec.abrir} ativo={tec.aberto} />
+      <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar={!novo} value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="lab">Todo dia</div>
       <DayGrid value={r.dia} onChange={(dia) => set({ dia })} />
       <div className="lab">Categoria</div>

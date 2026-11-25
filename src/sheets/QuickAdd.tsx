@@ -22,7 +22,7 @@ import { normalizar } from '../lib/smart';
 
 export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const novo = !lanc;
-  const tec = useTeclado(novo);
+  const tec = useTeclado(false); // teclado só aparece ao tocar no valor (novo e edição)
   const D = getData();
   // compra importada: o campo mostra o nome legível; se não mexer, o texto original do banco fica salvo
   const nomeInicial = lanc?.desc ? nomeExib(lanc.desc) : '';
@@ -126,7 +126,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
         onChange={(tipo) => { setManual(false); set({ tipo, cat: '', ...(tipo === 'entrada' ? { cartaoId: null, parcelas: 1 } : {}) }); }}
         options={[{ v: 'saida', label: 'Saída', tone: 'out' }, { v: 'entrada', label: 'Entrada', tone: 'in' }]}
       />
-      <AmountDisplay value={l.valor} compact onClick={novo ? undefined : tec.abrir} ativo={tec.aberto} />
+      <AmountDisplay value={l.valor} compact onClick={tec.abrir} ativo={tec.aberto} />
       </div>
       <div className="sl-mid" data-scroll>
 
@@ -211,9 +211,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
       )}
       </div>
       <div className="sl-foot">
-      {novo ? <Keypad small value={l.valor} onChange={(valor) => set({ valor })} /> : (
-        <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
-      )}
+      <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar={!novo} small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="actions tight">
         <Button disabled={!l.valor} onClick={salvar}>{novo ? 'Lançar' : 'Salvar'}</Button>
       </div>
