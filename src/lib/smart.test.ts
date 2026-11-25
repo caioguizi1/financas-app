@@ -91,3 +91,10 @@ describe('hospital veterinário', () => {
     expect(sugerir('Hospital Albert Einstein', 'saida')?.cat).toBe('saude');
   });
 });
+
+// v2.35: itens de casa (utensílios, iluminação, cama/banho, limpeza), mercado e higiene
+const casosCasa: [string,string][] = [['Lâmpadas Smart -','casa'],['Utensílios de cozinha','casa'],['jogo de panelas','casa'],['Talheres','casa'],['Toalhas de banho','casa'],['Vassoura e rodo','casa'],['Papel higiênico','casa'],['Fita LED','casa'],['Alexa echo dot','casa'],['Smart Fit','saude'],['smartfit','saude'],['Smart TV','compras'],['Arroz e feijão','mercado'],['Água mineral','mercado'],['Óleo de soja','mercado'],['Troca de óleo','transporte'],['Conta de água','contas'],['Cafeteira','casa'],['Café','comida'],['Fio dental','beleza'],['Netflx','assinaturas'],['Coca cola','mercado'],['Flores','compras'],['Prato feito','comida'],['Furadeira','casa'],['Air fryer','compras'],['Lampadas','casa']];
+it('dicionário ampliado: casa, mercado, higiene — e "smart" sozinho não vira Smart Fit', () => {
+  const r = casosCasa.map(([d, c]) => [d, sugerir(d, 'saida')?.cat, c]).filter(([, a, b]) => a !== b);
+  expect(r).toEqual([]);
+});

@@ -22,9 +22,9 @@ const REGRAS: Regra[] = [
   // ---- pets ----
   ['saida', 'pets', '🐾', 'pet,pets,petshop,pet shop,petz,cobasi,petlove,petland,racao,racoes,veterinario,veterinaria,vet,clinica veterinaria,banho e tosa,tosa,areia do gato,areia,granulado,cachorro,cao,gato,coleira,vermifugo,antipulgas,petisco,arranhador,hotel pet,creche pet,adestrador'],
   // ---- mercado ----
-  ['saida', 'mercado', '🛒', 'mercado,supermercado,mercadinho,minimercado,hipermercado,carrefour,carrefour express,pao de acucar,minuto pao de acucar,extra mercado,mercado extra,assai,atacadao,atacado,makro,sams club,sam s club,oxxo,st marche,mambo,hirota,sonda,dia supermercado,zona sul,guanabara,prezunic,mundial,bh supermercados,condor,angeloni,savegnago,tenda atacado,roldao,spani,compras do mes,feira,feira livre,hortifruti,oba hortifruti,natural da terra,sacolao,quitanda,acougue,peixaria,emporio,daki,shopper,rappi turbo,ifood mercado'],
+  ['saida', 'mercado', '🛒', 'mercado,supermercado,mercadinho,minimercado,hipermercado,carrefour,carrefour express,pao de acucar,minuto pao de acucar,extra mercado,mercado extra,assai,atacadao,atacado,makro,sams club,sam s club,oxxo,st marche,mambo,hirota,sonda,dia supermercado,zona sul,guanabara,prezunic,mundial,bh supermercados,condor,angeloni,savegnago,tenda atacado,roldao,spani,compras do mes,feira,feira livre,hortifruti,oba hortifruti,natural da terra,sacolao,quitanda,acougue,peixaria,emporio,daki,shopper,rappi turbo,ifood mercado,arroz,feijao,macarrao,leite,ovo,ovos,carne,carne moida,frango,peixe,fruta,frutas,verdura,verduras,legume,legumes,banana,tomate,batata,cebola,alho,queijo,presunto,mussarela,manteiga,margarina,requeijao,iogurte,cereal,granola,aveia,azeite,oleo de soja,oleo de cozinha,acucar,farinha,biscoito,bolacha,refrigerante,coca cola,suco,agua mineral,galao de agua,galao,cafe em po,cafe soluvel,tempero,molho de tomate,enlatados,congelados,hortalicas,ovo de pascoa'],
   // ---- comida ----
-  ['saida', 'comida', '🥐', 'padaria,pao,paes,cafe da manha,confeitaria'],
+  ['saida', 'comida', '🥐', 'padaria,pao,paes,cafe da manha,confeitaria,prato feito,pf'],
   ['saida', 'comida', '🍕', 'pizza,pizzaria,dominos,pizza hut'],
   ['saida', 'comida', '🍣', 'sushi,japones,temaki,yakisoba,china in box,china'],
   ['saida', 'comida', '🍦', 'sorvete,sorveteria,acai,doceria,doce,doces,bolo,brigadeiro,chocolate,cacau show,kopenhagen,brasil cacau'],
@@ -41,9 +41,14 @@ const REGRAS: Regra[] = [
   ['saida', 'transporte', '🚗', 'uber,uber x,uber black,99,99pop,99 pop,99taxi,99 taxi,cabify,indriver,in driver,taxi,corrida,pedagio,sem parar,conectcar,veloe,taggy,ipva,licenciamento,detran,multa de transito,multa,seguro do carro,seguro auto,lavagem,lava rapido,lava jato,carro,moto,aluguel de carro,localiza,movida,unidas,blablacar'],
   // ---- casa ----
   ['saida', 'casa', '🏢', 'condominio,taxa condominial'],
-  ['saida', 'casa', '🔨', 'reforma,pedreiro,eletricista,encanador,pintor,marceneiro,material de construcao,leroy,leroy merlin,telhanorte,c c,cec,obra,ferragem,ferramenta,tinta'],
-  ['saida', 'casa', '🛋️', 'moveis,movel,sofa,cama,mesa,cadeira,armario,ikea,tok stok,tokstok,tok e stok,etna,mobly,westwing,madeira madeira,decoracao,colchao,cortina,tapete,luminaria'],
+  ['saida', 'casa', '🔨', 'reforma,pedreiro,eletricista,encanador,pintor,marceneiro,material de construcao,leroy,leroy merlin,telhanorte,c c,cec,obra,ferragem,ferramenta,ferramentas,tinta,parafuso,parafusos,bucha,buchas,furadeira,parafusadeira,martelo,chave de fenda,fita isolante,silicone,torneira,sifao,prateleira,prateleiras,suporte de tv,rejunte,massa corrida,lixa'],
+  ['saida', 'casa', '🛋️', 'moveis,movel,sofa,cama,mesa,cadeira,armario,ikea,tok stok,tokstok,tok e stok,etna,mobly,westwing,madeira madeira,decoracao,colchao,cortina,cortinas,tapete,luminaria,estante,rack,painel de tv,criado mudo,comoda,poltrona,puff,banqueta,escrivaninha,guarda roupa,sapateira,nicho,cabeceira,box de banheiro'],
   ['saida', 'casa', '🧹', 'faxina,diarista,faxineira,limpeza,produtos de limpeza,lavanderia,lava e leva,detergente,sabao'],
+  ['saida', 'casa', '🍳', 'utensilio,utensilios,utensilios de cozinha,panela,panelas,jogo de panelas,frigideira,talher,talheres,faqueiro,faca,facas,prato,pratos,copo,copos,taca,tacas,caneca,canecas,xicara,xicaras,pote,potes,tupperware,marmiteira,garrafa,garrafa termica,jarra,assadeira,forma de bolo,refratario,travessa,tabua de corte,escorredor,ralador,peneira,espatula,concha,colher de pau,abridor,porta tempero,pano de prato,avental,luva termica,cafeteira,chaleira,sanduicheira,mixer,batedeira,processador,panela eletrica,panela de pressao,lixeira,filtro de agua,purificador,camicado,casa e video,casa e construcao'],
+  ['saida', 'casa', '💡', 'lampada,lampadas,lampada led,lampada smart,led,fita led,spot,plafon,abajur,arandela,pendente,lustre,tomada,tomadas,extensao,filtro de linha,benjamim,adaptador de tomada,interruptor,disjuntor,pilha,pilhas,smart home,casa inteligente,alexa,echo dot,google nest,tomada inteligente,camera de seguranca,fechadura digital,fechadura,campainha,interfone,chuveiro,ducha,resistencia do chuveiro'],
+  ['saida', 'casa', '🛏️', 'lencol,lencois,jogo de cama,edredom,cobertor,manta,travesseiro,travesseiros,fronha,toalha,toalhas,toalha de banho,roupao,tapete de banho,cortina de box,cabide,cabides,organizador,organizadores,cesto de roupa,varal,prendedor,ferro de passar,tabua de passar,almofada,almofadas,capa de sofa,persiana,varao,espelho,quadro,quadros,porta retrato,vela,velas,difusor,aromatizador'],
+  ['saida', 'casa', '🧽', 'vassoura,rodo,balde,pano,panos,esponja,desinfetante,agua sanitaria,alvejante,amaciante,sabao em po,lava roupas,multiuso,saco de lixo,papel higienico,papel toalha,guardanapo,lustra moveis,inseticida,repelente,dedetizacao,desentupidor,limpa vidros,tira manchas'],
+  ['saida', 'casa', '🪴', 'planta,plantas,vaso,vasos,jardim,jardinagem,adubo,terra vegetal,muda,mudas,cachepo,suculenta'],
   ['saida', 'casa', '🔑', 'chaveiro,mudanca,frete mudanca,cofre'],
   ['saida', 'casa', '🏠', 'aluguel,financiamento,prestacao do apartamento,prestacao da casa,parcela do apartamento,iptu,casa,apartamento,caixa habitacao,habitacao,quintoandar,quinto andar,imobiliaria,seguro residencial,seguro fianca'],
   // ---- contas ----
@@ -65,7 +70,7 @@ const REGRAS: Regra[] = [
   // ---- beleza ----
   ['saida', 'beleza', '💈', 'barbeiro,barbearia,corte de cabelo,corte,barba'],
   ['saida', 'beleza', '💅', 'manicure,unha,unhas,pedicure,esmalte,alongamento de unha'],
-  ['saida', 'beleza', '💇', 'cabelo,salao,salao de beleza,cabeleireiro,escova,progressiva,coloracao,estetica,depilacao,sobrancelha,cilios,perfume,perfumaria,cosmeticos,maquiagem,boticario,o boticario,natura,avon,eudora,sephora,quem disse berenice,skincare,protetor solar,shampoo,creme'],
+  ['saida', 'beleza', '💇', 'cabelo,salao,salao de beleza,cabeleireiro,escova,progressiva,coloracao,estetica,depilacao,sobrancelha,cilios,perfume,perfumaria,cosmeticos,maquiagem,boticario,o boticario,natura,avon,eudora,sephora,quem disse berenice,skincare,protetor solar,shampoo,condicionador,creme,desodorante,sabonete,pasta de dente,creme dental,escova de dente,fio dental,enxaguante bucal,absorvente,barbeador,gilete,lamina de barbear,hidratante,higiene,higiene pessoal'],
   // ---- viagem ----
   ['saida', 'viagem', '🏨', 'hotel,pousada,airbnb,hospedagem,booking,hostel,resort,hurb'],
   ['saida', 'viagem', '✈️', 'viagem,passagem,passagem aerea,aviao,voo,latam,gol linhas aereas,voo gol,azul linhas aereas,voo azul,decolar,123milhas,maxmilhas,cvc,aeroporto,mala,seguro viagem,cambio,dolar,euro,milhas,smiles,latam pass,tudoazul'],
@@ -85,12 +90,12 @@ const REGRAS: Regra[] = [
   // ---- educação ----
   ['saida', 'educacao', '📚', 'faculdade,universidade,mensalidade faculdade,curso,cursos,escola,colegio,creche,material escolar,livro,livros,apostila,udemy,alura,coursera,dio,rocketseat,fiap,senac,senai,anhanguera,unip,uninove,mackenzie,fgv,insper,estacio,cruzeiro do sul,ingles,idiomas,wizard,ccaa,fisk,open english,cambly,certificacao,prova,cisa,cissp,cisp,isaca,iso 27001,pos graduacao,mba,especializacao'],
   // ---- compras ----
-  ['saida', 'compras', '🎁', 'presente,presentes,aniversario,amigo secreto,natal,dia das maes,dia dos pais,dia dos namorados,lembrancinha'],
+  ['saida', 'compras', '🎁', 'presente,presentes,flores,floricultura,buque,aniversario,amigo secreto,natal,dia das maes,dia dos pais,dia dos namorados,lembrancinha'],
   ['saida', 'compras', '👟', 'tenis,sapato,sandalia,chinelo,havaianas,bota,nike,adidas,puma,mizuno,olympikus,centauro,netshoes,decathlon,artwalk'],
   ['saida', 'compras', '👕', 'roupa,roupas,camisa,camiseta,calca,bermuda,jaqueta,casaco,vestido,cueca,meia,renner,riachuelo,cea,c a,zara,hering,marisa,shein,reserva,youcom,levis,lacoste,farm,insider'],
   ['saida', 'compras', '📦', 'amazon,amazon br,mercado livre,mercadolivre,meli,shopee,aliexpress,ali express,temu,magalu,magazine luiza,americanas,submarino,casas bahia,ponto frio,carrefour online,encomenda,correios,frete,sedex,importacao,taxa importacao,remessa conforme'],
-  ['saida', 'compras', '💻', 'notebook,computador,pc,eletronico,eletronicos,fone,fone de ouvido,airpods,headset,teclado,mouse,monitor,iphone,celular novo,smartphone,samsung,xiaomi,motorola,apple store,carregador,cabo,capinha,pelicula,kabum,pichau,terabyte,terabyteshop,fast shop,tv,televisao,videogame,console,smartwatch,apple watch,tablet,ipad'],
-  ['saida', 'compras', '🧺', 'eletrodomestico,geladeira,fogao,microondas,maquina de lavar,air fryer,airfryer,liquidificador,aspirador,ventilador,ar condicionado,utensilios,panela'],
+  ['saida', 'compras', '💻', 'notebook,computador,pc,eletronico,eletronicos,fone,fone de ouvido,airpods,headset,teclado,mouse,monitor,iphone,celular novo,smartphone,samsung,xiaomi,motorola,apple store,carregador,cabo,capinha,pelicula,kabum,pichau,terabyte,terabyteshop,fast shop,tv,smart tv,televisao,videogame,console,smartwatch,apple watch,tablet,ipad'],
+  ['saida', 'compras', '🧺', 'eletrodomestico,geladeira,fogao,microondas,maquina de lavar,air fryer,airfryer,liquidificador,aspirador,ventilador,ar condicionado,secadora,lava loucas,lava louca,purificador de ar,umidificador,robo aspirador'],
   ['saida', 'compras', '🛍️', 'shopping,compras,loja,lojas,comprinhas,miudezas,papelaria,kalunga,daiso,lojas americanas'],
   // ---- outros comuns ----
   ['saida', 'outros', '🤝', 'doacao,dizimo,oferta,vaquinha,caridade,ong'],
@@ -181,7 +186,7 @@ export function sugerir(desc: string, tipo: Tipo, mem: Memoria = {}): Sugestao |
   for (const t of toks) { const m = PALAVRA.get(`${tipo}|${t}`); if (m) return { cat: m.cat, ico: m.ico, fonte: 'dicionario', termo: t }; }
   for (const t of toks) {
     if (t.length < 4 || /^\d+$/.test(t)) continue;
-    const m = TERMOS.find((x) => x.tipo === tipo && !x.frase && x.termo.length >= 4 && (t.startsWith(x.termo) || (x.termo.startsWith(t) && t.length >= 5)));
+    const m = TERMOS.find((x) => x.tipo === tipo && !x.frase && x.termo.length >= 4 && (t.startsWith(x.termo) || (x.termo.startsWith(t) && t.length >= 5 && x.termo.length - t.length <= 2)));
     if (m) return { cat: m.cat, ico: m.ico, fonte: 'dicionario', termo: m.termo };
   }
   for (const t of toks) {
