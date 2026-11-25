@@ -68,7 +68,7 @@ export function Home() {
         <div className="lbl">{sp ? diaLabel(sp.d) : 'Saldo hoje'}</div>
         <div className={`big num ${shown < 0 ? 'neg' : ''}`}>{sp ? brl(sp.v) : <AnimatedBRL value={vm.hoje} />}</div>
         <div className="sub">
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence presenceAffectsLayout={false} mode="wait" initial={false}>
             <m.span key={sp ? sp.d : 'hint'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}>
               {sp ? (spEvs.length ? spEvs.map((e) => `${nomeExib(e.desc)} ${brl(e.valor, true)}`).join(' · ') : 'Sem movimentação neste dia') : vm.pendV ? `${brl(vm.pendV, true)} ainda hoje · arraste no gráfico pra ver qualquer dia` : 'Toque e arraste no gráfico pra ver qualquer dia'}
             </m.span>
@@ -91,7 +91,7 @@ export function Home() {
         </Aviso>
       )}
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence presenceAffectsLayout={false} initial={false}>
         {mostra13 && (
           <m.div className="nudge" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
             <CatTile cat="salario" ico="🎄" />
@@ -154,7 +154,7 @@ export function Home() {
       <h2>Vem aí</h2>
       {vm.prox.length ? (
         <Lista className="list">
-          <AnimatePresence initial={false}>{vm.prox.map((e) => <EvItem key={`${e.ref}-${e.data}-${e.desc}`} e={e} />)}</AnimatePresence>
+          <AnimatePresence presenceAffectsLayout={false} initial={false}>{vm.prox.map((e) => <EvItem key={`${e.ref}-${e.data}-${e.desc}`} e={e} />)}</AnimatePresence>
         </Lista>
       ) : (
         <div className="card empty">Nada programado. Cadastre seus fixos em <b>Fixos</b>.</div>

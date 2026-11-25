@@ -8,7 +8,7 @@ import { spring, springSheet } from './motion';
 export function SheetHost() {
   const sheet = useUI((s) => s.sheet);
   return (
-    <AnimatePresence>
+    <AnimatePresence presenceAffectsLayout={false}>
       {sheet && <SheetFrame key={sheet.key}>{sheet.node}</SheetFrame>}
     </AnimatePresence>
   );

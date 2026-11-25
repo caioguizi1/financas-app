@@ -29,7 +29,7 @@ export function ValueRows({ linhas, ativa, onAtiva, onValor, onData }: {
                 </label>
               )}
             </div>
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence presenceAffectsLayout={false} mode="popLayout" initial={false}>
               <m.div key={l.valor} className={`vr-v num ${l.valor ? '' : 'zero'}`} initial={{ y: -6, opacity: 0.4 }} animate={{ y: 0, opacity: 1 }} transition={springSnappy}>
                 <small>R$</small>{centsToStr(l.valor)}
               </m.div>

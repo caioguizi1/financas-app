@@ -85,7 +85,7 @@ export function RendaSheet() {
         <ValueRows linhas={linhas} ativa={Math.min(ativa, linhas.length - 1)} onAtiva={setAtiva} onValor={setValor} />
       </div>
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence presenceAffectsLayout={false} initial={false}>
         {h && bruto > 0 && (
           <Expande className="holerite">
             <div className="hl"><span>Salário bruto</span><b className="num">{brl(h.bruto)}</b></div>

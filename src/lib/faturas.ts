@@ -95,13 +95,23 @@ export function faturasAnteriores(D: Data, c: Cartao, hoje: ISODate, maxMeses = 
   const atuais = new Set(faturasAtuais(D, c, hoje).map((f) => f.vencimento));
   const primeira = D.lancamentos.filter((l) => l.cartaoId === c.id).reduce((m, l) => (l.data < m ? l.data : m), hoje);
   const va = parse(pagamentoCartao(c, hoje));
-  const out: Fatura[] = [];
+  const vencs: ISODate[] = [];
   for (let k = 1; k <= maxMeses; k++) {
     const v = dateOf(va.getFullYear(), va.getMonth() - k, c.vencimento);
     if (v < addDays(primeira, -62)) break;
-    if (atuais.has(v)) continue;
-    const f = fatura(D, c, v, 'fechada');
-    if (f.itens.length) out.push(f);
+    if (!atuais.has(v)) vencs.push(v);
+  }
+  if (!vencs.length) return [];
+  // uma passada só pelos eventos do período (antes: uma por mês, o que travava a abertura das Faturas)
+  const porVenc = new Map<ISODate, Evento[]>();
+  for (const e of eventosEntre(D, addDays(vencs[vencs.length - 1], -62), addDays(vencs[0], 45)))
+    if (e.cartaoId === c.id && e.venc) { const l = porVenc.get(e.venc); if (l) l.push(e); else porVenc.set(e.venc, [e]); }
+  const out: Fatura[] = [];
+  for (const v of vencs) {
+    const itens = porVenc.get(v);
+    if (!itens?.length) continue;
+    const pg = pagamentoFatura(D, c, v);
+    out.push({ cartao: c, vencimento: v, fecha: fechamentoDe(c, v), status: 'fechada', total: -itens.reduce((a, e) => a + e.valor, 0) || 0, itens, pagaEm: pg.data, antecipada: pg.data !== v });
   }
   return out;
 }

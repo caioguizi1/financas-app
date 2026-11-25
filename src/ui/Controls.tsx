@@ -58,7 +58,7 @@ export function DayGrid({ value, onChange, caption = (d) => `Todo dia ${d}` }: {
       {caption && (
         <div className={`day-caption ${value ? 'ok' : ''}`}>
           <span className="dot" />
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence presenceAffectsLayout={false} mode="wait" initial={false}>
             <m.span key={value ?? 0} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.14 }}>
               {value ? <>Selecionado: <b>{caption(value)}</b></> : 'Toque em um dia'}
             </m.span>

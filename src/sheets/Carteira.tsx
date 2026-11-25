@@ -124,7 +124,7 @@ export function CarteiraSheet({ cartaoId }: { cartaoId?: string }) {
           </m.div>
         </div>
         {D.cartoes.length > 1 && <div className="wdots">{D.cartoes.map((cc, k) => <button key={cc.id} className={k === i ? 'on' : ''} onClick={() => irPara(k)} aria-label={cc.nome} />)}</div>}
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence presenceAffectsLayout={false} mode="popLayout" initial={false}>
           <m.div key={c.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={spring}>
             <Detalhes c={c} />
           </m.div>
@@ -275,7 +275,7 @@ function Detalhes({ c }: { c: Cartao }) {
                   <div className="imp-bar"><m.i initial={{ width: 0 }} animate={{ width: `${Math.max(4, (val / foco.totCat) * 100)}%` }} transition={spring} /></div>
                   <span className="num">{brl(val)}</span>
                 </button>
-                <AnimatePresence initial={false}>
+                <AnimatePresence presenceAffectsLayout={false} initial={false}>
                   {aberto && (
                     <Expande className="wcat-list">
                       {itens.map((e) => (
@@ -310,7 +310,7 @@ function Detalhes({ c }: { c: Cartao }) {
         </>
       )}
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence presenceAffectsLayout={false} initial={false}>
         {imgAberta && (
           <Expande className="wimg" chave={fonte ? `rec${fonte.w}x${fonte.h}` : 'opcoes'}>
             <Aviso nivel="info">Use só a <b>arte</b> do cartão (a imagem do site do banco ou uma foto do verso liso). <b>Nunca</b> uma foto com número, nome, validade ou CVV. A imagem fica só neste aparelho.</Aviso>

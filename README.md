@@ -15,13 +15,22 @@ App pessoal de finanças (PWA): controle de gastos e projeção do saldo futuro,
 ## Estrutura
 ```
 src/
-  lib/        motor financeiro puro (tipos, datas, dinheiro, engine + testes)
-              smart.ts = dicionário inteligente + aprendizado local (com testes)
-              versions.ts = histórico/vigência dos fixos · extras.ts = 13º, PLR, férias…
-              faturas.ts = ciclos, conferência e agrupamento de faturas · insights.ts = insights locais · folha.ts = INSS, IRRF (Lei 15.270), 13º e PLR — tabelas 2026, com testes dos exemplos da Receita
-  store.ts    dados persistidos + estado de interface (abas, janelas, toasts)
-  ui/         componentes base (Sheet, teclado numérico, controles, gráfico)
-  sheets/     janelas: lançamento rápido, fixos, cartões, ajuste de saldo
+  lib/        motor financeiro puro, sem interface (tudo com testes)
+              engine.ts      eventos e projeção do saldo (memoizados por versão dos dados)
+              dates.ts · money.ts · types.ts · categories.ts · tema.ts
+              faturas.ts     ciclos, faturas atuais e anteriores, ajustes, compras no cartão do mês
+              analiseFatura.ts  de que a fatura é feita, comparação, o que continua, categorias
+              insights.ts · insightsFatura.ts   dicas do Início e da fatura; parcelas mês a mês
+              importar.ts · pdfTexto.ts · importacoes.ts   leitura de CSV/OFX/PDF (Itaú, PicPay), duplicados, histórico
+              lojas.ts · nomes.ts   nome legível de loja (só do que veio do banco) e correções suas
+              smart.ts       dicionário inteligente + aprendizado local
+              versions.ts    vigência dos fixos · extras.ts 13º, PLR, férias · folha.ts INSS/IRRF/Lei 15.270
+              imagens.ts     imagem do cartão (recorte automático) · estiloIco.ts ícone x emoji
+  store.ts    dados persistidos (+ migrações únicas) e estado de interface (abas, janelas, toasts)
+  ui/         componentes base: Sheet, teclado (Money), controles, SwipeRow, Aviso, CatIco (figura de
+              categoria), Filtros (ordenar/categoria), Insights, gráfico, useAosPoucos (listas longas)
+  sheets/     janelas: lançamento (QuickAdd), fixos (EditRec), renda, extras, carteira, faturas,
+              fatura completa (FaturaPassada), parcelas, importação, cartão, saldo
   screens/    cadastro inicial, Início, Extrato, Fixos, Ajustes
 legacy/       v1 (HTML único), mantida só como referência
 ```
@@ -30,6 +39,13 @@ legacy/       v1 (HTML único), mantida só como referência
 Todo push na `main` passa pelo GitHub Actions: **checagem de tipos → testes → build → publicação**.
 Se qualquer etapa falhar, nada é publicado e a versão anterior continua no ar.
 
+- **Cada versão é uma GMUD**: commit `GMUD vX.Y — título` com *o que muda*, *evidência* (testes) e *rollback*.
+- **Tags e releases**: cada versão tem a tag `vX.Y.Z` no commit que a publicou e uma release no GitHub
+  com as notas da lista abaixo. As versões antes da v2.2.1 são anteriores a este repositório (`legacy/`).
+- **Versão**: `package.json` + a linha em *Versões* abaixo, no mesmo commit.
+- **Antes de publicar**: testes unitários (Vitest), regressão de ponta a ponta (Playwright, inclusive com
+  faturas reais que **não** são versionadas) e auditoria de espaçamento ícone↔texto.
+
 ```bash
 npm install
 npm run dev        # desenvolvimento
@@ -37,7 +53,19 @@ npm test           # testes
 npm run build      # build de produção
 ```
 
+## Desempenho
+Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5 aberturas):
+- Abrir/fechar janela **não re-renderiza as telas de fundo**: o botão ＋ é isolado e os `AnimatePresence`
+  usam `presenceAffectsLayout={false}` (sem isso, cada linha animada de todas as telas re-renderizava).
+- Animações pequenas (pulso do valor, pulo do ícone) em **CSS**, não em componentes animados.
+- Listas longas em janelas montam **aos poucos** (`useAosPoucos`): as primeiras linhas com a janela,
+  o resto em lotes nos momentos livres.
+- Cálculos pesados memoizados por versão dos dados (`eventosEntre`, `projecao`, `analisarFatura`,
+  `nomeVisivel`); histórico de faturas calculado numa passada só.
+- Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
+
 ## Versões
+- **v2.33** — desempenho: abrir/fechar janelas não re-renderiza mais as telas de fundo (antes, cada linha animada de todas as telas era refeita); trocar de aba ficou ~10x mais leve. Menus abrem 40–60% mais rápido (Novo lançamento 148→67 ms, Editar fixo 133→45 ms, Fatura completa 184→105 ms, com CPU 4x mais lenta). Histórico de faturas numa passada só; análise da fatura e nomes de loja memoizados; listas longas montam aos poucos; conteúdo chega junto com a janela (sem cascata); a fileira de categorias já abre posicionada. README com estrutura, desempenho e controle de mudanças atualizados; tags e releases de todas as versões.
 - **v2.32** — extrato: compras no cartão em bloco próprio no dia ("No cartão · sai na fatura"), com deslizar para editar/apagar e nome da categoria quando a compra não tem nome. Edição: trocar o nome aplica a sugestão do nome novo, e a dica "Sugestão" ganhou o botão Usar. O teclado numérico fecha depois do toque, sem deslocar a tela.
 - **v2.31** — extrato: compras lançadas no cartão aparecem no dia da compra, marcadas "no cartão" e com a fatura em que caem. Não entram nos totais (o dinheiro sai no vencimento da fatura) e tocar abre a edição. As compras importadas continuam só na fatura, pra não lotar o extrato.
 - **v2.30.1** — filtros: o valor em destaque de cada parcela acompanha a ordenação ("Maior parcela" mostra o valor por mês; as outras mostram o restante, com o prazo ou a data da compra embaixo); na fatura, "maior/menor valor" ordena pelo tamanho do valor (créditos não vão mais pro topo).

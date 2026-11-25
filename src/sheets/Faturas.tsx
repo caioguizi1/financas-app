@@ -18,6 +18,7 @@ import { CartaoMini } from '../ui/Ico';
 import { CatGlyph } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 import { FaturaPassadaSheet } from './FaturaPassada';
+import { useAosPoucos } from '../ui/useAosPoucos';
 
 const fmt = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
@@ -33,6 +34,8 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
   const setReais = (fn: (r: number[]) => number[]) => setReaisPor((x) => ({ ...x, [sel]: fn(reais) }));
   const [ativa, setAtiva] = useState(0);
   const [todas, setTodas] = useState(false);
+  // as primeiras linhas montam com a janela; o resto (fora da tela) logo depois da animação de abrir
+  const limite = useAosPoucos(200, 14, 30);
   const importadas = c ? doCartao(D, c.id) : [];
   const vals = (x: (typeof importadas)[number]) => valores(D, x);
   const anteriores = c ? faturasAnteriores(D, c, hoje) : [];
@@ -72,7 +75,7 @@ export function FaturasSheet({ cartaoId }: { cartaoId: string }) {
             </div>
             {f.itens.length ? (
               <div className="fat-itens">
-                {f.itens.map((e, k) => {
+                {f.itens.slice(0, limite).map((e, k) => {
                   const l = D.lancamentos.find((x) => x.id === e.ref);
                   return (
                     <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>

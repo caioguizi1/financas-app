@@ -1,4 +1,5 @@
 import { AnimatePresence, m } from 'motion/react';
+import { useRef, type ReactNode } from 'react';
 import { catN } from '../lib/categories';
 import type { Sugestao } from '../lib/smart';
 import { springSnappy } from './motion';
@@ -12,11 +13,8 @@ export function SmartDesc({ value, onChange, ico, cat, placeholder, autoFocus }:
   return (
     <div className="smart-desc">
       <div className="smart-ico">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <m.span key={ico + cat} initial={{ scale: 0.3, rotate: -25, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} exit={{ scale: 0.3, opacity: 0 }} transition={{ type: 'spring', stiffness: 520, damping: 18 }}>
-            <CatGlyph cat={cat} ico={ico} size={19} />
-          </m.span>
-        </AnimatePresence>
+        {/* "pulo" do ícone em CSS; na abertura não anima (só quando a categoria muda) */}
+        <IcoPula k={ico + cat}><CatGlyph cat={cat} ico={ico} size={19} /></IcoPula>
       </div>
       <input className="field" placeholder={placeholder} value={value} autoFocus={autoFocus} enterKeyHint="done"
         onChange={(e) => onChange(e.target.value)}
@@ -29,7 +27,7 @@ export function SmartDesc({ value, onChange, ico, cat, placeholder, autoFocus }:
 export function SmartHint({ sug, aplicada, atual, onUsar }: { sug: Sugestao | null; aplicada: boolean; atual?: string; onUsar?: () => void }) {
   const show = !!sug && (aplicada || sug.cat !== atual);
   return (
-    <AnimatePresence initial={false}>
+    <AnimatePresence presenceAffectsLayout={false} initial={false}>
       {show && sug && (
         <m.div className="smart-hint" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={springSnappy}>
           <span className="spark"><Ico n="sugerido" size={14} /></span>
@@ -40,4 +38,9 @@ export function SmartHint({ sug, aplicada, atual, onUsar }: { sug: Sugestao | nu
       )}
     </AnimatePresence>
   );
+}
+
+function IcoPula({ k, children }: { k: string; children: ReactNode }) {
+  const primeiro = useRef(k);
+  return <span key={k} className={k !== primeiro.current ? 'pula' : ''}>{children}</span>;
 }

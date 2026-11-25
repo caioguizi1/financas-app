@@ -1,5 +1,5 @@
 import { m } from 'motion/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { catsDe, FiltroBar } from '../ui/Filtros';
 
 import { dm, today } from '../lib/dates';
@@ -19,6 +19,9 @@ export function ParcelasSheet() {
   const D = getData();
   const todasAbertas = parcelasAbertas(D, today());
   const [ordem, setOrdem] = useState('fim');
+  // a lista chega pronta com a janela; a cascata só anima quando você muda a ordem ou o filtro
+  const jaMudou = useRef(false);
+  const mudar = <T,>(f: (v: T) => void) => (v: T) => { jaMudou.current = true; f(v); };
   const [cat, setCat] = useState<string | null>(null);
   const cats = catsDe(todasAbertas.map((p) => p.lanc.cat));
   const catOk = cat && cats.some((c) => c.cat === cat) ? cat : null;
@@ -73,11 +76,11 @@ export function ParcelasSheet() {
           <div className="lab">Por compra</div>
         </>
       )}
-      <FiltroBar ordem={ordem} setOrdem={setOrdem} cat={catOk} setCat={setCat} cats={cats}
+      <FiltroBar ordem={ordem} setOrdem={mudar(setOrdem)} cat={catOk} setCat={mudar(setCat)} cats={cats}
         opcoes={[{ id: 'fim', label: 'Termina antes' }, { id: 'fim-', label: 'Termina depois' }, { id: 'valor', label: 'Maior valor restante' }, { id: 'valor-', label: 'Menor valor restante' },
           { id: 'parcela', label: 'Maior parcela' }, { id: 'compra', label: 'Compra mais recente' }, { id: 'compra-', label: 'Compra mais antiga' }]} />
       {catOk && <div className="fat-tot" style={{ margin: '0 2px 8px' }}><span className="mut">{abertas.length} {abertas.length === 1 ? 'compra' : 'compras'} nesta categoria</span><b className="num">{brl(totFiltro)}</b></div>}
-      <m.div key={`${ordem}|${catOk}`} className="list" variants={listVariants} initial="hidden" animate="shown">
+      <m.div key={`${ordem}|${catOk}`} className="list" variants={listVariants} initial={jaMudou.current ? 'hidden' : false} animate="shown">
         {abertas.map((p) => {
           const c = p.lanc.cartaoId ? D.cartoes.find((x) => x.id === p.lanc.cartaoId) : undefined;
           return (

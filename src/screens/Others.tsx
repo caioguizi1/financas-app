@@ -61,7 +61,7 @@ export function Extrato() {
       <h1 style={{ marginBottom: 16 }}>Extrato</h1>
       <div className="mnav">
         <m.button whileTap={{ scale: 0.85 }} onClick={() => move(-1)} aria-label="Mês anterior">‹</m.button>
-        <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+        <AnimatePresence presenceAffectsLayout={false} mode="popLayout" initial={false} custom={dir}>
           <m.b key={`${y}-${mo}`} custom={dir} initial={{ x: dir * 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: dir * -30, opacity: 0 }} transition={spring}>{MESL[mo]} {y}</m.b>
         </AnimatePresence>
         <m.button whileTap={{ scale: 0.85 }} onClick={() => move(1)} aria-label="Próximo mês">›</m.button>
@@ -87,13 +87,13 @@ export function Extrato() {
           return (
             <m.div key={d} variants={itemVariants}>
               <div className="day"><span>{diaLabel(d)}{d > t ? ' · previsto' : ''}</span>{evd.length > 0 && <span className="num">{brl(tot, true)}</span>}</div>
-              {evd.length > 0 && <div className="list"><AnimatePresence initial={false}>
+              {evd.length > 0 && <div className="list"><AnimatePresence presenceAffectsLayout={false} initial={false}>
                 {evd.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}
               </AnimatePresence></div>}
               {(cartaoDia.get(d) ?? []).length > 0 && (
                 <>
                   <div className="nc-lab"><span>No cartão · sai na fatura</span><span className="num">{brl(-(cartaoDia.get(d) ?? []).reduce((s, x) => s + x.l.valor, 0))}</span></div>
-                  <div className="list nc-list"><AnimatePresence initial={false}>
+                  <div className="list nc-list"><AnimatePresence presenceAffectsLayout={false} initial={false}>
                     {(cartaoDia.get(d) ?? []).map((x) => <CompraCartaoItem key={`cc-${x.l.id}`} l={x.l} cartao={x.cartao} venc={x.venc} />)}
                   </AnimatePresence></div>
                 </>
@@ -137,7 +137,7 @@ export function Fixos() {
       <Aviso nivel={te - ts < 0 ? 'atencao' : 'bom'}>Sobra fixa de <b>{brl(te - ts, true)}</b> por mês, antes dos gastos do dia a dia.</Aviso>
       <div className="mut small" style={{ margin: '14px 2px -6px' }}>Deslize um item pro lado pra editar ou apagar.</div>
       <h2>Entradas</h2>
-      {ent.length > 0 && <Lista className="list"><AnimatePresence>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
+      {ent.length > 0 && <Lista className="list"><AnimatePresence presenceAffectsLayout={false}>{ent.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <div className="btn-row">
         <Button kind="ghost" onClick={() => openSheet(<RendaSheet />)}><CatGlyph cat="salario" ico="💼" />Minha renda</Button>
         <Button kind="ghost" onClick={() => openSheet(<EditRec tipo="entrada" />)}>＋ Outro fixo</Button>
@@ -146,14 +146,14 @@ export function Fixos() {
       <div className="mut small" style={{ margin: '-6px 2px 10px' }}>13º, PLR, férias, bônus… entram na projeção na data prevista.</div>
       {extras.length > 0 && (
         <Lista className="list">
-          <AnimatePresence initial={false}>
+          <AnimatePresence presenceAffectsLayout={false} initial={false}>
             {extras.map((l) => <EvItem key={l.id} e={{ data: l.data, valor: l.valor, desc: l.desc, cat: l.cat, ico: l.ico, ref: l.id, lanc: true, cartao: null, criado: l.criado }} />)}
           </AnimatePresence>
         </Lista>
       )}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<ExtraSheet />)}>＋ 13º, PLR, férias, bônus…</Button>
       <h2>Saídas</h2>
-      {sai.length > 0 && <Lista className="list"><AnimatePresence>{sai.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
+      {sai.length > 0 && <Lista className="list"><AnimatePresence presenceAffectsLayout={false}>{sai.map((x) => <RecItem key={x.r.id} r={x.r} prox={x.prox} />)}</AnimatePresence></Lista>}
       <Button kind="ghost" style={{ marginTop: 10 }} onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Gasto fixo</Button>
     </>
   );

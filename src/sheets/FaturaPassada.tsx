@@ -3,6 +3,7 @@
  * Abre pelo histórico de faturas do cartão (importadas ou lançadas à mão).
  */
 import { useState } from 'react';
+import { useAosPoucos } from '../ui/useAosPoucos';
 import { analisarFatura, parteDe, type Parte } from '../lib/analiseFatura';
 import { catN } from '../lib/categories';
 import { dm, mesCurto, monthKey, today } from '../lib/dates';
@@ -26,6 +27,8 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
   const [filtro, setFiltro] = useState<Filtro>('todas');
   const [ordem, setOrdem] = useState('data');
   const [cat, setCat] = useState<string | null>(null);
+  // as primeiras linhas montam junto com a janela; o resto (fora da tela) logo depois da animação de abrir
+
   const c = D.cartoes.find((x) => x.id === cartaoId);
   if (!c) return null;
   const A = analisarFatura(D, c, venc, today());
@@ -44,6 +47,7 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
     : ordem === 'valor-' ? Math.abs(a.e.valor) - Math.abs(b.e.valor)
     : dataDe(a).localeCompare(dataDe(b)) || a.e.valor - b.e.valor);
   const somaVis = -vis.reduce((s, x) => s + x.e.valor, 0);
+  const limite = useAosPoucos(vis.length, 24);
   const hoje = today();
 
   return (
@@ -70,7 +74,7 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
           opcoes={[{ id: 'data', label: 'Data (mais antiga)' }, { id: 'data-', label: 'Data (mais recente)' }, { id: 'valor', label: 'Maior valor' }, { id: 'valor-', label: 'Menor valor' }]} />
         <div className="fat-box">
           <div className="fat-itens">
-            {vis.map(({ e, l }, k) => (
+            {vis.slice(0, limite).map(({ e, l }, k) => (
               <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
                 <span><CatGlyph cat={e.cat} ico={e.ico} /></span>
                 <span className="m">

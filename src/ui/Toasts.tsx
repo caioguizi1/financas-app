@@ -7,7 +7,7 @@ export function Toasts() {
   const dismiss = useUI((s) => s.dismissToast);
   return (
     <div className="toast-host" aria-live="polite">
-      <AnimatePresence>
+      <AnimatePresence presenceAffectsLayout={false}>
         {toasts.map((t) => (
           <m.div
             key={t.id}

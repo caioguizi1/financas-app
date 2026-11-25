@@ -2,22 +2,16 @@ import { animate, m, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { brl, centsToStr } from '../lib/money';
-import { springSnappy } from './motion';
 
 /* ---------- valor grande que reage a cada dígito ---------- */
 export function AmountDisplay({ value, compact, onClick, ativo }: { value: number; compact?: boolean; onClick?: () => void; ativo?: boolean }) {
   const toque = onClick ? { role: 'button', tabIndex: 0, onClick, 'aria-label': ativo ? 'Valor (editando)' : 'Alterar valor', 'data-amount': '' } : {};
   return (
     <div className={`amount ${value ? '' : 'zero'} ${compact ? 'compact' : ''} ${onClick ? 'tap' : ''} ${ativo ? 'ativo' : ''}`} {...toque}>
-      <m.div
-        key={value}
-        className="v num"
-        initial={{ scale: value ? 1.035 : 1 }}
-        animate={{ scale: 1 }}
-        transition={springSnappy}
-      >
+      {/* pulso a cada dígito em CSS (antes: um componente animado por valor, caro ao abrir a janela) */}
+      <div key={value} className={`v num ${value ? 'pulse' : ''}`}>
         <small>R$</small>{centsToStr(value)}
-      </m.div>
+      </div>
     </div>
   );
 }
@@ -118,7 +112,7 @@ export function useTeclado(inicial: boolean) {
 
 export function TecladoRecolhivel({ aberto, onOk, children }: { aberto: boolean; onOk: () => void; children: ReactNode }) {
   return (
-    <AnimatePresence initial={false}>
+    <AnimatePresence presenceAffectsLayout={false} initial={false}>
       {aberto && (
         <m.div key="tec" data-teclado className="tec" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}>
           <div className="tec-bar"><button className="tec-ok" onClick={onOk}>OK</button></div>

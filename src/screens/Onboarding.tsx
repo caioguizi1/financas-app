@@ -157,7 +157,7 @@ export function Onboarding() {
           <Chip onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Outro</Chip>
         </div>
         {fix.length > 0 && <>
-          <m.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown"><AnimatePresence initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>
+          <m.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown"><AnimatePresence presenceAffectsLayout={false} initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>
           <div className="row" style={{ padding: '12px 4px' }}><span className="mut">Total fixo</span><span className="sp" /><b className="num"><AnimatedBRL value={-tot} /></b></div>
         </>}
       </>;
@@ -204,7 +204,7 @@ export function Onboarding() {
         <m.button whileTap={{ scale: 0.9 }} className="back" onClick={() => go(-1)} aria-label="Voltar"><IBack /></m.button>
         <div className="sp"><div className="bar"><m.i animate={{ width: `${pct}%` }} transition={spring} /></div></div>
       </div>
-      <AnimatePresence mode="wait" custom={dir} initial={false}>
+      <AnimatePresence presenceAffectsLayout={false} mode="wait" custom={dir} initial={false}>
         <m.div key={step} className="body" custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={{ ...spring, opacity: { duration: 0.18 } }}>
           {body}
         </m.div>

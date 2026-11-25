@@ -33,7 +33,6 @@ function Tela({ visivel, children }: { visivel: boolean; children: React.ReactNo
 export default function App() {
   const onboarded = useData().onboarded;
   const tab = useUI((s) => s.tab);
-  const sheetOpen = useUI((s) => !!s.sheet);
   const arrasto = useArrastoAbas();
   const [, tick] = useState(0);
   const [visitadas, setVisitadas] = useState<Set<Tab>>(() => new Set([tab]));
@@ -82,7 +81,7 @@ export default function App() {
 
   return (
       <div id="app">
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence presenceAffectsLayout={false} mode="wait" initial={false}>
           {!onboarded ? (
             <m.div key="ob" exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }}><Onboarding /></m.div>
           ) : (
@@ -97,10 +96,7 @@ export default function App() {
                 <div className="tabs" data-tab={tab} {...arrasto.handlers}>
                   <span className="tab-pill" aria-hidden ref={arrasto.pillRef} />
                   {TABS.slice(0, 2).map((x) => <TabBtn key={x.id} {...x} />)}
-                  <m.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
-                    onClick={() => (sheetOpen ? useUI.getState().closeSheet() : openSheet(<QuickAdd />))}>
-                    <IPlus />
-                  </m.button>
+                  <Fab />
                   {TABS.slice(2).map((x) => <TabBtn key={x.id} {...x} />)}
                 </div>
               </nav>
@@ -177,6 +173,17 @@ function TabBtn({ id, label, Icon }: (typeof TABS)[number]) {
     <m.button whileTap={{ scale: 0.9 }} className={`tab ${on ? 'on' : ''}`} onClick={() => setTab(id)}>
       <span className="tab-ic"><Icon /></span>
       <span className="tab-l">{label}</span>
+    </m.button>
+  );
+}
+
+/** Botão + isolado: só ele escuta se há janela aberta (antes o App inteiro re-renderizava a cada abrir/fechar). */
+function Fab() {
+  const sheetOpen = useUI((s) => !!s.sheet);
+  return (
+    <m.button className="fab" aria-label="Lançar" whileTap={{ scale: 0.88 }} animate={{ rotate: sheetOpen ? 45 : 0 }} transition={spring}
+      onClick={() => (sheetOpen ? useUI.getState().closeSheet() : openSheet(<QuickAdd />))}>
+      <IPlus />
     </m.button>
   );
 }

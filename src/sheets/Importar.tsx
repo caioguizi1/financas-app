@@ -226,7 +226,7 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               <div className="m">
                 <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
                 <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}{i.adiado && <span className="tag tag-l" title="Compra pulada (Pula Compra): paga nesta fatura">PULADA</span>}</div>
-                <AnimatePresence initial={false}>
+                <AnimatePresence presenceAffectsLayout={false} initial={false}>
                   {catAberta === i.id && (
                     <Expande className="chips scroll" style={{ marginTop: 8 }}>
                       {(i.valor > 0 ? CAT_OUT : CAT_IN).map(([k, e, n]) => <Chip key={k} on={i.cat === k} onClick={() => mudarCat(i.id, k)}>{e} {n}</Chip>)}

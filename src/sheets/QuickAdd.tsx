@@ -46,7 +46,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   const primeiraVez = useRef(true);
   useEffect(() => {
     // centraliza o chip escolhido só na faixa de chips. Na abertura, só se ele não estiver entre os primeiros
-    // (que já aparecem) e depois da animação — ler a posição antes forçava o layout da janela inteira e travava.
+    // (que já aparecem), sem animação e logo no 1º quadro — não dá pra ver o movimento.
     const idx = cats.findIndex((c) => c[0] === cat);
     const centralizar = () => {
       const box = chipsRef.current, chip = box?.querySelector<HTMLElement>('.chip.on');
@@ -55,8 +55,9 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
     };
     if (primeiraVez.current) {
       if (idx < 3) { primeiraVez.current = false; return; }
-      const t = setTimeout(centralizar, 380);
-      return () => clearTimeout(t);
+      // posiciona no 1º quadro, enquanto a janela ainda está subindo (antes: 380 ms depois, e a fileira "pulava")
+      const r = requestAnimationFrame(centralizar);
+      return () => cancelAnimationFrame(r);
     }
     centralizar();
   }, [cat]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,7 +154,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
               <div className="pay-info">{meio === 'pix' ? <><Ico n="pix" size={16} />Sai na hora da sua conta · sem parcelas</> : <><Ico n="pixparc" size={16} />Cobrado mês a mês, fora do cartão</>}</div>
             )}
           </div>
-          <AnimatePresence initial={false}>
+          <AnimatePresence presenceAffectsLayout={false} initial={false}>
             {parcelado && (
               <Expande>
                 <div className="row" style={{ marginTop: 12 }}>
@@ -171,7 +172,7 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
               </Expande>
             )}
           </AnimatePresence>
-          <AnimatePresence initial={false}>
+          <AnimatePresence presenceAffectsLayout={false} initial={false}>
             {(cartao || parcelas > 1) && l.valor > 0 && (
               <Expande className="cronograma">
                 {cartao && (

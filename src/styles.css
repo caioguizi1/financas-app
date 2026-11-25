@@ -818,3 +818,11 @@ html { touch-action: manipulation }
 .smart-hint { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px }
 .nc-lab { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); font-weight: 600; padding: 10px 6px 6px; letter-spacing: .01em }
 .nc-list .item .t { color: var(--mut) }
+
+/* ===== animações leves em CSS (v2.33) ===== */
+@keyframes pulse-num { from { transform: scale(1.035) } to { transform: scale(1) } }
+.amount .v.pulse { animation: pulse-num .22s cubic-bezier(.2, .9, .3, 1.2) }
+@keyframes pula-ico { 0% { transform: scale(.3) rotate(-25deg); opacity: 0 } 70% { transform: scale(1.08) rotate(0); opacity: 1 } 100% { transform: scale(1) } }
+.smart-ico .pula { display: inline-flex; animation: pula-ico .34s cubic-bezier(.2, .9, .3, 1.2) }
+.smart-ico > span { display: inline-flex }
+@media (prefers-reduced-motion: reduce) { .amount .v.pulse, .smart-ico .pula { animation: none } }

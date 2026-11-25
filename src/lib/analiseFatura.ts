@@ -28,7 +28,18 @@ export const parteDe = (e: Evento): Parte | 'credito' => {
 
 const mesAnt = (c: Cartao, venc: ISODate, k: number) => { const v = parse(venc); return dateOf(v.getFullYear(), v.getMonth() + k, c.vencimento); };
 
+/** Guarda a análise até os dados mudarem (trocar filtro/ordem não recalcula tudo). */
+const memo = new WeakMap<Data, Map<string, ReturnType<typeof calcular>>>();
 export function analisarFatura(D: Data, c: Cartao, venc: ISODate, hoje?: ISODate) {
+  let m = memo.get(D);
+  if (!m) { m = new Map(); memo.set(D, m); }
+  const k = `${c.id}|${venc}|${hoje ?? ''}`;
+  let r = m.get(k);
+  if (!r) { r = calcular(D, c, venc, hoje); m.set(k, r); }
+  return r;
+}
+
+function calcular(D: Data, c: Cartao, venc: ISODate, hoje?: ISODate) {
   const f = fatura(D, c, venc, 'fechada');
   const partes = PARTES.map((p) => ({ ...p, valor: 0, n: 0 }));
   let creditos = 0, nCred = 0;

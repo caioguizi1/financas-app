@@ -20,7 +20,7 @@ export function ExtraSheet({ k }: { k?: string }) {
       <>
         <SheetHeader title="Recebimento extra" />
         <p className="mut small" style={{ marginBottom: 12 }}>Coloque na previsão o dinheiro que vai entrar fora do salário. O app já soma na projeção.</p>
-        <m.div className="extra-grid" variants={listVariants} initial="hidden" animate="shown">
+        <m.div className="extra-grid" variants={listVariants} initial={false} animate="shown">
           {EXTRAS.map((e) => (
             <m.button key={e.k} variants={itemVariants} whileTap={{ scale: 0.95 }} className="extra-card" onClick={() => setModelo(e)}>
               <span className="ex-ico"><CatGlyph cat={e.cat} ico={e.ico} size={24} /></span><span>{e.nome}</span>
