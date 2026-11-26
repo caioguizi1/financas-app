@@ -49,7 +49,7 @@ test('cadastro inicial do zero até a tela principal', { tag: '@safari' }, async
 /** Varredura: todas as abas e os primeiros itens/menus de cada uma, em vários tamanhos e temas. */
 for (const [nome, w, h, tema, emoji] of [['iPhone claro', 390, 844, 'light', false], ['iPhone escuro', 390, 844, 'dark', false], ['iPhone SE', 375, 667, 'light', false], ['tela estreita', 320, 640, 'dark', false], ['figuras em emoji', 390, 844, 'dark', true]] as const) {
   test(`varredura de todas as telas · ${nome}`, { tag: nome === 'iPhone claro' ? '@safari' : [] }, async ({ page }, info) => {
-    test.setTimeout(240_000);
+    test.setTimeout(360_000); // com 4 testes em paralelo numa máquina lenta, a varredura passou de 4 min (v2.40)
     await page.setViewportSize({ width: w, height: h });
     await page.emulateMedia({ colorScheme: tema });
     const erros = await abrir(page, realista());
