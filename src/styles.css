@@ -844,3 +844,6 @@ html { touch-action: manipulation }
 .chips.sem{grid-template-columns:repeat(7,1fr)}
 .chips.meses{grid-template-columns:repeat(6,1fr)}
 .chips.sem .chip,.chips.meses .chip{justify-content:center;padding-left:0;padding-right:0;min-width:0}
+
+/* v2.38 — figura sozinha numa caixa fica no centro (sem o espaço que a separa do texto) */
+.lucide.cat-g.solo, .chip .lucide.cat-g.solo, .btn .lucide.cat-g.solo, .emo.solo { margin: 0 }

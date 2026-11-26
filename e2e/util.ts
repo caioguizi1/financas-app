@@ -76,3 +76,29 @@ export const problemasNaTela = (page: Page) => page.evaluate(() => {
   }
   return [...new Set(out)].slice(0, 12);
 });
+
+/** Ícone sozinho numa caixa (quadradinho, botão redondo…) tem que estar no centro dela (tolerância 1 px). */
+export const iconesForaDoCentro = (page: Page) => page.evaluate(() => {
+  const out: string[] = [];
+  const icones = document.querySelectorAll<Element>('svg, .emo, .smart-ico > span, .ico > span, .in-ico > span');
+  for (const ic of icones) {
+    const pai = ic.parentElement;
+    if (!pai || ic.closest('.chart') || pai.closest('svg')) continue;
+    // sozinho: a caixa não tem outro elemento nem texto além do ícone
+    const outros = [...pai.childNodes].filter((n) => n !== ic && (n.nodeType === 1 ? (n as HTMLElement).getBoundingClientRect().width > 0 : (n.textContent ?? '').trim()));
+    if (outros.length) continue;
+    const r = ic.getBoundingClientRect(), b = pai.getBoundingClientRect();
+    if (!r.width || !b.width || b.width > 90 || b.height > 90 || r.width >= b.width - 1) continue; // só caixas pequenas com folga
+    const cs = getComputedStyle(pai);
+    if (cs.visibility === 'hidden' || +cs.opacity === 0) continue;
+    const bl = parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft), br = parseFloat(cs.borderRightWidth) + parseFloat(cs.paddingRight);
+    const bt = parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop), bb = parseFloat(cs.borderBottomWidth) + parseFloat(cs.paddingBottom);
+    const dx = (r.left + r.width / 2) - (b.left + bl + (b.width - bl - br) / 2);
+    const dy = (r.top + r.height / 2) - (b.top + bt + (b.height - bt - bb) / 2);
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1.5) {
+      const nome = (e: Element) => e.tagName.toLowerCase() + (typeof (e as HTMLElement).className === 'string' && (e as HTMLElement).className ? '.' + (e as HTMLElement).className.trim().split(/\s+/).slice(0, 2).join('.') : '');
+      out.push(`${nome(pai)} > ${ic.tagName.toLowerCase()} (${ic.getAttribute('class')?.split(' ').slice(0, 2).join('.') ?? ''}): ${dx.toFixed(1)} px ${dx < 0 ? '←' : '→'}, ${dy.toFixed(1)} px ${dy < 0 ? '↑' : '↓'}`);
+    }
+  }
+  return [...new Set(out)];
+});

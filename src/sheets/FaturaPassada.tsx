@@ -76,7 +76,7 @@ export function FaturaPassadaSheet({ cartaoId, venc, voltar }: { cartaoId: strin
           <div className="fat-itens">
             {vis.slice(0, limite).map(({ e, l }, k) => (
               <button key={k} className="fat-it" onClick={() => l && openSheet(<QuickAdd lanc={l} />)} disabled={!l}>
-                <span><CatGlyph cat={e.cat} ico={e.ico} /></span>
+                <span><CatGlyph cat={e.cat} ico={e.ico} solo /></span>
                 <span className="m">
                   <span className="m-n">{nomeExib(e.desc)}{e.fixo ? ' · fixo' : ''}</span>
                   <span className="fp-sub">{l ? fmt(l.data) : fmt(e.data)}{e.adiado && <span className="tag" title="Compra pulada (Pula Compra): paga nesta fatura">PULADA</span>}</span>

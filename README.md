@@ -57,6 +57,7 @@ publicação**. Se qualquer etapa falhar, nada é publicado e a versão anterior
 - **No GitHub Actions (cada execução):** o resumo aparece no *Summary* da execução de "Testar e publicar", e o
   relatório HTML completo, com **print de cada etapa** e o *trace* (passo a passo) de qualquer falha, fica no
   artefato `evidencias-e2e` por 90 dias (o máximo do GitHub para repositório público).
+- **Navegadores:** Chromium em todos os testes; os principais (marcados `@safari`) também no **WebKit**, o motor do Safari do iPhone, só no GitHub.
 - **Dados dos testes:** sempre fictícios (`e2e/dados.ts`), com data fixa (25/11/2026) para a evidência ser
   reproduzível. Faturas reais nunca entram no repositório.
 
@@ -80,6 +81,7 @@ Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5
 - Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
 
 ## Versões
+- **v2.38.0** — gráfico do Início corrigido no iPhone: a linha era desenhada com `pathLength`, que o Safari ignora com traço de espessura fixa (ficava pontilhada/oca e acabava antes do fim); agora é revelada por máscara. Figuras de categoria sozinhas num quadradinho (campo do ＋, faturas, extras, Minha renda, filtro) estavam 3 px à esquerda; centralizadas. Testes: auditoria de ícones fora do centro em todas as telas (inclusive modo emoji), teste do gráfico, e os testes principais também no **Safari (WebKit)** no GitHub.
 - **v2.37.0** — fixos que se repetem **toda semana** ou **todo ano** (além de todo mês), no ＋ e em Fixos, com a média mensal nos totais; aviso quando já existe um fixo com o mesmo nome; **lembrete de backup** (Ajustes e Início) quando nunca fez ou faz mais de 30 dias; nota quando boa parte da projeção é **estimativa** dos cartões; cadastro sem a piscada em branco entre etapas (317 → 66 ms). **Testes E2E no repositório** (Playwright, dados fictícios) rodando no GitHub antes de publicar, com evidência em `docs/evidencias/`.
 - **v2.36.0** — "Repete todo mês" no ＋: transforma o lançamento (saída ou entrada) em fixo no dia da data escolhida, com a mesma forma de pagamento (Pix/débito, cartão ou boleto), a partir daquele mês. Também converte um lançamento seu já salvo (sem contar duas vezes). Dicionário: "Assinatura"/IPTV vai para Assinaturas, mesmo com "TV" no nome.
 - **v2.35.0** — dicionário ampliado: utensílios de cozinha, iluminação e casa inteligente (lâmpadas, LED, Alexa), cama/mesa/banho, limpeza, ferramentas, móveis e plantas vão para Casa; itens de mercado (arroz, leite, água mineral, óleo de soja…) e de higiene (desodorante, fio dental…) também. Correção: "Lâmpadas Smart" caía em Saúde porque "smart" era lido como começo de "Smart Fit".

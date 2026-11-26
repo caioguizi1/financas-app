@@ -3,7 +3,7 @@ import { realista, vazio } from './dados';
 import { aba, abrir, dados, evidencia, fecharSheet, novoLancamento } from './util';
 
 test.describe('Lançar pelo ＋', () => {
-  test('teclado só aparece ao tocar no valor e some no OK', async ({ page }, info) => {
+  test('teclado só aparece ao tocar no valor e some no OK', { tag: '@safari' }, async ({ page }, info) => {
     const erros = await abrir(page, vazio());
     await page.locator('.fab').click();
     await page.waitForTimeout(500);
@@ -20,7 +20,7 @@ test.describe('Lançar pelo ＋', () => {
     expect(erros).toEqual([]);
   });
 
-  test('saída no Pix entra no extrato e baixa o saldo', async ({ page }, info) => {
+  test('saída no Pix entra no extrato e baixa o saldo', { tag: '@safari' }, async ({ page }, info) => {
     const erros = await abrir(page, vazio());
     await novoLancamento(page, '2590', 'Padaria');
     await page.locator('.sheet [data-primary]').click();
@@ -35,7 +35,7 @@ test.describe('Lançar pelo ＋', () => {
     expect(erros).toEqual([]);
   });
 
-  test('compra no cartão vai pra fatura (não sai da conta hoje)', async ({ page }, info) => {
+  test('compra no cartão vai pra fatura (não sai da conta hoje)', { tag: '@safari' }, async ({ page }, info) => {
     const erros = await abrir(page, realista());
     const antes = await page.locator('.hero .big').innerText();
     await novoLancamento(page, '12000', 'Tênis');

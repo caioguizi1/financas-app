@@ -181,8 +181,8 @@ export function Ajustes() {
         {D.cartoes.length > 0 && <Row ico={<Ico n="carteira" size={20} />} t="Carteira e faturas" s={D.cartoes.map((c) => c.nome).join(', ')} onClick={() => openSheet(<CarteiraSheet />)} />}
         <Row ico={<Ico n="importar" size={20} />} t="Importar fatura ou extrato" s="Opcional · CSV, OFX ou PDF" onClick={() => openSheet(<ImportarSheet />)} />
         <Row ico={<Ico n="saldo" size={20} />} t="Conferir saldo com o banco" s={`Último ajuste: ${dm(D.saldo.data)}`} onClick={() => openSheet(<AjustarSaldo />)} />
-        <Row ico={<CatGlyph cat="salario" ico="💼" size={20} />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
-        <Row ico={<CatGlyph cat="extra" ico="🎁" size={20} />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
+        <Row ico={<CatGlyph cat="salario" ico="💼" size={20} solo />} t="Minha renda" s={resumoRenda()} onClick={() => openSheet(<RendaSheet />)} />
+        <Row ico={<CatGlyph cat="extra" ico="🎁" size={20} solo />} t="Recebimentos extras" s="13º, PLR, férias, bônus, IR" onClick={() => openSheet(<ExtraSheet />)} />
       </Lista>
       <h2>Cartões</h2>
       {D.cartoes.length > 0 && (

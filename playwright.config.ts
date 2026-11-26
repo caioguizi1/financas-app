@@ -18,6 +18,11 @@ export default defineConfig({
     ['html', { open: 'never', outputFolder: 'relatorio-e2e' }],
     ['json', { outputFile: 'relatorio-e2e/resultado.json' }],
   ],
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+    // Safari (WebKit): o motor do iPhone. Só no GitHub (aqui o download do WebKit é bloqueado), nos testes @safari.
+    ...(process.env.CI ? [{ name: 'safari', grep: /@safari/, use: { browserName: 'webkit' as const, deviceScaleFactor: 3 } }] : []),
+  ],
   use: {
     baseURL: 'http://localhost:4173/financas-app/',
     browserName: 'chromium',

@@ -13,7 +13,7 @@ const walk = (s, grupo = '') => {
     const prints = res.attachments.filter((a) => a.contentType === 'image/png').length;
     const nota = t.annotations.filter((a) => a.type === 'cobertura').map((a) => a.description).join('');
     const status = res.status === 'passed' ? (t.results.length > 1 ? '⚠️ passou na 2ª' : '✅') : '❌';
-    linhas.push({ grupo: grupo || sp.file.replace(/\.spec\.ts$/, ''), nome: sp.title, status, seg: (res.duration / 1000).toFixed(1), prints, nota, ok: res.status === 'passed' });
+    linhas.push({ nav: t.projectName === 'safari' ? 'Safari (WebKit)' : 'Chromium', grupo: grupo || sp.file.replace(/\.spec\.ts$/, ''), nome: sp.title, status, seg: (res.duration / 1000).toFixed(1), prints, nota, ok: res.status === 'passed' });
   }
 };
 walk(r);
@@ -24,9 +24,10 @@ const quando = inicio.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 console.log(`# Evidência E2E · v${versao}\n`);
 console.log(`- **Resultado:** ${ok}/${linhas.length} testes passaram ${ok === linhas.length ? '✅' : '❌'}`);
 console.log(`- **Quando:** ${quando} (horário de Brasília) · duração ${((r.stats?.duration ?? 0) / 1000).toFixed(0)} s`);
-console.log(`- **Ambiente:** Chromium (Playwright ${r.config?.version ?? ''}), tela de iPhone 390×844 (+ 375×667 e 320×640 na varredura), dados fictícios, data fixa 25/11/2026`);
+const navs = [...new Set(linhas.map((l) => l.nav))].join(' e ');
+console.log(`- **Ambiente:** ${navs} (Playwright ${r.config?.version ?? ''}), tela de iPhone 390×844 (+ 375×667 e 320×640 na varredura), dados fictícios, data fixa 25/11/2026`);
 console.log(`- **Prints de cada etapa:** relatório HTML no artefato \`evidencias-e2e\` da execução no GitHub Actions\n`);
-console.log('| | Teste | Grupo | Tempo | Prints | Cobertura |');
-console.log('|---|---|---|---|---|---|');
-for (const l of linhas) console.log(`| ${l.status} | ${l.nome} | ${l.grupo} | ${l.seg} s | ${l.prints} | ${l.nota} |`);
+console.log('| | Teste | Navegador | Grupo | Tempo | Prints | Cobertura |');
+console.log('|---|---|---|---|---|---|---|');
+for (const l of linhas) console.log(`| ${l.status} | ${l.nome} | ${l.nav} | ${l.grupo} | ${l.seg} s | ${l.prints} | ${l.nota} |`);
 if (ok !== linhas.length) process.exitCode = 1;

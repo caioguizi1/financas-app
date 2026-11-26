@@ -14,7 +14,7 @@ export function SmartDesc({ value, onChange, ico, cat, placeholder, autoFocus }:
     <div className="smart-desc">
       <div className="smart-ico">
         {/* "pulo" do ícone em CSS; na abertura não anima (só quando a categoria muda) */}
-        <IcoPula k={ico + cat}><CatGlyph cat={cat} ico={ico} size={19} /></IcoPula>
+        <IcoPula k={ico + cat}><CatGlyph cat={cat} ico={ico} size={19} solo /></IcoPula>
       </div>
       <input className="field" placeholder={placeholder} value={value} autoFocus={autoFocus} enterKeyHint="done"
         onChange={(e) => onChange(e.target.value)}

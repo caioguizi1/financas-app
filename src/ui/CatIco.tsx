@@ -45,13 +45,14 @@ export const useEstiloIco = () => useSyncExternalStore(assinarEstiloIco, getEsti
 const corDe = (cat: string) => COR_CAT[cat] ?? COR_CAT.outros;
 const icoDe = (cat: string, ico?: string) => (ico && ICO_EMOJI[ico]) || ICO_CAT[cat] || Ellipsis;
 
-/** Figura em linha (chips, listas compactas, sugestão): emoji ou ícone colorido. */
-export function CatGlyph({ cat, ico, size = 16, forcar }: { cat: string; ico?: string; size?: number; forcar?: EstiloIco }) {
+/** Figura em linha (chips, listas compactas, sugestão): emoji ou ícone colorido.
+ *  `solo`: sozinha numa caixa (quadradinho, campo) — sem o espaço que separa do texto, pra ficar no centro. */
+export function CatGlyph({ cat, ico, size = 16, forcar, solo }: { cat: string; ico?: string; size?: number; forcar?: EstiloIco; solo?: boolean }) {
   const atual = useEstiloIco();
   const estilo = forcar ?? atual;
-  if (estilo === 'emoji') return <span className="emo" aria-hidden>{ico || catE(cat)}</span>;
+  if (estilo === 'emoji') return <span className={solo ? 'emo solo' : 'emo'} aria-hidden>{ico || catE(cat)}</span>;
   const I = icoDe(cat, ico);
-  return <I size={size} strokeWidth={2} className="cat-g" style={{ ['--c' as string]: corDe(cat) } as CSSProperties} aria-hidden />;
+  return <I size={size} strokeWidth={2} className={solo ? 'cat-g solo' : 'cat-g'} style={{ ['--c' as string]: corDe(cat) } as CSSProperties} aria-hidden />;
 }
 
 /** Quadradinho/círculo das listas (extrato, fixos, parcelas, importação). */

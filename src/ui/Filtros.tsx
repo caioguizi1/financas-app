@@ -24,7 +24,7 @@ export function FiltroBar({ ordem, setOrdem, opcoes, cats, cat, setCat }: {
       </label>
       {cats.length > 1 && (
         <label className={`fsel ${cat ? 'on' : ''}`}>
-          {cat ? <CatGlyph cat={cat} size={15} /> : <Ico n="filtro" size={15} />}
+          {cat ? <CatGlyph cat={cat} size={15} solo /> : <Ico n="filtro" size={15} />}
           <span className="fsel-t">{cat ? catN(cat) : 'Categoria'}</span>
           <select aria-label="Categoria" value={cat ?? ''} onChange={(e) => setCat(e.target.value || null)}>
             <option value="">Todas as categorias</option>

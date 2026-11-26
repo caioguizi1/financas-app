@@ -20,7 +20,7 @@ test.describe('Fixos: repetir todo mês, semana ou ano', () => {
     expect(erros).toEqual([]);
   });
 
-  test('pelo ＋: toda semana e todo ano', async ({ page }, info) => {
+  test('pelo ＋: toda semana e todo ano', { tag: '@safari' }, async ({ page }, info) => {
     const erros = await abrir(page, vazio());
     await novoLancamento(page, '8000', 'Feira');
     await page.locator('.sheet input[type=date]').fill('2026-11-28'); // sábado

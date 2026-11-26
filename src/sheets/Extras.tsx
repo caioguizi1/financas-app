@@ -23,7 +23,7 @@ export function ExtraSheet({ k }: { k?: string }) {
         <m.div className="extra-grid" variants={listVariants} initial={false} animate="shown">
           {EXTRAS.map((e) => (
             <m.button key={e.k} variants={itemVariants} whileTap={{ scale: 0.95 }} className="extra-card" onClick={() => setModelo(e)}>
-              <span className="ex-ico"><CatGlyph cat={e.cat} ico={e.ico} size={24} /></span><span>{e.nome}</span>
+              <span className="ex-ico"><CatGlyph cat={e.cat} ico={e.ico} size={24} solo /></span><span>{e.nome}</span>
             </m.button>
           ))}
         </m.div>

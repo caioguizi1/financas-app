@@ -4,7 +4,7 @@ import { HOJE, realista } from './dados';
 import { aba, abrir, dados, evidencia } from './util';
 
 test.describe('Seus dados: backup, restauração e sem internet', () => {
-  test('exportar → apagar tudo → restaurar devolve tudo igual', async ({ page }, info) => {
+  test('exportar → apagar tudo → restaurar devolve tudo igual', { tag: '@safari' }, async ({ page }, info) => {
     const D = realista();
     delete D.backupEm;
     const erros = await abrir(page, D);

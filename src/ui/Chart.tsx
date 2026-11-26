@@ -49,16 +49,18 @@ export function BalanceChart({ pts, onScrub }: { pts: Ponto[]; onScrub: (i: numb
           </linearGradient>
           <clipPath id={`a${id}`}><rect x="0" y="0" width={W} height={zeroY} /></clipPath>
           <clipPath id={`b${id}`}><rect x="0" y={zeroY} width={W} height={H} /></clipPath>
+          {/* revela a linha da esquerda pra direita. Não usar pathLength: com vector-effect=non-scaling-stroke
+              o Safari ignora o pathLength e desenha o tracejado "1px 1px" literal (linha pontilhada/oca, cortada no fim). */}
+          <clipPath id={`r${id}`}><m.rect x="0" y="0" height={H} initial={{ width: 0 }} animate={{ width: W }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} /></clipPath>
         </defs>
         {ticks.map((i) => <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H} stroke="rgba(255,255,255,.07)" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />)}
         {neg && <line x1="0" x2={W} y1={zeroY} y2={zeroY} stroke="rgba(255,255,255,.25)" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
         <m.path d={area} fill={`url(#g${id})`} clipPath={`url(#a${id})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.35 }} />
-        <m.path d={line} fill="none" stroke="#9A8CFF" strokeOpacity={0.25} strokeWidth={7} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`}
-          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
-        <m.path d={line} fill="none" stroke="#B9AFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`}
-          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
-        <m.path d={line} fill="none" stroke="#E0577F" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#b${id})`}
-          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
+        <g clipPath={`url(#r${id})`}>
+          <path d={line} fill="none" stroke="#9A8CFF" strokeOpacity={0.25} strokeWidth={7} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`} />
+          <path d={line} fill="none" stroke="#B9AFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`} />
+          <path d={line} fill="none" stroke="#E0577F" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#b${id})`} />
+        </g>
         <line ref={crossRef} x1="0" x2="0" y1={PT - 6} y2={H} stroke="rgba(255,255,255,.55)" vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
       </svg>
       <div className="xl">

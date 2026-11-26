@@ -52,7 +52,7 @@ jobs:
       - name: Build
         run: npx vite build
       - name: Navegador dos testes
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
       - name: Testes E2E
         run: npx playwright test
         env:

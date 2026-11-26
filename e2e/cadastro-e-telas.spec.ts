@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { realista } from './dados';
-import { abrir, dados, evidencia, fecharSheet, problemasNaTela } from './util';
+import { abrir, dados, evidencia, fecharSheet, iconesForaDoCentro, problemasNaTela } from './util';
 
-test('cadastro inicial do zero até a tela principal', async ({ page }, info) => {
+test('cadastro inicial do zero até a tela principal', { tag: '@safari' }, async ({ page }, info) => {
   const erros = await abrir(page, null);
   const continuar = async (texto = 'Continuar') => { await page.locator('.foot button', { hasText: texto }).first().click(); };
   // espera a pergunta da etapa aparecer antes de agir (não um tempo fixo: com a máquina carregada a transição demora)
@@ -47,14 +47,15 @@ test('cadastro inicial do zero até a tela principal', async ({ page }, info) =>
 });
 
 /** Varredura: todas as abas e os primeiros itens/menus de cada uma, em vários tamanhos e temas. */
-for (const [nome, w, h, tema] of [['iPhone claro', 390, 844, 'light'], ['iPhone escuro', 390, 844, 'dark'], ['iPhone SE', 375, 667, 'light'], ['tela estreita', 320, 640, 'dark']] as const) {
-  test(`varredura de todas as telas · ${nome}`, async ({ page }, info) => {
+for (const [nome, w, h, tema, emoji] of [['iPhone claro', 390, 844, 'light', false], ['iPhone escuro', 390, 844, 'dark', false], ['iPhone SE', 375, 667, 'light', false], ['tela estreita', 320, 640, 'dark', false], ['figuras em emoji', 390, 844, 'dark', true]] as const) {
+  test(`varredura de todas as telas · ${nome}`, { tag: nome === 'iPhone claro' ? '@safari' : [] }, async ({ page }, info) => {
     test.setTimeout(240_000);
     await page.setViewportSize({ width: w, height: h });
     await page.emulateMedia({ colorScheme: tema });
     const erros = await abrir(page, realista());
+    if (emoji) { await page.evaluate(() => localStorage.setItem('fluxo.icones', 'emoji')); await page.reload(); await page.waitForTimeout(600); }
     const achados: Record<string, string[]> = {};
-    const checar = async (onde: string) => { const r = await problemasNaTela(page); if (r.length) achados[onde] = r; };
+    const checar = async (onde: string) => { const r = [...(await problemasNaTela(page)), ...(await iconesForaDoCentro(page)).map((x) => `ícone fora do centro: ${x}`)]; if (r.length) achados[onde] = r; };
     const abas = (await page.locator('.tab').allInnerTexts()).map((t) => t.trim());
     let abertos = 0;
     const falhas: string[] = [];
@@ -100,4 +101,26 @@ test('nota de estimativa quando o gasto típico do cartão pesa na projeção', 
   await abrir(page, realista());
   await expect(page.locator('.est-nota')).toContainText('estimativa');
   await evidencia(page, info, 'nota de estimativa na tela principal');
+});
+
+/** Gráfico do Início: a linha vai de ponta a ponta e não usa traço tracejado (pathLength),
+ *  que no Safari virava linha pontilhada/oca e cortada antes do fim (corrigido na v2.38). */
+test('gráfico do saldo: linha contínua até o fim', { tag: '@safari' }, async ({ page }, info) => {
+  const erros = await abrir(page, realista());
+  await page.waitForTimeout(1600); // revelação da linha
+  const g = await page.evaluate(() => {
+    const svg = document.querySelector('.chart svg')!;
+    const r = svg.getBoundingClientRect();
+    const linhas = [...svg.querySelectorAll('path[fill="none"]')];
+    return {
+      tracejado: linhas.map((p) => [p.getAttribute('pathLength'), getComputedStyle(p).strokeDasharray]).filter(([pl, da]) => pl || (da && da !== 'none')),
+      fimDaLinha: Math.max(...linhas.map((p) => p.getBoundingClientRect().right)) - r.right,
+      inicio: Math.min(...linhas.map((p) => p.getBoundingClientRect().left)) - r.left,
+    };
+  });
+  await info.attach('gráfico', { body: await page.locator('.chart').screenshot(), contentType: 'image/png' });
+  expect(g.tracejado).toEqual([]);
+  expect(Math.abs(g.fimDaLinha)).toBeLessThan(4);
+  expect(Math.abs(g.inicio)).toBeLessThan(4);
+  expect(erros).toEqual([]);
 });
