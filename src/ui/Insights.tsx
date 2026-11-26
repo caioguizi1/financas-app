@@ -1,8 +1,8 @@
 import { m } from 'motion/react';
 import { useMemo } from 'react';
 import { Lista } from './Lista';
-import { monthKey, parse, today } from '../lib/dates';
-import { gerarInsights, type Insight } from '../lib/insights';
+import { mesCurto, today } from '../lib/dates';
+import { fixoDoLancamento, gerarInsights, type Insight } from '../lib/insights';
 import { uid } from '../lib/money';
 import { closeSheet, getData, openSheet, useData, withUndo } from '../store';
 import { SheetHeader } from './Sheet';
@@ -19,10 +19,8 @@ function agir(i: Insight) {
   const id = i.acao.lancId;
   const l = getData().lancamentos.find((x) => x.id === id);
   if (!l) return;
-  withUndo(`"${l.desc}" virou fixo`, (d) => ({
-    ...d,
-    recorrentes: [...d.recorrentes, { id: uid(), tipo: 'saida', desc: l.desc, cat: l.cat, ico: l.ico, valor: l.valor, dia: parse(l.data).getDate(), inicio: monthKey(today()), cartaoId: l.cartaoId ?? null }],
-  }));
+  const r = fixoDoLancamento(l, today(), uid());
+  withUndo(`"${l.desc}" virou fixo, a partir de ${mesCurto(r.inicio)}`, (d) => ({ ...d, recorrentes: [...d.recorrentes, r] }));
 }
 
 /** Carrossel de insights no Início. */

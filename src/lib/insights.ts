@@ -11,7 +11,7 @@ import { normalizar } from './smart';
 import { porMes as mediaMes } from './recorrencia';
 import { diasSemBackup, lembrarBackup } from './backupInfo';
 import { ativaEm } from './versions';
-import type { Data, ISODate, Lancamento } from './types';
+import type { Data, ISODate, Lancamento, Recorrente } from './types';
 import { nomeVisivel } from './nomes';
 
 export type Tom = 'bom' | 'alerta' | 'info';
@@ -208,4 +208,17 @@ export function trechoNegativo(pts: Ponto[]): TrechoNegativo | null {
   let j = i;
   for (; j < pts.length && pts[j].v < 0; j++) if (pts[j].v < pior.v) pior = pts[j];
   return { inicio: pts[i], pior, volta: pts[j] };
+}
+
+/**
+ * "Virar fixo" a partir de um gasto que se repete. Começa no mês SEGUINTE ao último lançamento quando
+ * esse mês já foi lançado (senão o mês contava duas vezes: o fixo e a compra — corrigido na v2.40).
+ */
+export function fixoDoLancamento(l: Lancamento, hoje: ISODate, id: string): Recorrente {
+  const mk = monthKey(hoje), ml = monthKey(l.data);
+  return {
+    id, tipo: 'saida', desc: l.desc, cat: l.cat, ico: l.ico, valor: l.valor, dia: parse(l.data).getDate(),
+    inicio: ml >= mk ? addMonths(ml, 1) : mk,
+    ...(l.cartaoId ? { cartaoId: l.cartaoId, meio: 'credito' as const } : { cartaoId: null, meio: l.meio === 'boleto' ? 'boleto' as const : 'pix' as const }),
+  };
 }

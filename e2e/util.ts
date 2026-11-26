@@ -74,6 +74,10 @@ export const problemasNaTela = (page: Page) => page.evaluate(() => {
     if (!el.children.length && el.textContent?.trim() && el.scrollWidth > el.clientWidth + 1 && cs.overflow !== 'visible' && cs.textOverflow !== 'ellipsis')
       out.push(`texto cortado: "${el.textContent.trim().slice(0, 40)}"`);
   }
+  // botão principal (roxo): texto branco em qualquer tema (no claro herdava a cor escura do tema — v2.40)
+  for (const b of document.querySelectorAll<HTMLElement>('[data-primary]')) {
+    if (b.checkVisibility() && getComputedStyle(b).color !== 'rgb(255, 255, 255)') out.push(`botão principal sem texto branco: "${b.innerText.trim().slice(0, 30)}" (${getComputedStyle(b).color})`);
+  }
   return [...new Set(out)].slice(0, 12);
 });
 

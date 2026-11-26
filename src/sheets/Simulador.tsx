@@ -108,7 +108,8 @@ export function Simulador() {
         <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad small value={valor} onChange={(v) => { setValor(v); }} /></TecladoRecolhivel>
         <div className="actions tight">
           <Button disabled={!sel} onClick={() => sel && lancar(sel)}>{sel ? `Lançar ${rotuloOpcao(sel.parcelas).toLowerCase()}${cartao ? ` no ${cartao.nome}` : ' no Pix'}` : 'Lançar'}</Button>
-          {sel && <Button kind="ghost" onClick={verNoGrafico}>Ver no gráfico</Button>}
+          {/* sempre presente (inativo sem valor): se aparecesse no 1º dígito, o teclado subia e o dedo errava a tecla */}
+          <Button kind="ghost" disabled={!sel} onClick={verNoGrafico}>Ver no gráfico</Button>
         </div>
       </div>
     </div>
