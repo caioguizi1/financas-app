@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { realista, vazio } from './dados';
-import { aba, abrir, dados, evidencia, novoLancamento } from './util';
+import { aba, abrir, dados, evidencia, fecharSheet, novoLancamento } from './util';
 
 test.describe('Fixos: repetir todo mês, semana ou ano', () => {
   test('pelo ＋: todo mês no cartão, no dia da data escolhida', async ({ page }, info) => {
@@ -70,8 +70,7 @@ test.describe('Fixos: repetir todo mês, semana ou ano', () => {
     await expect(page.locator('.sheet .av')).toContainText('Você já tem Internet em Fixos');
     await expect(page.locator('.sheet [data-primary]')).toHaveText('Salvar outro fixo mesmo assim');
     await evidencia(page, info, 'aviso de fixo repetido no ＋');
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
+    await fecharSheet(page);
     await aba(page, 'Fixos');
     await page.getByRole('button', { name: '＋ Gasto fixo' }).click();
     await page.locator('.sheet .smart-desc input').fill('aluguel');

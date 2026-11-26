@@ -6,7 +6,7 @@ import { brl } from '../lib/money';
 import { closeSheet, getData, mutate, withUndo } from '../store';
 import { Button, Segmented } from '../ui/Controls';
 import { AmountDisplay, Keypad } from '../ui/Money';
-import { SheetHeader } from '../ui/Sheet';
+import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { CatGlyph } from '../ui/CatIco';
 import { nomeExib } from '../ui/nome';
 
@@ -16,6 +16,7 @@ export function AjustarSaldo() {
   const atual = projecao(D0, 0).saldoEm(hoje) ?? 0;
   const [v, setV] = useState(Math.abs(atual));
   const [sg, setSg] = useState<1 | -1>(atual < 0 ? -1 : 1);
+  useRascunho(v * sg !== atual); // digitou um saldo novo: fechar sem querer pergunta antes
   // o que está previsto pra hoje (salário, aluguel, fatura…): já caiu no banco ou ainda não?
   const doDia = eventosEntre(D0, hoje, hoje).filter((e) => !e.estimativa);
   const [pend, setPend] = useState<Set<string>>(() => new Set(D0.saldo.data === hoje ? D0.saldo.pendentes ?? [] : []));

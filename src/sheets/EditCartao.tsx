@@ -4,7 +4,7 @@ import { ajusteFatura, faturasAtuais } from '../lib/faturas';
 import { brl, uid } from '../lib/money';
 import type { Cartao, Lancamento } from '../lib/types';
 import { closeSheet, getData, mutate, openSheet, withUndo } from '../store';
-import { SheetHeader } from '../ui/Sheet';
+import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { Button, DayGrid } from '../ui/Controls';
 import { ValueRows } from '../ui/ValueRows';
 import { FaturasSheet } from './Faturas';
@@ -30,6 +30,10 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
   const [valores, setValores] = useState<Record<string, number>>({});
   const valorDe = (f: (typeof fats)[number]) => valores[f.vencimento] ?? f.total;
   const [ativa, setAtiva] = useState(0);
+  // mexeu em algo e não salvou? fechar sem querer pergunta antes
+  const [c0] = useState(() => JSON.stringify(c));
+  const sujo = JSON.stringify(c) !== c0 || estimativa !== (cartao?.estimativa ?? 0) || Object.keys(valores).length > 0;
+  useRascunho(sujo);
 
   const salvar = () => {
     if (!ok) return;
@@ -76,7 +80,7 @@ export function EditCartao({ cartao }: { cartao?: Cartao }) {
           </>
         )}
         {!novo && (
-          <Button kind="ghost" style={{ marginTop: 12 }} onClick={() => openSheet(<FaturasSheet cartaoId={cartao!.id} />)}>Ver compras de cada fatura e data de pagamento</Button>
+          <Button kind="ghost" style={{ marginTop: 12 }} disabled={sujo && !ok} onClick={() => { if (sujo) salvar(); openSheet(<FaturasSheet cartaoId={cartao!.id} />); }}>{sujo ? 'Salvar e ver as compras de cada fatura' : 'Ver compras de cada fatura e data de pagamento'}</Button>
         )}
       </div>
       <div className="sl-foot">

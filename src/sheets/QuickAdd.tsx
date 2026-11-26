@@ -10,6 +10,7 @@ import type { Lancamento, Meio, Recorrente } from '../lib/types';
 import { closeSheet, getData, mutate, openSheet, restore, toast, withUndo } from '../store';
 import { Button, Chip, Segmented, Stepper } from '../ui/Controls';
 import { AmountDisplay, Keypad, TecladoRecolhivel, useTeclado } from '../ui/Money';
+import { useRascunho } from '../ui/Sheet';
 import { SheetHeader } from '../ui/Sheet';
 import { Expande } from '../ui/Expande';
 import { ExtraSheet } from './Extras';
@@ -80,6 +81,10 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
   const parcelas = l.tipo === 'saida' && parcelado ? nParc : 1;
   const escolherMeio = (m: Meio, cartaoId: string | null = null) => { setMeio(m); set({ cartaoId }); };
   const total = parcelas > 1 && modoValor === 'parcela' ? l.valor * parcelas : l.valor;
+  // coisa digitada e não salva? (novo: qualquer valor ou nome; edição: qualquer mudança) — fechar sem querer pergunta antes
+  const assinatura = JSON.stringify([l, fixo, freqFixo, meio, parcEscolha, nParc, adiar, modoValor]);
+  const assinatura0 = useRef(assinatura);
+  useRascunho(novo ? l.valor > 0 || !!l.desc.trim() : assinatura !== assinatura0.current);
   const valorParcela = Math.floor(total / parcelas);
 
   // cronograma: quando cada parcela sai da conta (cartão = vencimento da fatura; boleto/Pix = mês a mês)
@@ -236,7 +241,7 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
           <div className="lab">Isso se repete?</div>
           <div className="chips">
             <Chip on={fixo} onClick={() => { if (!fixo && meio === 'pixparc') setMeio('pix'); setFixo((v) => !v); }}><Ico n="fixo" size={16} />{fixo ? rotuloFixo : 'Repete (fixo)'}</Chip>
-            {l.tipo === 'entrada' && <Chip onClick={() => openSheet(<ExtraSheet />)}><CatGlyph cat="extra" ico="🎁" />13º, PLR, férias…</Chip>}
+            {novo && l.tipo === 'entrada' && <Chip onClick={() => openSheet(<ExtraSheet rascunho={{ valor: l.valor, desc: l.desc, data: l.data }} />)}><CatGlyph cat="extra" ico="🎁" />13º, PLR, férias…</Chip>}
           </div>
           {fixo && (
             <>

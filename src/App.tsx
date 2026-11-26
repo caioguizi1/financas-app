@@ -67,8 +67,9 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const ui = useUI.getState();
-      if (e.key === 'Escape' && ui.sheet) return ui.closeSheet();
+      if (e.key === 'Escape' && ui.sheet) return ui.confirmarSaida ? useUI.setState({ confirmarSaida: false }) : ui.pedirFechar();
       if (e.key !== 'Enter' || e.defaultPrevented) return;
+      if (ui.confirmarSaida) { e.preventDefault(); return useUI.setState({ confirmarSaida: false }); } // "Sair sem salvar?": Enter = continuar editando
       const t = e.target as HTMLElement;
       if (t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'date') return;
       const scope = document.querySelector('.sheet') ?? document.querySelector('.ob .foot');

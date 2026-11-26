@@ -32,7 +32,9 @@ test.describe('Teclado não pula enquanto digita', () => {
       // sem esperar 30 s por um "Cancelar" que a janela pode não ter (com a máquina lenta isso estourava o tempo)
       for (let i = 0; i < 3 && (await page.locator('.sheet').count()); i++) {
         const c = page.locator('.sheet').getByRole('button', { name: 'Cancelar' });
-        if (await c.count()) await c.first().click({ timeout: 3000 }).catch(() => {}); else await page.keyboard.press('Escape');
+        const sair = page.locator('.sair').getByRole('button', { name: 'Sair sem salvar' }); // tinha coisa digitada
+        if (await sair.count()) await sair.click({ timeout: 3000 }).catch(() => {});
+        else if (await c.count()) await c.first().click({ timeout: 3000 }).catch(() => {}); else await page.keyboard.press('Escape');
         await page.waitForTimeout(500);
       }
     };

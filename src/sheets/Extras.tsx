@@ -7,18 +7,24 @@ import { brl, uid } from '../lib/money';
 import type { Lancamento } from '../lib/types';
 import { closeSheet, getData, openSheet, restore, mutate, toast } from '../store';
 import { Button, itemVariants, listVariants, Segmented, Stepper } from '../ui/Controls';
-import { SheetHeader } from '../ui/Sheet';
+import { SheetHeader, useRascunho } from '../ui/Sheet';
+import { QuickAdd } from './QuickAdd';
 import { ValueRows } from '../ui/ValueRows';
 import { CatGlyph, comFigura } from '../ui/CatIco';
 import { rendaAtual, RendaSheet } from './Renda';
 
 /** Recebimentos extras previstos: 13º, PLR, férias, bônus, IR... */
-export function ExtraSheet({ k }: { k?: string }) {
+/** Rascunho vindo do "＋" (Entrada): o que já foi digitado não se perde ao escolher o tipo de extra. */
+export type RascunhoExtra = { valor: number; desc: string; data: string };
+
+export function ExtraSheet({ k, rascunho }: { k?: string; rascunho?: RascunhoExtra }) {
   const [modelo, setModelo] = useState<ExtraModelo | undefined>(() => EXTRAS.find((e) => e.k === k));
+  useRascunho(!modelo && !!rascunho && (rascunho.valor > 0 || !!rascunho.desc.trim()));
   if (!modelo) {
+    const voltar = rascunho ? { label: 'Voltar', onClick: () => openSheet(<QuickAdd inicial={{ tipo: 'entrada', valor: rascunho.valor, desc: rascunho.desc, data: rascunho.data }} />) } : undefined;
     return (
       <>
-        <SheetHeader title="Recebimento extra" />
+        <SheetHeader title="Recebimento extra" voltar={voltar} />
         <p className="mut small" style={{ marginBottom: 12 }}>Coloque na previsão o dinheiro que vai entrar fora do salário. O app já soma na projeção.</p>
         <m.div className="extra-grid" variants={listVariants} initial={false} animate="shown">
           {EXTRAS.map((e) => (
@@ -30,10 +36,10 @@ export function ExtraSheet({ k }: { k?: string }) {
       </>
     );
   }
-  return <ExtraForm modelo={modelo} voltar={k ? undefined : () => setModelo(undefined)} />;
+  return <ExtraForm modelo={modelo} voltar={k ? undefined : () => setModelo(undefined)} valorDigitado={rascunho?.valor} />;
 }
 
-function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => void }) {
+function ExtraForm({ modelo, voltar, valorDigitado = 0 }: { modelo: ExtraModelo; voltar?: () => void; valorDigitado?: number }) {
   const hoje = today();
   const D = getData();
   const renda = rendaAtual().reduce((a, r) => a + r.valor, 0);
@@ -45,14 +51,19 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
   const brutoBase = folha?.bruto ?? (e13 && renda > 0 ? brutoDoLiquido(renda) : 0);
   const dec = e13 && brutoBase ? decimoTerceiro(brutoBase, folha?.dependentes ?? 0, meses) : null;
   const [n, setN] = useState(modelo.divisivel ? 1 : modelo.parcelas.length);
+  // valor já digitado no "＋": vira o valor da parcela única (PLR, bônus, outro)
+  const usaDigitado = valorDigitado > 0 && !!modelo.divisivel;
   const inicial = () => modelo.parcelas.map((p, i) => ({
     label: p.label,
-    valor: dec ? (i === 0 ? dec.parcela1 : dec.parcela2) : Math.round(renda * p.pct),
+    valor: usaDigitado && i === 0 ? valorDigitado : dec ? (i === 0 ? dec.parcela1 : dec.parcela2) : Math.round(renda * p.pct),
     data: p.data(hoje),
   }));
   const [linhas, setLinhas] = useState(inicial);
-  // mudou os meses trabalhados: recalcula as parcelas do 13º
-  useEffect(() => { if (dec) setLinhas(inicial()); }, [meses]);
+  // linhas que a pessoa já ajustou à mão: o recálculo não passa por cima delas
+  const [editadas, setEditadas] = useState<ReadonlySet<number>>(() => new Set(usaDigitado ? [0] : []));
+  useRascunho(editadas.size > 0);
+  // mudou os meses trabalhados: recalcula as parcelas do 13º (menos as que você digitou)
+  useEffect(() => { if (dec) { const novas = inicial(); setLinhas((ls) => ls.map((l, i) => (editadas.has(i) ? l : novas[i]))); } }, [meses]);
   const [ativa, setAtiva] = useState(0);
 
   // PLR: IR acumulado no ano (parcelas anteriores já lançadas + as desta tela)
@@ -95,7 +106,7 @@ function ExtraForm({ modelo, voltar }: { modelo: ExtraModelo; voltar?: () => voi
         linhas={usadas}
         ativa={ativa}
         onAtiva={setAtiva}
-        onValor={(i, v) => setLinhas((ls) => ls.map((l, j) => (j === i ? { ...l, valor: v } : l)))}
+        onValor={(i, v) => { setLinhas((ls) => ls.map((l, j) => (j === i ? { ...l, valor: v } : l))); setEditadas((e) => new Set(e).add(i)); }}
         onData={(i, d) => setLinhas((ls) => ls.map((l, j) => (j === i ? { ...l, data: d } : l)))}
       />
       {dec && (

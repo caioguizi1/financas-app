@@ -47,8 +47,11 @@ export async function novoLancamento(page: Page, centavos: string, desc?: string
 }
 
 export async function fecharSheet(page: Page) {
-  for (let i = 0; i < 3 && (await page.locator('.sheet').count()); i++) {
-    await page.keyboard.press('Escape');
+  for (let i = 0; i < 4 && (await page.locator('.sheet').count()); i++) {
+    // janela com coisa digitada pergunta "Sair sem salvar?" — nos testes, sai
+    const sair = page.locator('.sair').getByRole('button', { name: 'Sair sem salvar' });
+    if (await sair.count()) await sair.click();
+    else await page.keyboard.press('Escape');
     await page.waitForTimeout(450);
   }
 }

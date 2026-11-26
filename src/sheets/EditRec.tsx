@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { aprender, normalizar, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
@@ -9,7 +9,7 @@ import { VigenciaPicker } from './Renda';
 import { uid } from '../lib/money';
 import type { Recorrente, Tipo } from '../lib/types';
 import { closeSheet, getData, mutate, toast, withUndo } from '../store';
-import { SheetHeader } from '../ui/Sheet';
+import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { Button, Chip, DayGrid, Segmented } from '../ui/Controls';
 import { DIAS_SEMANA_CURTO, MES_CURTO, freqDe, quando, type Freq } from '../lib/recorrencia';
 import { Aviso } from '../ui/Aviso';
@@ -23,6 +23,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const novo = !rec?.id;
   const [r, setR] = useState<Draft>(() => rec ?? { tipo, desc: '', cat: tipo === 'entrada' ? 'salario' : 'contas', valor: 0, dia: null });
   const set = (p: Partial<Draft>) => setR((x) => ({ ...x, ...p }));
+  // coisa digitada e não salva? fechar sem querer pergunta antes (o modelo do cadastro, sem valor, não conta)
+  const r0 = useRef(JSON.stringify(r));
+  useRascunho(JSON.stringify(r) !== r0.current);
   const cats = r.tipo === 'entrada' ? CAT_IN : CAT_OUT;
   const D = getData();
   const cartoes = D.cartoes;
@@ -41,7 +44,8 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const mudouValor = !novo && !!rec && (r.valor !== rec.valor || r.dia !== rec.dia || freq !== freqDe(rec) || r.semana !== rec.semana || r.mes !== rec.mes);
   // o que falta pra salvar, conforme a frequência
   const faltaQuando = freq === 'semanal' ? r.semana == null : freq === 'anual' ? !r.dia || !r.mes : !r.dia;
-  const falta = [!r.valor && 'o valor', faltaQuando && (freq === 'semanal' ? 'o dia da semana' : freq === 'anual' ? 'o dia e o mês' : 'o dia')].filter(Boolean).join(' e ');
+  const faltaAnual = [!r.dia && 'o dia', !r.mes && 'o mês'].filter(Boolean).join(' e ');
+  const falta = [!r.valor && 'o valor', faltaQuando && (freq === 'semanal' ? 'o dia da semana' : freq === 'anual' ? faltaAnual : 'o dia')].filter(Boolean).join(' e ');
   const mudarFreq = (f: Freq) => {
     const hoje = new Date();
     set({ freq: f === 'mensal' ? undefined : f,

@@ -114,6 +114,15 @@ interface UIStore {
   sheet: { key: number; node: ReactNode } | null;
   openSheet: (node: ReactNode) => void;
   closeSheet: () => void;
+  /** partes da janela aberta com coisa digitada e não salva ("key:parte") */
+  sujos: ReadonlySet<string>;
+  setSujo: (key: number, parte: string, sujo: boolean) => void;
+  /** a janela aberta tem coisa digitada e não salva? */
+  temRascunho: () => boolean;
+  /** pediu pra sair de uma janela com coisa digitada: mostra "Sair sem salvar?" */
+  confirmarSaida: boolean;
+  /** fechar por gesto, fundo ou Cancelar: se tiver coisa digitada, pergunta antes */
+  pedirFechar: () => void;
   /** compra simulada mostrada no gráfico do Início (só na tela, nunca salva) */
   sim: Simulacao | null;
   setSim: (s: Simulacao | null) => void;
@@ -133,8 +142,18 @@ export const useUI = create<UIStore>((set, get) => ({
   tab: 'home',
   setTab: (tab) => set({ tab }),
   sheet: null,
-  openSheet: (node) => set({ sheet: { key: ++seq, node } }),
-  closeSheet: () => set({ sheet: null }),
+  openSheet: (node) => set({ sheet: { key: ++seq, node }, sujos: new Set(), confirmarSaida: false }),
+  closeSheet: () => set({ sheet: null, sujos: new Set(), confirmarSaida: false }),
+  sujos: new Set(),
+  setSujo: (key, parte, sujo) => set((s) => {
+    const id = `${key}:${parte}`;
+    if (sujo === s.sujos.has(id) || (sujo && s.sheet?.key !== key)) return {};
+    const n = new Set(s.sujos); if (sujo) n.add(id); else n.delete(id);
+    return { sujos: n };
+  }),
+  temRascunho: () => { const s = get(); return !!s.sheet && [...s.sujos].some((id) => id.startsWith(`${s.sheet!.key}:`)); },
+  confirmarSaida: false,
+  pedirFechar: () => { const s = get(); if (s.temRascunho()) set({ confirmarSaida: true }); else s.closeSheet(); },
   sim: null,
   setSim: (sim) => set({ sim }),
   visao: 'futuro',
@@ -152,6 +171,7 @@ export const useUI = create<UIStore>((set, get) => ({
 
 export const openSheet = (n: ReactNode) => useUI.getState().openSheet(n);
 export const closeSheet = () => useUI.getState().closeSheet();
+export const pedirFechar = () => useUI.getState().pedirFechar();
 export const toast = (m: string, undo?: () => void) => useUI.getState().toast(m, undo);
 
 /** Executa uma mudança e oferece "Desfazer" no toast. */

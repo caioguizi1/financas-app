@@ -11,7 +11,7 @@ import { closeSheet, getData, openSheet, useUI } from '../store';
 import { Button, Chip } from '../ui/Controls';
 import { CartaoMini, Ico } from '../ui/Ico';
 import { AmountDisplay, Keypad, TecladoRecolhivel, useTeclado } from '../ui/Money';
-import { SheetHeader } from '../ui/Sheet';
+import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { SmartDesc } from '../ui/Smart';
 import { QuickAdd } from './QuickAdd';
 
@@ -24,6 +24,7 @@ export function Simulador() {
   const tec = useTeclado(false);
   const [valor, setValor] = useState(0);
   const [desc, setDesc] = useState('');
+  useRascunho(valor > 0 || !!desc.trim()); // fechar sem querer pergunta antes
   const [cartaoId, setCartaoId] = useState<string | null>(D.cartoes[0]?.id ?? null);
   const [extras, setExtras] = useState<number[]>([]);
   const [escolhida, setEscolhida] = useState<number | null>(null);
