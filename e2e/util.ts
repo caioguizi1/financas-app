@@ -106,3 +106,50 @@ export const iconesForaDoCentro = (page: Page) => page.evaluate(() => {
   }
   return [...new Set(out)];
 });
+
+/**
+ * Contraste de texto (WCAG AA): 4,5:1 no texto normal, 3:1 no grande (≥ 24 px, ou ≥ 18,66 px em negrito).
+ * Fundo efetivo: compõe as cores de fundo dos ancestrais (degradê = média das cores dele sobre a cor de fundo).
+ */
+export const contrasteBaixo = (page: Page) => page.evaluate(() => {
+  type C = [number, number, number, number];
+  const parse = (s: string): C[] => [...s.matchAll(/rgba?\(([^)]+)\)/g)].map((m) => { const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p[3] ?? 1]; });
+  const over = (top: C, base: C): C => { const a = top[3]; return [top[0] * a + base[0] * (1 - a), top[1] * a + base[1] * (1 - a), top[2] * a + base[2] * (1 - a), 1]; };
+  const lum = (c: C) => { const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+  const fundo = (el: Element): C => {
+    const camadas: C[] = [];
+    for (let a: Element | null = el; a; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      const img = cs.backgroundImage;
+      if (img && img !== 'none' && img.includes('gradient')) {
+        const cores = parse(img);
+        if (cores.length) { const m = cores.reduce((x, c) => [x[0] + c[0] / cores.length, x[1] + c[1] / cores.length, x[2] + c[2] / cores.length, x[3] + c[3] / cores.length], [0, 0, 0, 0] as C); camadas.push(m); }
+      }
+      const bc = parse(cs.backgroundColor)[0];
+      if (bc && bc[3] > 0) { camadas.push(bc); if (bc[3] >= 1 && !(img && img.includes('gradient'))) break; }
+    }
+    let base: C = parse(getComputedStyle(document.body).backgroundColor)[0] ?? [255, 255, 255, 1];
+    if (base[3] < 1) base = over(base, [255, 255, 255, 1]);
+    for (const c of camadas.reverse()) base = over(c, base);
+    return base;
+  };
+  const out: string[] = [];
+  for (const el of document.querySelectorAll<HTMLElement>('body *')) {
+    const txt = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent ?? '').join('').trim();
+    if (!txt || !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || r.bottom < 0 || r.top > innerHeight * 3) continue;
+    if (el.closest('[disabled], [aria-disabled="true"], .chart, svg')) continue; // desabilitado não entra na regra
+    // o fundo real está noutra camada (pílula do seletor, ações do deslize) ou é a arte do cartão (texto com sombra)
+    if (el.closest('.seg-label, .sa, .cface')) continue;
+    const cs = getComputedStyle(el);
+    let op = 1; for (let a: Element | null = el; a; a = a.parentElement) op *= Number(getComputedStyle(a).opacity);
+    if (op < 0.99) continue; // em animação
+    const fg0 = parse(cs.color)[0]; if (!fg0) continue;
+    const bg = fundo(el), fg = over(fg0, bg);
+    const L1 = lum(fg), L2 = lum(bg), ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    const px = parseFloat(cs.fontSize), grande = px >= 24 || (px >= 18.66 && Number(cs.fontWeight) >= 700);
+    if (ratio < (grande ? 3 : 4.5)) out.push(`${ratio.toFixed(2)}:1 · ${px}px · "${txt.slice(0, 28)}" · ${typeof el.className === 'string' ? el.className.split(' ')[0] : el.tagName} · cor ${cs.color}`);
+  }
+  return [...new Set(out)];
+});

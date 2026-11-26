@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { realista } from './dados';
-import { abrir, dados, evidencia, fecharSheet, iconesForaDoCentro, problemasNaTela } from './util';
+import { abrir, contrasteBaixo, dados, evidencia, fecharSheet, iconesForaDoCentro, problemasNaTela } from './util';
 
 test('cadastro inicial do zero até a tela principal', { tag: '@safari' }, async ({ page }, info) => {
   const erros = await abrir(page, null);
@@ -55,7 +55,7 @@ for (const [nome, w, h, tema, emoji] of [['iPhone claro', 390, 844, 'light', fal
     const erros = await abrir(page, realista());
     if (emoji) { await page.evaluate(() => localStorage.setItem('fluxo.icones', 'emoji')); await page.reload(); await page.waitForTimeout(600); }
     const achados: Record<string, string[]> = {};
-    const checar = async (onde: string) => { const r = [...(await problemasNaTela(page)), ...(await iconesForaDoCentro(page)).map((x) => `ícone fora do centro: ${x}`)]; if (r.length) achados[onde] = r; };
+    const checar = async (onde: string) => { const r = [...(await problemasNaTela(page)), ...(await iconesForaDoCentro(page)).map((x) => `ícone fora do centro: ${x}`), ...(await contrasteBaixo(page)).map((x) => `contraste baixo: ${x}`)]; if (r.length) achados[onde] = r; };
     const abas = (await page.locator('.tab').allInnerTexts()).map((t) => t.trim());
     let abertos = 0;
     const falhas: string[] = [];

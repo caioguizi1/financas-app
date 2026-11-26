@@ -5,6 +5,7 @@ import { fluxoMeses, pendentesHoje, projecao } from '../lib/engine';
 import { brl } from '../lib/money';
 import { openSheet, useData, useUI } from '../store';
 import { Simulador } from '../sheets/Simulador';
+import { ParaOndeFoi } from '../ui/ParaOndeFoi';
 import { AjustarSaldo } from '../sheets/Misc';
 import { ExtraSheet } from '../sheets/Extras';
 import { rendaAtual } from '../sheets/Renda';
@@ -31,6 +32,8 @@ export function Home() {
   const [scrubI, setScrubI] = useState<number | null>(null);
   // compra simulada no gráfico (só na tela); some se os dados mudarem, pra não mostrar conta velha
   const sim = useUI((s) => s.sim);
+  const visao = useUI((s) => s.visao);
+  const setVisao = useUI.getState().setVisao;
   // compra pequena perto da escala do gráfico: a linha tracejada fica em cima da outra; avisa em texto
   const simPequena = !!sim && (() => { const vs = sim.base.pts.map((p) => p.v); const faixa = Math.max(...vs, 0) - Math.min(...vs, 0); return sim.compra.valor < faixa * 0.015; })();
   const simCartao = sim?.compra.cartaoId ? D.cartoes.find((c) => c.id === sim.compra.cartaoId) : undefined;
@@ -78,6 +81,13 @@ export function Home() {
     <>
       <div className="top"><div><div className="hello">{saudacao()},</div><h1>{D.perfil.nome || 'você'}</h1></div></div>
 
+      <div className="visoes" role="tablist" aria-label="Visões do Início">
+        <button role="tab" aria-selected={visao === 'futuro'} className={visao === 'futuro' ? 'on' : ''} onClick={() => setVisao('futuro')}><Ico n="futuro" size={16} />Visão futura</button>
+        <button role="tab" aria-selected={visao === 'mes'} className={visao === 'mes' ? 'on' : ''} onClick={() => setVisao('mes')}><Ico n="rosca" size={16} />Para onde foi</button>
+      </div>
+
+      {visao === 'mes' ? <ParaOndeFoi /> : (
+      <>
       <m.div className="hero" initial={{ opacity: 0, y: 12, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }}>
         <div className="lbl">{sp ? diaLabel(sp.d) : 'Saldo hoje'}</div>
         <div className={`big num ${shown < 0 ? 'neg' : ''}`}>{sp ? brl(sp.v) : <AnimatedBRL value={vm.hoje} />}</div>
@@ -132,6 +142,8 @@ export function Home() {
           {vm.neg.volta ? <>. Volta ao positivo em {dm(vm.neg.volta.d)}{vm.neg.voltaPor ? ` (${vm.neg.voltaPor})` : ''}.</> : <> e não volta ao positivo nos próximos 90 dias.</>}
           {' '}Vale segurar gastos até lá.
         </Aviso>
+      )}
+      </>
       )}
 
       <AnimatePresence presenceAffectsLayout={false} initial={false}>

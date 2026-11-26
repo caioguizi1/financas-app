@@ -25,7 +25,7 @@ src/
               importar.ts · pdfTexto.ts · importacoes.ts   leitura de CSV/OFX/PDF (Itaú, PicPay), duplicados, histórico
               lojas.ts · nomes.ts   nome legível de loja (só do que veio do banco) e correções suas
               smart.ts       dicionário inteligente + aprendizado local
-              versions.ts    vigência dos fixos · recorrencia.ts todo mês/semana/ano · simulador.ts "e se eu comprar" · mensalidade.ts provável mensalidade · extras.ts 13º, PLR, férias
+              versions.ts    vigência dos fixos · recorrencia.ts todo mês/semana/ano · simulador.ts "e se eu comprar" · mensalidade.ts provável mensalidade · gastosMes.ts "para onde foi" · extras.ts 13º, PLR, férias
               folha.ts INSS/IRRF/Lei 15.270 · backupInfo.ts lembrete de backup
               imagens.ts     imagem do cartão (recorte automático) · estiloIco.ts ícone x emoji
   store.ts    dados persistidos (+ migrações únicas) e estado de interface (abas, janelas, toasts)
@@ -81,6 +81,7 @@ Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5
 - Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
 
 ## Versões
+- **v2.43.0** — **"Para onde foi"** no Início: um seletor alterna entre a **Visão futura** (o gráfico de saldo, que continua o padrão) e os **gastos do mês por categoria** (rosca, lista com barra, valor e %, comparação com o mês passado até o mesmo dia, setas para meses anteriores). Tocando numa categoria: histórico de 4 meses, os gastos e "Ver no Extrato" já filtrado. Compra no cartão conta no mês da compra; parcelas, cada uma no seu mês; fatura não entra. Pente-fino: **contraste do modo claro e escuro** revisado pelo padrão WCAG (203 textos abaixo do mínimo → 0; cores de texto secundário, verde, âmbar e vermelho ajustadas), nome do cartão legível sobre qualquer cor, Extrato sem engasgo ao trocar de mês (55 ms → 0 em CPU 4x).
 - **v2.42.0** — correção do **saldo de hoje**: depois de "Conferir com o saldo do banco", um fixo criado no mesmo dia com vencimento hoje (ex.: lançar com "Repete") não descontava — era tratado como se já estivesse no saldo do banco. Agora o fixo guarda quando foi criado e, se veio depois do ajuste, desconta na hora, como qualquer lançamento. Transformar em fixo um lançamento feito antes do ajuste não desconta duas vezes. Fixos antigos não mudam.
 - **v2.41.0** — recorrência que **pergunta**: "PETLOVE: R$ X todo dia 8?" só quando o gasto aparece **uma vez por mês**, com **valor estável** (até 10%) e **dia parecido** (até 5 dias), em **2 meses seguidos** — Uber e afins ficam de fora. Botões **Sim, virar fixo** / **Não é** (não pergunta mais); tocar no cartão não responde sozinho. Na importação da fatura, o item que bate ganha "Todo mês? Virar fixo". Substitui a regra antiga (só o nome, 3 de 4 meses), que pegaria o Uber.
 - **v2.40.0** — simulador: o teclado não sobe mais no 1º dígito (o botão "Ver no gráfico" já fica lá, inativo, desde o início). Correção: "Virar fixo" (sugestão de gasto que se repete) começava no mês atual mesmo com a compra do mês já lançada, contando a fatura duas vezes — agora começa no mês seguinte. Botão principal com texto branco também no tema claro. Testes novos: teclado que não pula em 7 telas, botão principal legível, virar fixo sem duplicar.

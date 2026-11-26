@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'motion/react';
 import { porMes } from '../lib/recorrencia';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
 import { ativaEm, serieDe } from '../lib/versions';
@@ -12,6 +12,7 @@ import { CarteiraSheet } from '../sheets/Carteira';
 import { RendaSheet, resumoRenda } from '../sheets/Renda';
 import { brl } from '../lib/money';
 import type { Evento } from '../lib/types';
+import { useAosPoucos } from '../ui/useAosPoucos';
 import { openSheet, resetData, useData, useUI } from '../store';
 import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
@@ -31,6 +32,12 @@ import { setEstiloIco } from '../lib/estiloIco';
 import { CartaoMini, Ico } from '../ui/Ico';
 
 /* ================= Extrato ================= */
+/** Dias do mês aos poucos: os primeiros já na troca de mês, o resto nos frames seguintes (trocar de mês travava 64 ms em CPU 4x — v2.43). */
+function DiasDoMes({ total, children }: { total: number; children: (lim: number) => ReactNode }) {
+  const lim = useAosPoucos(total, 6, 10, 220);
+  return <>{children(lim)}</>;
+}
+
 export function Extrato() {
   const D = useData();
   const n = new Date();
@@ -40,6 +47,14 @@ export function Extrato() {
   const t = today();
   // filtro por categoria: mostra cada compra (inclusive as do cartão, no dia da fatura) e o total da categoria
   const [cat, setCat] = useState<string | null>(null);
+  // vindo de "Para onde foi": abre no mês e na categoria escolhidos
+  const pedido = useUI((s) => s.extratoPedido);
+  useEffect(() => {
+    if (!pedido) return;
+    setYM([Number(pedido.mk.slice(0, 4)), Number(pedido.mk.slice(5, 7)) - 1]);
+    setCat(pedido.cat);
+    useUI.getState().pedirExtrato(null);
+  }, [pedido]);
   const cats = new Map<string, number>();
   for (const e of r.evs) if (e.valor < 0) cats.set(e.cat, (cats.get(e.cat) ?? 0) - e.valor);
   const listaCats = [...cats.entries()].sort((a, b) => b[1] - a[1]);
@@ -81,8 +96,9 @@ export function Extrato() {
           {cat && !cats.has(cat) && <Chip on onClick={() => setCat(null)}><CatGlyph cat={cat} />{catN(cat)}</Chip>}
         </div>
       )}
-      <Lista key={`${y}-${mo}-${cat ?? ''}`}>
-        {days.length ? days.map((d) => {
+      <DiasDoMes key={`${y}-${mo}-${cat ?? ''}`} total={days.length}>{(lim) => (
+      <Lista>
+        {days.length ? days.slice(0, lim).map((d) => {
           const evd = byDay.get(d) ?? [];
           const tot = evd.reduce((a, e) => a + e.valor, 0);
           return (
@@ -103,6 +119,7 @@ export function Extrato() {
           );
         }) : <div className="card empty" style={{ marginTop: 14 }}>{cat ? `Nada em ${catN(cat)} neste mês.` : 'Nenhuma movimentação neste mês.'}</div>}
       </Lista>
+      )}</DiasDoMes>
       <div className="footnote">Compras no cartão aparecem no dia da compra como "no cartão" (sem entrar nos totais) e saem da conta no dia em que a fatura vence.</div>
     </>
   );

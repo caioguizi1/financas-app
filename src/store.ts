@@ -117,6 +117,12 @@ interface UIStore {
   /** compra simulada mostrada no gráfico do Início (só na tela, nunca salva) */
   sim: Simulacao | null;
   setSim: (s: Simulacao | null) => void;
+  /** Início: "Visão futura" (gráfico de saldo) ou "Para onde foi" (gastos por categoria) */
+  visao: 'futuro' | 'mes';
+  setVisao: (v: 'futuro' | 'mes') => void;
+  /** abrir o Extrato já filtrado (vindo de "Para onde foi") */
+  extratoPedido: { cat: string; mk: string } | null;
+  pedirExtrato: (p: { cat: string; mk: string } | null) => void;
   toasts: Toast[];
   toast: (msg: string, undo?: () => void) => void;
   dismissToast: (id: number) => void;
@@ -131,6 +137,10 @@ export const useUI = create<UIStore>((set, get) => ({
   closeSheet: () => set({ sheet: null }),
   sim: null,
   setSim: (sim) => set({ sim }),
+  visao: 'futuro',
+  setVisao: (visao) => set({ visao }),
+  extratoPedido: null,
+  pedirExtrato: (extratoPedido) => set({ extratoPedido }),
   toasts: [],
   toast: (msg, undo) => {
     const id = ++seq;

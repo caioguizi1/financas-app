@@ -23,8 +23,8 @@
   --line: rgba(255, 255, 255, 0.07);
   /* texto */
   --text: #f3f1fa;
-  --mut: #a29db8;
-  --dim: #6c6782;
+  --mut: #ada8c2;           /* v2.43: era #a29db8 (4,05:1 nos cartões "Pra você") */
+  --dim: #8c889d;          /* v2.43: era #6c6782 (3,3–3,7:1); agora ≥ 4,6:1 em todos os fundos */
   /* marca */
   --acc: #6e5bff;
   --acc-hi: #9a8cff;
@@ -187,6 +187,7 @@ button.item:active { background: var(--card2) }
 .btn.ghost { background: var(--card2); border: 1px solid var(--line) }
 .btn.link { background: none; color: var(--mut); font-weight: 500; font-size: 15px; padding: 12px }
 .btn.danger { background: rgba(168, 51, 88, 0.16); color: var(--out) }
+[data-theme='light'] .btn.danger { color: #9e2449 } /* v2.43: 4,28 → ≥ 4,5:1 sobre o fundo rosado */
 .btn:disabled { opacity: 0.35; box-shadow: none }
 .chips { display: flex; flex-wrap: wrap; gap: 8px }
 .chips.scroll { flex-wrap: nowrap; overflow-x: auto; margin: 0 -20px; padding: 0 20px; scrollbar-width: none }
@@ -347,7 +348,7 @@ button.item:active { background: var(--card2) }
 .nudge .m { flex: 1 } .nudge .t { font-weight: 650 } .nudge .s { font-size: 13.5px; color: var(--mut); margin-top: 2px }
 .nudge-btns { display: flex; gap: 8px; margin-top: 10px }
 .nb { padding: 8px 14px; border-radius: 12px; background: var(--card2); font-size: 14px; font-weight: 600 }
-.nb.on { background: var(--acc-grad) }
+.nb.on { background: var(--acc-grad); color: #fff }
 /* troca de aba: telas ocultas guardam o layout pronto (content-visibility) → reaparecem sem recalcular */
 .tab-screen.off { content-visibility: hidden; position: absolute; top: 0; left: 0; right: 0; pointer-events: none; visibility: hidden }
 @supports not (content-visibility: hidden) { .tab-screen.off { display: none } }
@@ -545,9 +546,10 @@ html { touch-action: manipulation }
   color-scheme: light;
   --bg: #f6f4fb; --card: #ffffff; --card2: #f1eef8; --card3: #e5e0f2;
   --line: rgba(35, 25, 80, 0.09);
-  --text: #16122a; --mut: #5d5876; --dim: #8e89a6;
+  /* v2.43: contraste WCAG AA (≥ 4,6:1) em branco, fundo, cartão e cartão 3 — antes 2,6–3,8:1 */
+  --text: #16122a; --mut: #4f4a68; --dim: #656176;
   --acc: #5b47f0; --acc-hi: #4a36dc; --acc-lo: #c9c1ff;
-  --in: #0e9a6a; --out: #c2315f; --warn: #b5761a;
+  --in: #0a724e; --out: #b62e59; --warn: #895913;
   --glass: rgba(255, 255, 255, 0.74); --glass-strong: rgba(255, 255, 255, 0.94);
   --glass-brd: rgba(35, 25, 80, 0.08); --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
@@ -577,7 +579,7 @@ html { touch-action: manipulation }
 /* peças que seguem escuras nos dois temas (assinatura): card principal com gráfico e o aviso flutuante */
 [data-theme='light'] .hero, [data-theme='light'] .toast {
   --card: #14102a; --card2: #1d1836; --card3: #282147; --line: rgba(255, 255, 255, 0.08);
-  --text: #f5f3fc; --mut: #b3adcc; --dim: #7d779a; --acc-hi: #a99dff; --in: #5fe3b3; --out: #ef6f95;
+  --text: #f5f3fc; --mut: #b3adcc; --dim: #a09bb7; --acc-hi: #a99dff; --in: #5fe3b3; --out: #ef6f95; --warn: #f2b35b;
   --glass-brd: rgba(255, 255, 255, 0.1); --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: var(--text);
 }
@@ -898,3 +900,71 @@ html { touch-action: manipulation }
 .in-a.nao { color: var(--mut) }
 .imp-mens { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font: inherit; font-size: 13px; font-weight: 600; color: var(--acc-hi); background: rgba(110,91,255,.12); border: 1px solid rgba(154,140,255,.35); border-radius: 12px; padding: 6px 10px; min-height: 34px; cursor: pointer }
 .imp-mens.on { color: #fff; background: var(--acc); border-color: var(--acc) }
+
+/* v2.43 — Início: "Visão futura" × "Para onde foi" */
+.visoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 0 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 16px }
+.visoes button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--mut); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .18s, color .18s }
+.visoes button .ic-l { margin: 0 }
+.visoes button.on { background: var(--card3); color: var(--text); font-weight: 600 }
+.visoes button.on svg { color: var(--acc-hi) }
+.hero.pf { padding: 14px 16px 16px; animation: pf-entra .28s ease-out both }
+@keyframes pf-entra { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+.pf-mes { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px }
+.pf-nome { font-size: 15px; font-weight: 600; text-transform: capitalize }
+.pf-nome small { font-weight: 500; color: var(--mut); text-transform: none }
+.pf-seta { width: 40px; height: 40px; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--mut); display: grid; place-items: center; cursor: pointer }
+.pf-seta .ic-l { margin: 0 }
+.pf-seta:disabled { opacity: .35; cursor: default }
+.pf-topo { display: flex; align-items: center; gap: 16px }
+.pf-rosca { position: relative; width: 148px; height: 148px; flex: none }
+.pf-rosca svg { width: 100%; height: 100%; transform: rotate(-90deg) }
+.pf-trilho { fill: none; stroke: color-mix(in srgb, var(--text) 6%, transparent); stroke-width: 16 }
+.pf-fatia { fill: none; stroke-width: 16; transition: stroke-dasharray .45s ease, stroke-dashoffset .45s ease }
+.pf-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px }
+.pf-centro span { font-size: 11px; color: var(--mut) }
+.pf-centro b { font-size: 19px; font-weight: 700; letter-spacing: -0.02em }
+.pf-lado { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1 }
+.pf-var { align-self: flex-start; font-size: 12px; font-weight: 600; border-radius: 9px; padding: 4px 8px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--mut) }
+.pf-var.menos { color: var(--in); background: color-mix(in srgb, var(--in) 14%, transparent) }
+.pf-var.mais { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent) }
+.pf-resumo { font-size: 13px; line-height: 1.45; color: var(--mut) }
+.pf-vazio { padding: 26px 4px 18px; text-align: center; color: var(--mut); font-size: 14px }
+.pf-lista { margin-top: 12px; padding: 4px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 22px; display: flex; flex-direction: column }
+.pf-linha { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer }
+.pf-linha:last-child { border-bottom: 0 }
+.pf-linha .ico { width: 36px; height: 36px; border-radius: 11px; flex: none }
+.pf-meio { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px }
+.pf-t { display: flex; justify-content: space-between; gap: 8px; font-size: 14px }
+.pf-t b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pf-sobe { font-size: 11px; font-weight: 600; color: var(--warn) }
+.pf-barra { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--text) 6%, transparent); overflow: hidden }
+.pf-barra i { display: block; height: 100%; border-radius: 3px; transition: width .45s ease }
+.pf-pct { width: 36px; flex: none; text-align: right; font-size: 12px; color: var(--mut) }
+.pf-nota { margin: 8px 4px 4px; font-size: 12px; line-height: 1.45; color: var(--dim) }
+.pf-cat-topo { display: flex; align-items: center; gap: 14px; margin: 4px 0 14px }
+.pf-cat-topo .ico { width: 52px; height: 52px; border-radius: 16px }
+.pf-cat-topo > span { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.pf-cat-topo b { font-size: 28px; font-weight: 700; letter-spacing: -0.02em }
+.pf-cat-topo small { font-size: 13px; color: var(--mut); display: flex; flex-wrap: wrap; align-items: center; gap: 4px }
+.pf-cat-topo .pf-var { padding: 2px 6px }
+.pf-hist { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px 10px }
+.pf-hist-t { font-size: 13px; color: var(--mut) }
+.pf-hist-b { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: end; height: 108px; margin-top: 8px }
+.pf-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100% }
+.pf-col i { width: 100%; border-radius: 5px 5px 0 0; opacity: .38 }
+.pf-col.on i { opacity: 1 }
+.pf-col small { font-size: 11px; color: var(--mut) }
+.pf-col.on small { color: var(--text); font-weight: 600 }
+.pf-col em { font-style: normal; font-size: 12px; color: var(--dim) }
+.pf-col.on em { color: var(--text) }
+.pf-itens { max-height: 38vh; overflow-y: auto }
+.pf-it { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-bottom: 1px solid var(--line) }
+.pf-it:last-child { border-bottom: 0 }
+.pf-it-t { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.pf-it-t b { font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pf-it-t b small { color: var(--mut); font-weight: 500 }
+.pf-it-t > small { font-size: 12px; color: var(--mut) }
+.pf-it > b { font-size: 15px; font-weight: 600; flex: none }
+.pf-cmp { margin-top: -4px; font-size: 11px; color: var(--dim) }
+/* v2.43: nome e datas do cartão legíveis sobre qualquer cor/imagem escolhida (o canto claro do verde do PicPay dava ~2:1) */
+.cface { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 10px rgba(0, 0, 0, 0.18) }
