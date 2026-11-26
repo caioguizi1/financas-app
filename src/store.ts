@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { Simulacao } from './lib/simulador';
 import type { ReactNode } from 'react';
 import { today } from './lib/dates';
 import { regraFixa } from './lib/smart';
@@ -113,6 +114,9 @@ interface UIStore {
   sheet: { key: number; node: ReactNode } | null;
   openSheet: (node: ReactNode) => void;
   closeSheet: () => void;
+  /** compra simulada mostrada no gráfico do Início (só na tela, nunca salva) */
+  sim: Simulacao | null;
+  setSim: (s: Simulacao | null) => void;
   toasts: Toast[];
   toast: (msg: string, undo?: () => void) => void;
   dismissToast: (id: number) => void;
@@ -125,6 +129,8 @@ export const useUI = create<UIStore>((set, get) => ({
   sheet: null,
   openSheet: (node) => set({ sheet: { key: ++seq, node } }),
   closeSheet: () => set({ sheet: null }),
+  sim: null,
+  setSim: (sim) => set({ sim }),
   toasts: [],
   toast: (msg, undo) => {
     const id = ++seq;

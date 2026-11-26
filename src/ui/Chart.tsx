@@ -6,20 +6,25 @@ import type { Ponto } from '../lib/engine';
 const W = 340, H = 140, PT = 14, PB = 10;
 
 /** Saldo projetado em degraus; arrastar mostra o dia. Abaixo de zero fica vermelho. */
-export function BalanceChart({ pts, onScrub }: { pts: Ponto[]; onScrub: (i: number | null) => void }) {
+/** `ghost`: projeção com uma compra simulada (linha tracejada por cima; mesmas datas de `pts`). */
+export function BalanceChart({ pts, onScrub, ghost }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[] }) {
   const id = useId().replace(/:/g, '');
   const svgRef = useRef<SVGSVGElement>(null);
   const crossRef = useRef<SVGLineElement>(null);
   const n = pts.length;
   const vals = pts.map((p) => p.v);
-  const vmin = Math.min(0, ...vals);
-  const vmax = Math.max(...vals, 1);
+  const gmap = ghost ? new Map(ghost.map((p) => [p.d, p.v])) : null;
+  const gvals = gmap ? pts.map((p) => gmap.get(p.d) ?? p.v) : [];
+  const vmin = Math.min(0, ...vals, ...gvals);
+  const vmax = Math.max(...vals, ...gvals, 1);
   const sy = (v: number) => PT + (H - PT - PB) * (1 - (v - vmin) / (vmax - vmin || 1));
   const sx = (i: number) => (i / Math.max(1, n - 1)) * W;
 
   let line = '';
   pts.forEach((p, i) => { const X = sx(i).toFixed(1), Y = sy(p.v).toFixed(1); line += i ? ` H${X} V${Y}` : `M${X} ${Y}`; });
   const area = `${line} V${H} H0 Z`;
+  let gline = '';
+  gvals.forEach((v, i) => { const X = sx(i).toFixed(1), Y = sy(v).toFixed(1); gline += i ? ` H${X} V${Y}` : `M${X} ${Y}`; });
   const zeroY = sy(0);
   const neg = vals.some((v) => v < 0);
   const ticks = pts.map((p, i) => (p.d.endsWith('-01') ? i : -1)).filter((i) => i > 0);
@@ -61,6 +66,7 @@ export function BalanceChart({ pts, onScrub }: { pts: Ponto[]; onScrub: (i: numb
           <path d={line} fill="none" stroke="#B9AFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#a${id})`} />
           <path d={line} fill="none" stroke="#E0577F" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" clipPath={`url(#b${id})`} />
         </g>
+        {gline && <path className="ghost" d={gline} fill="none" stroke="#F2B35B" strokeWidth={2} strokeDasharray="5 4" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />}
         <line ref={crossRef} x1="0" x2="0" y1={PT - 6} y2={H} stroke="rgba(255,255,255,.55)" vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
       </svg>
       <div className="xl">

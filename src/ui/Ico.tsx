@@ -4,7 +4,7 @@
  * o que é AÇÃO ou AJUSTE usa ícone Lucide. Avisos usam <Aviso> (ui/Aviso.tsx).
  */
 import {
-  ArrowUpDown, Banknote, Barcode, BriefcaseBusiness, CalendarClock, CalendarDays, Camera, Coins, CreditCard, Download, FileDown, FileUp, Gift, Info, Landmark, ListFilter, LoaderCircle, Lock, Moon, PenLine, Receipt, RefreshCw, Repeat, RotateCcw, RotateCw, Sparkles, Sun, SunMoon, TrendingUp, TriangleAlert, Tv, Upload, UserRound, WalletCards, Zap, type LucideIcon,
+  ArrowUpDown, Banknote, Barcode, BriefcaseBusiness, CalendarClock, CalendarDays, Camera, Coins, CreditCard, Download, FileDown, FileUp, Gift, Info, Landmark, ListFilter, LoaderCircle, Lock, Moon, PenLine, Receipt, RefreshCw, Repeat, RotateCcw, RotateCw, Sparkles, Sun, SunMoon, TrendingUp, TriangleAlert, Tv, Upload, UserRound, WalletCards, Zap, Lightbulb, ShoppingCart, X, type LucideIcon,
 } from 'lucide-react';
 import type { Cartao } from '../lib/types';
 import { corDoCartao, useImagemUrl } from '../lib/imagens';
@@ -17,6 +17,7 @@ export const ICONES = {
   fixo: Repeat, camera: Camera, padrao: RotateCcw, girar: RotateCw, mao: PenLine, previsto: Sparkles, sugerido: Sparkles,
   arquivo: FileUp, carregando: LoaderCircle, privado: Lock, parcelas: Receipt, semDuplicar: RefreshCw, assinatura: Tv,
   info: Info, porDia: Coins, alerta: TriangleAlert, alta: TrendingUp, dinheiro: Banknote,
+  ideia: Lightbulb, simular: ShoppingCart, fechar: X,
 } satisfies Record<string, LucideIcon>;
 export type NomeIcone = keyof typeof ICONES;
 

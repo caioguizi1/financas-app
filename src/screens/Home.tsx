@@ -1,9 +1,10 @@
 import { AnimatePresence, m } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { dateOf, diaLabel, dm, MESL, parse, saudacao, today } from '../lib/dates';
 import { fluxoMeses, pendentesHoje, projecao } from '../lib/engine';
 import { brl } from '../lib/money';
-import { openSheet, useData } from '../store';
+import { openSheet, useData, useUI } from '../store';
+import { Simulador } from '../sheets/Simulador';
 import { AjustarSaldo } from '../sheets/Misc';
 import { ExtraSheet } from '../sheets/Extras';
 import { rendaAtual } from '../sheets/Renda';
@@ -28,6 +29,13 @@ import { nomeExib } from '../ui/nome';
 export function Home() {
   const D = useData();
   const [scrubI, setScrubI] = useState<number | null>(null);
+  // compra simulada no gráfico (só na tela); some se os dados mudarem, pra não mostrar conta velha
+  const sim = useUI((s) => s.sim);
+  // compra pequena perto da escala do gráfico: a linha tracejada fica em cima da outra; avisa em texto
+  const simPequena = !!sim && (() => { const vs = sim.base.pts.map((p) => p.v); const faixa = Math.max(...vs, 0) - Math.min(...vs, 0); return sim.compra.valor < faixa * 0.015; })();
+  const simCartao = sim?.compra.cartaoId ? D.cartoes.find((c) => c.id === sim.compra.cartaoId) : undefined;
+  const dPrev = useRef(D);
+  useEffect(() => { if (dPrev.current !== D) { dPrev.current = D; if (useUI.getState().sim) useUI.getState().setSim(null); } }, [D]);
   const t = today();
   const now = new Date();
 
@@ -80,8 +88,30 @@ export function Home() {
             </m.span>
           </AnimatePresence>
         </div>
-        <BalanceChart pts={vm.fut} onScrub={setScrubI} />
+        {sim && (
+          <div className="sim-leg">
+            <span><i className="l-hoje" />Hoje</span>
+            <span className="g"><i className="l-sim" />Com a compra ({sim.opcoes[0].parcelas === 1 ? 'à vista' : `${sim.opcoes[0].parcelas}x`})</span>
+          </div>
+        )}
+        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} />
       </m.div>
+
+      {sim ? (
+        <div className="sim-ativo">
+          <span className="sim-ativo-t"><b>Simulando {brl(sim.compra.valor)} {sim.opcoes[0].parcelas === 1 ? 'à vista' : `em ${sim.opcoes[0].parcelas}x`}</b>{simCartao ? ` no ${simCartao.nome}` : ' no Pix'} · saldo mais baixo {brl(sim.opcoes[0].minimo.v)} em {dm(sim.opcoes[0].minimo.d)}{simPequena ? '. A diferença é pequena demais pra aparecer no gráfico.' : ''}</span>
+          <div className="sim-ativo-b">
+            <Button kind="ghost" onClick={() => openSheet(<Simulador />)}>Mudar</Button>
+            <Button kind="ghost" aria-label="Limpar simulação" onClick={() => useUI.getState().setSim(null)}><Ico n="fechar" size={18} />Limpar</Button>
+          </div>
+        </div>
+      ) : (
+        <button className="sim-btn" onClick={() => openSheet(<Simulador />)}>
+          <span className="sim-btn-ico"><Ico n="simular" size={20} /></span>
+          <span className="sim-btn-t"><b>E se eu comprar…?</b><span>Veja o impacto antes, à vista ou parcelado</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+      )}
 
       <Lista className="stats">
         <m.div variants={itemVariants} className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${vm.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={vm.fimMes} /></div></m.div>

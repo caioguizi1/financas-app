@@ -847,3 +847,47 @@ html { touch-action: manipulation }
 
 /* v2.38 — figura sozinha numa caixa fica no centro (sem o espaço que a separa do texto) */
 .lucide.cat-g.solo, .chip .lucide.cat-g.solo, .btn .lucide.cat-g.solo, .emo.solo { margin: 0 }
+
+/* v2.39 — simulador "E se eu comprar…?" */
+.sim-btn{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:14px 16px;min-height:64px;text-align:left;font:inherit;color:var(--text);background:var(--card);border:1px solid rgba(154,140,255,.35);border-radius:20px;cursor:pointer}
+.sim-btn:active{transform:scale(.985)}
+.sim-btn > svg{color:var(--dim);flex:none}
+.sim-btn-ico{width:40px;height:40px;border-radius:13px;background:rgba(110,91,255,.18);color:var(--acc-hi);display:grid;place-items:center;flex:none}
+.sim-btn-ico .ic-l{margin:0}
+.sim-btn-t{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.sim-btn-t b{font-size:16px;font-weight:600}
+.sim-btn-t span{font-size:13px;color:var(--mut)}
+.sim-leg{display:flex;gap:12px;margin-top:4px;font-size:12px;color:var(--mut)}
+.sim-leg span{display:inline-flex;align-items:center;gap:6px}
+.sim-leg .g{color:var(--warn)}
+.sim-leg i{display:inline-block;width:16px;height:0;border-top:2px solid var(--acc-hi)}
+.sim-leg i.l-sim{border-top:2px dashed var(--warn)}
+.sim-ativo{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding:12px 14px;background:rgba(242,179,91,.08);border:1px solid rgba(242,179,91,.4);border-radius:18px}
+.sim-ativo-t{font-size:14px;line-height:1.4;color:var(--mut)}
+.sim-ativo-t b{color:var(--text);font-weight:600}
+.sim-ativo-b{display:flex;gap:8px}
+.sim-ativo-b .btn{flex:1;min-height:40px}
+.sim-sub{text-align:center;font-size:12px;color:var(--dim);margin-top:-4px}
+.sim-vazio{display:flex;gap:8px;margin-top:14px;font-size:13px;line-height:1.45;color:var(--mut)}
+.sim-vazio svg{flex:none;margin-top:2px}
+.sim-ops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sim-op{display:flex;flex-direction:column;align-items:stretch;gap:1px;text-align:left;font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 13px;cursor:pointer;min-width:0}
+.sim-op.sel{border:1.5px solid var(--acc);background:rgba(110,91,255,.1)}
+.sim-op-h{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.sim-de{font-size:12px;color:var(--mut);margin-bottom:4px}
+.sim-op-h b{font-size:15px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sim-k{font-size:11px;color:var(--dim);margin-top:6px}
+.sim-v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.sim-v.neg{color:var(--out)}
+.sim-v small{font-size:11px;font-weight:500;color:var(--mut)}
+.selo{flex:none;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:8px;padding:3px 7px}
+.selo.melhor,.selo.tranquilo{background:#5fe3b3;color:#04231a}
+.selo.atencao{background:#f2b35b;color:#1d1405}
+.selo.aperta{background:#e0577f;color:#fff}
+.sim-mais{margin-top:10px;flex-wrap:wrap}
+.sim-dica{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;font-size:13px;line-height:1.45;background:rgba(95,227,179,.08);border:1px solid rgba(95,227,179,.3);border-radius:16px}
+.sim-dica svg{flex:none;margin-top:1px;color:#5fe3b3}
+.sim-nota{margin-top:10px;font-size:12px;line-height:1.45;color:var(--dim)}
+.sim .actions.tight{display:flex;flex-direction:column;gap:6px}
+:root[data-theme=light] .selo.tranquilo,:root[data-theme=light] .selo.melhor{background:#1f9e72;color:#fff}
+:root[data-theme=light] .selo.atencao{background:#b8741a;color:#fff}

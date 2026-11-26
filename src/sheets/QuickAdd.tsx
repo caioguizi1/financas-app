@@ -21,13 +21,15 @@ import { normalizar } from '../lib/smart';
 import { DIAS_SEMANA, MES_CURTO, quando, type Freq } from '../lib/recorrencia';
 import { Aviso } from '../ui/Aviso';
 
-export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
+/** `inicial`: um lançamento NOVO já preenchido (ex.: vindo do simulador). */
+export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Partial<Lancamento> }) {
   const novo = !lanc;
+  const pre = lanc ?? inicial;
   const tec = useTeclado(false); // teclado só aparece ao tocar no valor (novo e edição)
   const D = getData();
   // compra importada: o campo mostra o nome legível; se não mexer, o texto original do banco fica salvo
   const nomeInicial = lanc?.desc ? nomeExib(lanc.desc) : '';
-  const [l, setL] = useState<Lancamento>(() => (lanc ? { ...lanc, desc: nomeInicial } : { id: '', tipo: 'saida', valor: 0, cat: '', data: today(), cartaoId: null, parcelas: 1, desc: '', criado: 0 }));
+  const [l, setL] = useState<Lancamento>(() => (lanc ? { ...lanc, desc: nomeInicial } : { id: '', tipo: 'saida', valor: 0, cat: '', data: today(), cartaoId: null, parcelas: 1, desc: '', criado: 0, ...inicial }));
   const set = (p: Partial<Lancamento>) => setL((x) => ({ ...x, ...p }));
   // categoria escolhida à mão nesta tela? então a sugestão não sobrescreve.
   // Editando: mantém a categoria salva até você trocar o nome — aí a sugestão do nome novo vale.
@@ -64,9 +66,9 @@ export function QuickAdd({ lanc }: { lanc?: Lancamento }) {
   }, [cat]); // eslint-disable-line react-hooks/exhaustive-deps
   const cartao = l.cartaoId ? D.cartoes.find((c) => c.id === l.cartaoId) : undefined;
   // forma de pagamento: Pix/débito sai na hora (sem parcelar); boleto e crédito podem parcelar; Pix parcelado sempre parcela
-  const [meio, setMeio] = useState<Meio>(() => (lanc?.cartaoId ? 'credito' : lanc?.meio ?? 'pix'));
-  const [parcEscolha, setParcEscolha] = useState((lanc?.parcelas ?? 1) > 1);
-  const [nParc, setNParc] = useState(Math.max(2, lanc?.parcelas ?? 2));
+  const [meio, setMeio] = useState<Meio>(() => (pre?.cartaoId ? 'credito' : pre?.meio ?? 'pix'));
+  const [parcEscolha, setParcEscolha] = useState((pre?.parcelas ?? 1) > 1);
+  const [nParc, setNParc] = useState(Math.max(2, pre?.parcelas ?? 2));
   const [adiar, setAdiar] = useState(lanc?.adiar ?? 1);
   const [modoValor, setModoValor] = useState<'total' | 'parcela'>('total');
   // "Repete todo mês": vira um fixo no dia da data escolhida (só lançamentos seus, não os importados da fatura)

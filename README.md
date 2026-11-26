@@ -25,7 +25,7 @@ src/
               importar.ts · pdfTexto.ts · importacoes.ts   leitura de CSV/OFX/PDF (Itaú, PicPay), duplicados, histórico
               lojas.ts · nomes.ts   nome legível de loja (só do que veio do banco) e correções suas
               smart.ts       dicionário inteligente + aprendizado local
-              versions.ts    vigência dos fixos · recorrencia.ts todo mês/semana/ano · extras.ts 13º, PLR, férias
+              versions.ts    vigência dos fixos · recorrencia.ts todo mês/semana/ano · simulador.ts "e se eu comprar" · extras.ts 13º, PLR, férias
               folha.ts INSS/IRRF/Lei 15.270 · backupInfo.ts lembrete de backup
               imagens.ts     imagem do cartão (recorte automático) · estiloIco.ts ícone x emoji
   store.ts    dados persistidos (+ migrações únicas) e estado de interface (abas, janelas, toasts)
@@ -81,6 +81,7 @@ Regras que mantêm as janelas leves (medidas com CPU 4x mais lenta, mediana de 5
 - Conteúdo da janela chega junto com ela (sem cascata de entrada na abertura).
 
 ## Versões
+- **v2.39.0** — **simulador "E se eu comprar…?"** no Início (abaixo do gráfico): digite o valor e o cartão (ou Pix) e veja à vista × parcelado lado a lado (saldo mais baixo, dias no negativo, fim do mês, parcelas ÷ renda), com selo de melhor opção só quando uma é de fato melhor e uma dica em linguagem simples. Conta como gasto a mais, além do gasto típico do cartão; parcelas sem juros; nada é salvo. "Ver no gráfico" mostra a compra tracejada no Início; "Lançar" abre o ＋ já preenchido.
 - **v2.38.0** — gráfico do Início corrigido no iPhone: a linha era desenhada com `pathLength`, que o Safari ignora com traço de espessura fixa (ficava pontilhada/oca e acabava antes do fim); agora é revelada por máscara. Figuras de categoria sozinhas num quadradinho (campo do ＋, faturas, extras, Minha renda, filtro) estavam 3 px à esquerda; centralizadas. Testes: auditoria de ícones fora do centro em todas as telas (inclusive modo emoji), teste do gráfico, e os testes principais também no **Safari (WebKit)** no GitHub.
 - **v2.37.0** — fixos que se repetem **toda semana** ou **todo ano** (além de todo mês), no ＋ e em Fixos, com a média mensal nos totais; aviso quando já existe um fixo com o mesmo nome; **lembrete de backup** (Ajustes e Início) quando nunca fez ou faz mais de 30 dias; nota quando boa parte da projeção é **estimativa** dos cartões; cadastro sem a piscada em branco entre etapas (317 → 66 ms). **Testes E2E no repositório** (Playwright, dados fictícios) rodando no GitHub antes de publicar, com evidência em `docs/evidencias/`.
 - **v2.36.0** — "Repete todo mês" no ＋: transforma o lançamento (saída ou entrada) em fixo no dia da data escolhida, com a mesma forma de pagamento (Pix/débito, cartão ou boleto), a partir daquele mês. Também converte um lançamento seu já salvo (sem contar duas vezes). Dicionário: "Assinatura"/IPTV vai para Assinaturas, mesmo com "TV" no nome.
