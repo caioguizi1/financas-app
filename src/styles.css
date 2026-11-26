@@ -891,3 +891,10 @@ html { touch-action: manipulation }
 .sim .actions.tight{display:flex;flex-direction:column;gap:6px}
 :root[data-theme=light] .selo.tranquilo,:root[data-theme=light] .selo.melhor{background:#1f9e72;color:#fff}
 :root[data-theme=light] .selo.atencao{background:#b8741a;color:#fff}
+
+/* v2.41 — pergunta "É mensalidade?" (Sim / Não é) */
+.in-sn { display: flex; gap: 16px; margin-top: auto; align-items: center }
+.in-sn .in-a { margin-top: 0; min-height: 36px; display: inline-flex; align-items: center }
+.in-a.nao { color: var(--mut) }
+.imp-mens { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font: inherit; font-size: 13px; font-weight: 600; color: var(--acc-hi); background: rgba(110,91,255,.12); border: 1px solid rgba(154,140,255,.35); border-radius: 12px; padding: 6px 10px; min-height: 34px; cursor: pointer }
+.imp-mens.on { color: #fff; background: var(--acc); border-color: var(--acc) }

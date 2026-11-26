@@ -7,9 +7,9 @@ import { addDays, addMonths, dm, mesCurto, monthKey, parse } from './dates';
 import { eventosEntre, projecao, type Ponto } from './engine';
 import { faturasAtuais } from './faturas';
 import { brl } from './money';
-import { normalizar } from './smart';
 import { porMes as mediaMes } from './recorrencia';
 import { diasSemBackup, lembrarBackup } from './backupInfo';
+import { chaveNaoMensal, provaveisMensalidades } from './mensalidade';
 import { ativaEm } from './versions';
 import type { Data, ISODate, Lancamento, Recorrente } from './types';
 import { nomeVisivel } from './nomes';
@@ -23,6 +23,8 @@ export interface Insight {
   tom: Tom;
   peso: number;
   acao?: { label: string; tipo: 'virarFixo'; lancId: string } | { label: string; tipo: 'parcelas' } | { label: string; tipo: 'backup' };
+  /** pergunta sim/não: a chave guardada em `dispensados` quando a resposta é "Não é" */
+  nao?: string;
 }
 
 const dias = (a: ISODate, b: ISODate) => Math.round((parse(b).getTime() - parse(a).getTime()) / 86400000);
@@ -140,23 +142,13 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
     }
   }
 
-  // 4) gasto que se repete todo mês → virar fixo
-  const fixosNomes = new Set(D.recorrentes.filter((r) => !r.fim || r.fim >= mk).map((r) => normalizar(r.desc)));
-  const janelaMeses = new Set([mk, addMonths(mk, -1), addMonths(mk, -2), addMonths(mk, -3)]);
-  const grupos = new Map<string, Lancamento[]>();
-  for (const l of gastos) {
-    if (!l.desc || (l.parcelas ?? 1) > 1 || !janelaMeses.has(monthKey(l.data))) continue;
-    const k = normalizar(l.desc);
-    grupos.set(k, [...(grupos.get(k) ?? []), l]);
-  }
-  for (const [k, ls] of grupos) {
-    const meses = new Set(ls.map((l) => monthKey(l.data)));
-    if (meses.size < 3 || fixosNomes.has(k)) continue;
-    const ult = ls.sort((a, b) => (a.data < b.data ? 1 : -1))[0];
-    out.push({ id: `rec-${k}`, ico: '🔁', tom: 'info', peso: 60, titulo: `"${nomeVisivel(D, ult.desc)}" todo mês`,
-      texto: `Você lançou em ${meses.size} meses seguidos. Virando fixo, ele entra sozinho na projeção.`,
-      acao: { label: 'Virar fixo', tipo: 'virarFixo', lancId: ult.id } });
-    if (out.filter((i) => i.id.startsWith('rec-')).length >= 2) break;
+  // 4) provável mensalidade (mesmo nome, 1×/mês, valor e dia estáveis, 2 meses seguidos) → PERGUNTA
+  for (const p of provaveisMensalidades(D, hoje).slice(0, 2)) {
+    const nome = nomeVisivel(D, p.ultimo.desc);
+    const meses = p.meses.slice(-2).map((m) => mesCurto(m).split('/')[0]).join(' e ');
+    out.push({ id: `rec-${p.chave}`, ico: '🔁', tom: 'info', peso: 60, titulo: `${nome}: ${brl(p.valor)} todo dia ${p.dia}?`,
+      texto: `Apareceu em ${meses}, uma vez por mês, com o mesmo valor e dia. É mensalidade? Virando fixo, entra sozinho na projeção.`,
+      acao: { label: 'Sim, virar fixo', tipo: 'virarFixo', lancId: p.ultimo.id }, nao: chaveNaoMensal(p.chave) });
   }
 
   // 5) faturas de cada cartão (a fechada a vencer, se houver, e a aberta)

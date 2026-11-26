@@ -39,12 +39,19 @@ export function InsightsStrip() {
               // texto cortado (3 linhas) e sem ação: o toque mostra a dica inteira
               const el = e.currentTarget as HTMLElement;
               const cortado = [...el.querySelectorAll('.in-x, .in-t')].some((x) => x.scrollHeight > x.clientHeight + 1);
+              if (i.nao) { if (cortado) openSheet(<DicaSheet i={i} />); return; } // pergunta: só os botões respondem
               if (i.acao) agir(i);
               else if (cortado) openSheet(<DicaSheet i={i} />);
             }}>
             <div className="in-h"><span className="in-ico"><Ico n={icoDaDica(i.id)} size={19} /></span><span className="in-t">{semQuebrarValor(i.titulo)}</span></div>
             <div className="in-x">{i.texto}</div>
-            {i.acao && <button className="in-a">{i.acao.label} ›</button>}
+            {i.acao && !i.nao && <button className="in-a">{i.acao.label} ›</button>}
+            {i.nao && i.acao && (
+              <div className="in-sn">
+                <button className="in-a" onClick={(e) => { e.stopPropagation(); agir(i); }}>{i.acao.label}</button>
+                <button className="in-a nao" onClick={(e) => { e.stopPropagation(); responderNao(i); }}>Não é</button>
+              </div>
+            )}
           </m.div>
         ))}
       </Lista>
@@ -52,13 +59,20 @@ export function InsightsStrip() {
   );
 }
 
+/** "Não é": guarda a resposta pra não perguntar de novo (com desfazer). */
+function responderNao(i: Insight) {
+  const k = i.nao!;
+  withUndo('Certo, não pergunto mais', (d) => ({ ...d, dispensados: [...(d.dispensados ?? []).filter((x) => x !== k), k] }));
+}
+
 /** Dica inteira (quando o texto não coube nas 3 linhas do cartão). */
 function DicaSheet({ i }: { i: Insight }) {
   return (
     <>
       <SheetHeader title={i.titulo} />
+      {i.nao && <p style={{ fontSize: 18, fontWeight: 650, margin: '4px 0 0', lineHeight: 1.35 }}>{semQuebrarValor(i.titulo)}</p>}
       <p className="mut" style={{ lineHeight: 1.5 }}>{i.texto}</p>
-      {i.acao && <div className="actions"><Button onClick={() => { closeSheet(); agir(i); }}>{i.acao.label}</Button></div>}
+      {i.acao && <div className="actions"><Button onClick={() => { closeSheet(); agir(i); }}>{i.acao.label}</Button>{i.nao && <Button kind="ghost" onClick={() => { closeSheet(); responderNao(i); }}>Não é</Button>}</div>}
     </>
   );
 }

@@ -5,8 +5,10 @@ import { dm, mesCurto, today } from '../lib/dates';
 import { analisar, encaixar, lerArquivo, marcarAdiados, paraLancamentos, preparar, type Item, type MetaFatura, type TipoImport } from '../lib/importar';
 import type { Cartao, Data } from '../lib/types';
 import { registrar } from '../lib/importacoes';
-import { brl } from '../lib/money';
-import { aprender } from '../lib/smart';
+import { brl, uid } from '../lib/money';
+import { provaveisMensalidades, type Provavel } from '../lib/mensalidade';
+import { fixoDoLancamento } from '../lib/insights';
+import { aprender, normalizar } from '../lib/smart';
 import { closeSheet, getData, restore, mutate, toast } from '../store';
 import { Button, Chip, Segmented } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
@@ -33,6 +35,8 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
   const [nomeArquivo, setNomeArquivo] = useState<string>();
   const [ajustarDias, setAjustarDias] = useState(true);
   const [catAberta, setCatAberta] = useState<string | null>(null);
+  /** itens que você marcou "Todo mês? Virar fixo" (pela chave do nome) */
+  const [virarFixo, setVirarFixo] = useState<Set<string>>(() => new Set());
   const cartao = tipo === 'fatura' ? D.cartoes.find((c) => c.id === cid) : undefined;
 
   const escolher = () => {
@@ -85,6 +89,14 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
     return { novos, ...encaixar(base, novos, cartaoFinal, meta.vencimento) };
   }, [itens, tipo, cartaoFinal, meta.vencimento]);
 
+  // prováveis mensalidades: o que, somado ao que já está no app, aparece 1×/mês com valor e dia estáveis em 2 meses seguidos
+  const mensais = useMemo(() => {
+    if (!plano) return new Map<string, Provavel>();
+    const chavesNovas = new Set(plano.novos.filter((l) => l.tipo === 'saida').map((l) => normalizar(l.desc)));
+    const ps = provaveisMensalidades({ ...getData(), lancamentos: plano.lancamentos }, today());
+    return new Map(ps.filter((p) => chavesNovas.has(p.chave)).map((p) => [p.chave, p]));
+  }, [plano]);
+
   // compras que já estavam no app e chegam agora com a marca FIN (adiada)
   const recuperaveis = useMemo(() => {
     if (!itens) return 0;
@@ -106,6 +118,11 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
         aprendido: mem,
         cartoes: cartaoFinal ? d.cartoes.map((c) => (c.id === cartaoFinal.id ? { ...cartaoFinal, estimativa: c.estimativa ?? (usarTipico && a ? a.tipicoSugerido : undefined) } : c)) : d.cartoes,
       };
+      // marcados como mensalidade: viram fixo a partir do mês seguinte ao desta cobrança (que entra agora como lançamento)
+      for (const k of virarFixo) {
+        const l = novos.filter((x) => x.tipo === 'saida' && normalizar(x.desc) === k).sort((a, b) => (a.data < b.data ? 1 : -1))[0];
+        if (l && mensais.has(k)) nd.recorrentes = [...nd.recorrentes, fixoDoLancamento(l, today(), uid())];
+      }
       if (!novos.length) return nd; // só recuperou a marca de adiadas: não é uma importação nova
       // histórico: qual fatura foi enviada pra qual cartão, e se bateu com o banco
       const conf = a?.conferencia;
@@ -117,7 +134,9 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
     });
     closeSheet();
     const adiadas = recuperaveis ? ` · ${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como pulada${recuperaveis === 1 ? '' : 's'}` : '';
-    toast(novos.length ? `${novos.length} lançamentos importados${adiadas}` : `${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como pulada${recuperaveis === 1 ? '' : 's'}`, () => restore(before));
+    const nFixos = [...virarFixo].filter((k) => mensais.has(k)).length;
+    const fixosTxt = nFixos ? ` · ${nFixos} ${nFixos === 1 ? 'virou fixo' : 'viraram fixos'}` : '';
+    toast(novos.length ? `${novos.length} lançamentos importados${adiadas}${fixosTxt}` : `${recuperaveis} ${recuperaveis === 1 ? 'compra marcada' : 'compras marcadas'} como pulada${recuperaveis === 1 ? '' : 's'}`, () => restore(before));
   };
 
   const alternar = (id: string) => setItens((xs) => xs!.map((i) => (i.id === id ? { ...i, incluir: !i.incluir } : i)));
@@ -226,6 +245,15 @@ export function ImportarSheet({ cartaoId }: { cartaoId?: string }) {
               <div className="m">
                 <div className="t">{nomeExib(i.desc)}{i.parcela && <span className="tag">{i.parcela.i}/{i.parcela.n}</span>}</div>{nomeExib(i.desc) !== i.desc && <div className="raw">{i.desc}</div>}
                 <div className="s">{fmt(i.data)} · {catN(i.cat)}{i.motivo ? ` · ${MOTIVO[i.motivo]}` : ''}{i.adiado && <span className="tag tag-l" title="Compra pulada (Pula Compra): paga nesta fatura">PULADA</span>}</div>
+                {i.incluir && i.valor > 0 && mensais.has(normalizar(i.desc)) && (() => {
+                  const k = normalizar(i.desc), on = virarFixo.has(k), p = mensais.get(k)!;
+                  return (
+                    <button className={`imp-mens ${on ? 'on' : ''}`} aria-pressed={on} title={`Apareceu em ${p.meses.slice(-2).map((m) => mesCurto(m)).join(' e ')} com o mesmo valor e dia`}
+                      onClick={() => setVirarFixo((xs) => { const n = new Set(xs); if (on) n.delete(k); else n.add(k); return n; })}>
+                      <Ico n="fixo" size={14} />{on ? `Vira fixo · todo dia ${p.dia}` : 'Todo mês? Virar fixo'}
+                    </button>
+                  );
+                })()}
                 <AnimatePresence presenceAffectsLayout={false} initial={false}>
                   {catAberta === i.id && (
                     <Expande className="chips scroll" style={{ marginTop: 8 }}>
