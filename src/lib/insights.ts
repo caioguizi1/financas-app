@@ -209,7 +209,7 @@ export function trechoNegativo(pts: Ponto[]): TrechoNegativo | null {
 export function fixoDoLancamento(l: Lancamento, hoje: ISODate, id: string): Recorrente {
   const mk = monthKey(hoje), ml = monthKey(l.data);
   return {
-    id, tipo: 'saida', desc: l.desc, cat: l.cat, ico: l.ico, valor: l.valor, dia: parse(l.data).getDate(),
+    id, criado: Date.now(), tipo: 'saida', desc: l.desc, cat: l.cat, ico: l.ico, valor: l.valor, dia: parse(l.data).getDate(),
     inicio: ml >= mk ? addMonths(ml, 1) : mk,
     ...(l.cartaoId ? { cartaoId: l.cartaoId, meio: 'credito' as const } : { cartaoId: null, meio: l.meio === 'boleto' ? 'boleto' as const : 'pix' as const }),
   };

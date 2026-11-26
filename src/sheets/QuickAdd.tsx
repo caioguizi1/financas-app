@@ -102,7 +102,8 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
   const salvarFixo = () => {
     const meioRec: Meio = l.tipo !== 'saida' ? 'pix' : meio === 'credito' && l.cartaoId ? 'credito' : meio === 'boleto' ? 'boleto' : 'pix';
     const desc = l.desc.trim();
-    const rec: Recorrente = { id: uid(), tipo: l.tipo, desc: desc || catN(cat), cat, ico: ico !== catE(cat) ? ico : undefined, valor: l.valor, dia: diaFixo,
+    // criado: novo = agora; transformando um lançamento seu = o momento dele (se veio antes do ajuste de saldo, já está no saldo)
+    const rec: Recorrente = { id: uid(), criado: novo ? Date.now() : l.criado || Date.now(), tipo: l.tipo, desc: desc || catN(cat), cat, ico: ico !== catE(cat) ? ico : undefined, valor: l.valor, dia: diaFixo,
       ...(freqFixo === 'semanal' ? { freq: 'semanal', semana: recQuando.semana } : freqFixo === 'anual' ? { freq: 'anual', mes: recQuando.mes } : {}),
       inicio: monthKey(l.data), ...(l.tipo === 'saida' ? { meio: meioRec, cartaoId: meioRec === 'credito' ? l.cartaoId : null } : {}) };
     const before = getData();

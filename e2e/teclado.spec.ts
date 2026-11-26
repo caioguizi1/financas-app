@@ -28,7 +28,14 @@ test.describe('Teclado não pula enquanto digita', () => {
     test.setTimeout(180_000);
     const erros = await abrir(page, realista());
     const saltos: string[] = [];
-    const fechar = async () => { for (let i = 0; i < 3 && (await page.locator('.sheet').count()); i++) { await page.locator('.sheet').getByRole('button', { name: 'Cancelar' }).first().click().catch(() => page.keyboard.press('Escape')); await page.waitForTimeout(500); } };
+    const fechar = async () => {
+      // sem esperar 30 s por um "Cancelar" que a janela pode não ter (com a máquina lenta isso estourava o tempo)
+      for (let i = 0; i < 3 && (await page.locator('.sheet').count()); i++) {
+        const c = page.locator('.sheet').getByRole('button', { name: 'Cancelar' });
+        if (await c.count()) await c.first().click({ timeout: 3000 }).catch(() => {}); else await page.keyboard.press('Escape');
+        await page.waitForTimeout(500);
+      }
+    };
 
     // ＋ saída, entrada e com nome que já é fixo (aviso de repetido)
     await page.locator('.fab').click(); await page.waitForTimeout(500);

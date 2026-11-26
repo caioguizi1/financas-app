@@ -56,7 +56,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const salvar = () => {
     if (falta) return;
     const { semana, mes, freq: _f, ...base } = r;
-    const final: Recorrente = { ...base, ...(freq !== 'mensal' ? { freq } : {}), ...(freq === 'semanal' ? { semana } : {}), ...(freq === 'anual' ? { mes } : {}), cat, ico: ico !== catE(cat) ? ico : undefined, dia: freq === 'semanal' ? r.dia ?? 1 : r.dia!, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(cat) };
+    const final: Recorrente = { ...base, ...(freq !== 'mensal' ? { freq } : {}), ...(freq === 'semanal' ? { semana } : {}), ...(freq === 'anual' ? { mes } : {}), cat, ico: ico !== catE(cat) ? ico : undefined, dia: freq === 'semanal' ? r.dia ?? 1 : r.dia!, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(cat), ...(novo ? { criado: Date.now() } : {}) };
     const { id: _id, inicio: _ini, fim: _fim, serie: _s, ...mudancas } = final;
     mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouValor ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
     closeSheet();

@@ -54,7 +54,7 @@ function calcularEventos(D: Data, de: ISODate, ate: ISODate): Evento[] {
     const pg = c ? pagamentoFatura(D, c, venc!) : undefined;
     const cash = pg ? pg.data : occ;
     if (cash >= de && cash <= ate) {
-      out.push({ venc, ...(pg?.ts ? { lanc: true, criado: pg.ts } : {}), data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: pg?.ts ?? 0 });
+      out.push({ venc, ...(pg?.ts ? { lanc: true, criado: pg.ts } : {}), data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: pg?.ts ?? (c ? 0 : r.criado ?? 0) });
     }
   };
   for (const r of D.recorrentes) {
@@ -72,7 +72,7 @@ function calcularEventos(D: Data, de: ISODate, ate: ISODate): Evento[] {
         const pg = c ? pagamentoFatura(D, c, venc!) : undefined;
         const cash = pg ? pg.data : occ;
         if (cash >= de && cash <= ate) {
-          out.push({ venc, ...(pg?.ts ? { lanc: true, criado: pg.ts } : {}), data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: pg?.ts ?? 0 });
+          out.push({ venc, ...(pg?.ts ? { lanc: true, criado: pg.ts } : {}), data: cash, valor: r.tipo === 'entrada' ? r.valor : -r.valor, desc: r.desc, cat: r.cat, ico: r.ico, fixo: true, ref: r.id, cartao: c?.nome ?? null, cartaoId: c?.id, criado: pg?.ts ?? (c ? 0 : r.criado ?? 0) });
         }
       }
       m++;
@@ -115,7 +115,8 @@ export function entraNaConta(D: Data, ev: Evento) {
   if (ev.data > b.data) return true;
   if (ev.data < b.data) return false;
   // no próprio dia: entra o que foi lançado depois de informar o saldo, ou o que o usuário disse que ainda não caiu
-  return (!!ev.lanc && ev.criado > b.ts) || !!b.pendentes?.includes(chaveEvento(ev));
+  // (um fixo fora do cartão criado depois do saldo também entra: ele não podia estar no saldo do banco)
+  return ((!!ev.lanc || (!!ev.fixo && !ev.cartaoId)) && ev.criado > b.ts) || !!b.pendentes?.includes(chaveEvento(ev));
 }
 
 export interface Ponto { d: ISODate; v: number }

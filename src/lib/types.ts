@@ -30,6 +30,9 @@ export interface Recorrente {
   semana?: number;
   /** Anual: mês (1–12); o dia fica em `dia`. */
   mes?: number;
+  /** Quando foi criado (ms). No dia em que o saldo foi informado, a ocorrência de um fixo criado DEPOIS
+   *  desconta (como um lançamento); sem isso, contava como "já estava no saldo do banco" (v2.42). */
+  criado?: number;
 }
 
 export interface Cartao {
