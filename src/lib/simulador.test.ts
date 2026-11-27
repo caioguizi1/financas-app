@@ -59,8 +59,8 @@ describe('simulador', () => {
     const s = simular(D, { valor: 10_000, cartaoId: 'it', parcelas: 1 }, [1, 2], HOJE);
     expect(s.opcoes[0].minimo.v).toBe(s.opcoes[1].minimo.v);
     expect(s.opcoes.some((o) => o.melhor)).toBe(false);
-    expect(s.dica).toMatch(/já fica negativo/);
-    expect(s.dica).toMatch(/Em 2x sobram R\$\s?50,00 a mais no fim de dezembro, mas as parcelas seguem até janeiro/);
+    expect(s.dica).toMatch(/fica negativo a partir de/);
+    expect(s.dica).toMatch(/dá no mesmo: as parcelas já saíram antes dele\. Parcelando, o pagamento só se espalha até janeiro/);
   });
 
   it('comprometimento da renda com parcelas (mês do 1º pagamento)', () => {
@@ -68,5 +68,42 @@ describe('simulador', () => {
     const duas = s.opcoes[1];
     expect(duas.mes).toBe('2026-12');
     expect(duas.comprometimento).toEqual({ antes: 0, depois: 10 }); // R$ 300 de R$ 3.000
+    expect(s.opcoes[0].comprometimento).toEqual({ antes: 0, depois: 0 }); // à vista: igual (mostrado nas duas)
+  });
+
+  // o caso do print (26/11/2026): já negativo sem a compra; mesmos dias no negativo; 2x menos fundo
+  // só porque a 2ª parcela cai DEPOIS do dia mais apertado. Tudo tem que contar a mesma história.
+  describe('já negativo sem a compra: números e dica coerentes', () => {
+    const D = base({
+      saldo: { valor: 50_000, data: HOJE, ts: 1 },
+      lancamentos: [
+        { id: 'a', tipo: 'saida', valor: 370_000, cat: 'casa', data: '2026-12-15', desc: 'Conta grande', meio: 'pix', criado: 1 },
+        { id: 'b', tipo: 'saida', valor: 30_000, cat: 'casa', data: '2026-12-20', desc: 'Outra conta', meio: 'pix', criado: 1 },
+      ],
+    });
+    const s = simular(D, { valor: 10_000, cartaoId: 'it', parcelas: 1 }, [1, 2], HOJE);
+    const [vista, duas] = s.opcoes;
+
+    it('sem a compra: 1º dia negativo ≠ dia mais baixo', () => {
+      expect(s.base.primeiroNeg).toBe('2026-12-15');
+      expect(s.base.minimo).toEqual({ v: -50_000, d: '2026-12-20' });
+    });
+    it('cada opção: o quanto fica mais fundo bate com o que sai até o dia mais apertado', () => {
+      expect(vista.minimo.v).toBe(s.base.minimo.v - 10_000);
+      expect(vista.aMais).toBe(10_000);
+      expect(vista.depoisDoAperto).toBe(0);
+      expect(duas.minimo.v).toBe(s.base.minimo.v - 5_000);
+      expect(duas.aMais).toBe(5_000);
+      expect(duas.depoisDoAperto).toBe(5_000); // a 2ª parcela (10/01) sai depois de 20/12
+      expect(duas.pagamentos).toEqual([{ d: '2026-12-10', v: 5_000 }, { d: '2027-01-10', v: 5_000 }]);
+      expect(vista.pagamentos).toEqual([{ d: '2026-12-10', v: 10_000 }]);
+      expect(vista.diasNeg).toBe(s.base.diasNeg);
+      expect(duas.diasNeg).toBe(s.base.diasNeg);
+    });
+    it('a dica diz o 1º dia negativo (não o mais baixo) e explica a diferença', () => {
+      expect(duas.melhor).toBe(true);
+      expect(s.dica).toBe('Mesmo sem essa compra, o saldo fica negativo a partir de 15/12. Os dias no negativo não mudam. Em 2x o dia mais apertado (20/12) fica R$\u00a050,00 menos fundo que à vista, porque R$\u00a050,00 só sai depois dele.');
+      expect(s.dica).not.toMatch(/-R\$/); // sinal de menos de verdade, nunca hífen
+    });
   });
 });

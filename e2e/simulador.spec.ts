@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { realista } from './dados';
-import { abrir, dados, evidencia } from './util';
+import { abrir, contrasteBaixo, dados, evidencia, problemasNaTela } from './util';
 
 const digitar = async (page: import('@playwright/test').Page, centavos: string) => {
   await page.locator('.sheet .amount.tap').click();
@@ -65,5 +65,56 @@ test.describe('Simulador "E se eu comprar…?"', () => {
     await expect(page.locator('.sheet .sim-op')).toHaveCount(1);
     await expect(page.locator('.sheet .sim-op')).toContainText('sai hoje');
     await expect(page.getByRole('button', { name: 'Lançar à vista no Pix' })).toBeVisible();
+  });
+
+  // v2.45 — o print do Caio: números, linhas e dica contando a mesma história em qualquer cenário
+  test('coerência: cada opção bate com "sem a compra", mesmas linhas, dica sem contradição', { tag: '@safari' }, async ({ page }, info) => {
+    const D = realista(); D.saldo = { ...D.saldo, valor: 60_000 };
+    await abrir(page, D);
+    await page.locator('.sim-btn').click();
+    const brl = (t: string) => { const m = t.replace(/\s/g, '').match(/([−-])?R\$([\d.]+,\d{2})/); if (!m) return NaN; const v = Math.round(Number(m[2].replace(/\./g, '').replace(',', '.')) * 100); return m[1] ? -v : v; };
+    const probs: string[] = [];
+    let print = false;
+    for (const [valor, digitos] of [['105,00', '10500'], ['600,00', '60000'], ['3.000,00', '300000']] as const) {
+      await page.locator('.sheet .amount.tap').click();
+      for (let i = 0; i < 9; i++) await page.locator('.sheet .key[aria-label="Apagar"]').click();
+      for (const k of digitos) await page.locator(`.sheet .key[aria-label="${k}"]`).click();
+      await page.locator('.sheet .tec-ok').click();
+      for (const meio of ['Pix / débito', 'Cartão Roxo', 'Cartão Laranja']) {
+        await page.locator('.sheet .chip', { hasText: meio }).click();
+        if (meio !== 'Pix / débito') for (const n of ['+ 3x', '+ 6x']) { const c = page.locator('.sheet .sim-mais .chip', { hasText: n }); if (await c.count()) await c.click(); }
+        await page.waitForTimeout(150);
+        const ctx = `R$ ${valor} · ${meio}`;
+        const baseMin = brl(await page.locator('.sheet .sim-base-v b').innerText());
+        const cards = page.locator('.sheet .sim-op');
+        const rotulos: string[] = [];
+        for (let i = 0; i < (await cards.count()); i++) {
+          const c = cards.nth(i);
+          const ks = (await c.locator('.sim-k').allInnerTexts()).join('|');
+          rotulos.push(ks);
+          const min = brl(await c.locator('.sim-v').first().innerText());
+          const d = await c.locator('.sim-d').first().innerText();
+          const fundo = d.includes('mais fundo') ? brl(d) : 0;
+          if (min !== Math.min(baseMin, baseMin) - fundo && !(fundo === 0 && min === baseMin)) probs.push(`${ctx}: cartão ${i + 1} mostra ${min}, mas "sem a compra" ${baseMin} − ${fundo}`);
+          if (/Fim de/.test(await c.innerText())) probs.push(`${ctx}: ainda mostra "Fim de"`);
+        }
+        if (new Set(rotulos).size > 1) probs.push(`${ctx}: cartões com linhas diferentes (${[...new Set(rotulos)].join(' ≠ ')})`);
+        const tudo = await page.locator('.sheet .sl-mid').innerText();
+        if (/-\s?R\$/.test(tudo)) probs.push(`${ctx}: valor negativo com hífen em vez de sinal de menos`);
+        if (/sem parcela nova/.test(tudo)) probs.push(`${ctx}: "sem parcela nova" de volta`);
+        if (!print && valor === '105,00' && meio === 'Cartão Roxo') { print = true; await page.locator('.sheet .sim-op').first().scrollIntoViewIfNeeded(); await evidencia(page, info, 'R$ 105,00 no Cartão Roxo: sem a compra × à vista × 2x × 3x × 6x'); await page.locator('.sheet .sim-dica').scrollIntoViewIfNeeded(); await evidencia(page, info, 'dica e nota'); }
+      }
+    }
+    expect(probs).toEqual([]);
+    // legível nos dois temas, sem texto cortado
+    for (const tema of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme: tema });
+      await page.waitForTimeout(200);
+      for (const alvo of ['.sheet .sim-base', '.sheet .sim-dica']) {
+        await page.locator(alvo).scrollIntoViewIfNeeded();
+        expect(await contrasteBaixo(page), `contraste · ${tema} · ${alvo}`).toEqual([]);
+        expect(await problemasNaTela(page), `layout · ${tema} · ${alvo}`).toEqual([]);
+      }
+    }
   });
 });

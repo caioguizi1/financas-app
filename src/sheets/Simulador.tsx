@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { dm } from '../lib/dates';
 import { brl } from '../lib/money';
-import { rotuloOpcao, simular, type OpcaoSim, type Veredito } from '../lib/simulador';
+import { datasPagamento, rotuloOpcao, simular, type OpcaoSim, type Veredito } from '../lib/simulador';
 import { sugerir } from '../lib/smart';
 import { closeSheet, getData, openSheet, useUI } from '../store';
 import { Button, Chip } from '../ui/Controls';
@@ -73,23 +73,38 @@ export function Simulador() {
         {sim && (
           <>
             <div className="lab">Comparar</div>
+            {/* a referência: como fica SEM a compra — cada cartão mostra o que muda em relação a ela */}
+            <div className="sim-base">
+              <span className="sim-base-k">Sem a compra</span>
+              <span className="sim-base-v">
+                mais baixo <b className={sim.base.minimo.v < 0 ? 'neg' : ''}>{brl(sim.base.minimo.v)}</b> em {dm(sim.base.minimo.d)}
+                {' · '}{sim.base.diasNeg ? `${sim.base.diasNeg} dia${sim.base.diasNeg > 1 ? 's' : ''} no negativo` : 'nunca negativo'}
+              </span>
+            </div>
             <div className="sim-ops">
               {sim.opcoes.map((o) => {
                 const parcela = Math.round(valor / o.parcelas);
+                const difDias = o.diasNeg - sim.base.diasNeg;
                 return (
                   <button key={o.parcelas} className={`sim-op ${o.veredito}${sel === o ? ' sel' : ''}`} onClick={() => setEscolhida(o.parcelas)} aria-pressed={sel === o}>
                     <span className="sim-op-h">
-                      <b>{o.parcelas === 1 ? 'À vista' : `${o.parcelas}x`}</b>
+                      <b>{rotuloOpcao(o.parcelas)}</b>
                       <span className={`selo ${o.melhor ? 'melhor' : o.veredito}`}>{o.melhor ? 'Melhor' : SELO[o.veredito]}</span>
                     </span>
-                    <span className="sim-de">{o.parcelas === 1 ? (cartao ? `na fatura de ${mesNome(o.mes)}` : 'sai hoje') : `de ${brl(parcela)}`}</span>
+                    <span className="sim-de">{o.parcelas === 1 ? (cartao ? `${brl(valor)} na fatura de ${mesNome(o.mes)}` : `${brl(valor)} sai hoje`) : `${o.parcelas} × ${brl(parcela)}`}</span>
                     <span className="sim-k">Saldo mais baixo</span>
                     <span className={`sim-v ${o.minimo.v < 0 ? 'neg' : ''}`}>{brl(o.minimo.v)} <small>{dm(o.minimo.d)}</small></span>
+                    <span className={`sim-d${o.aMais > 0 ? ' pior' : ''}`}>{o.aMais > 0 ? `${brl(o.aMais)} mais fundo` : 'igual'}</span>
                     <span className="sim-k">Dias no negativo</span>
-                    <span className="sim-v">{o.diasNeg === 0 ? 'nenhum' : `${o.diasNeg} dia${o.diasNeg > 1 ? 's' : ''}`}{o.diasNeg > sim.base.diasNeg && <small> (+{o.diasNeg - sim.base.diasNeg})</small>}</span>
-                    <span className="sim-k">Fim de {mesNome(o.mes)}</span><span className={`sim-v ${o.fimMes < 0 ? 'neg' : ''}`}>{brl(o.fimMes)}</span>
-                    <span className="sim-k">Parcelas/renda · {mesNome(o.mes).slice(0, 3)}</span>
-                    <span className="sim-v">{o.comprometimento ? `${o.comprometimento.antes}% → ${o.comprometimento.depois}%` : 'sem parcela nova'}</span>
+                    <span className="sim-v">{o.diasNeg === 0 ? 'nenhum' : `${o.diasNeg} dia${o.diasNeg > 1 ? 's' : ''}`}</span>
+                    <span className={`sim-d${difDias > 0 ? ' pior' : ''}`}>{difDias > 0 ? `+${difDias} pela compra` : 'igual'}</span>
+                    <span className="sim-k">Sai da conta</span>
+                    <span className="sim-v">{datasPagamento(o.pagamentos)}</span>
+                    {o.comprometimento && <>
+                      <span className="sim-k">Parcelas na renda · {mesNome(o.mes).slice(0, 3)}</span>
+                      <span className="sim-v">{o.comprometimento.depois === o.comprometimento.antes ? `${o.comprometimento.antes}%` : `${o.comprometimento.antes}% → ${o.comprometimento.depois}%`}</span>
+                      <span className="sim-d">{o.comprometimento.depois === o.comprometimento.antes ? 'igual' : 'com a compra'}</span>
+                    </>}
                   </button>
                 );
               })}
@@ -101,7 +116,7 @@ export function Simulador() {
             ) : <div className="sim-nota">No Pix a compra sai na hora. Parcelado: escolha um cartão.</div>}
 
             {sim.dica && <div className="sim-dica"><Ico n="ideia" size={17} /><span>{sim.dica}</span></div>}
-            <div className="sim-nota">Conta como gasto a mais, além do gasto típico do cartão. Parcelas sem juros. {sim.base.diasNeg > 0 && `Sem a compra, o saldo mais baixo seria ${brl(sim.base.minimo.v)} em ${dm(sim.base.minimo.d)}.`}</div>
+            <div className="sim-nota">Conta como gasto a mais, além do gasto típico do cartão. Parcelas sem juros. “Parcelas na renda”: quanto das entradas do mês vai para parcelas.</div>
           </>
         )}
       </div>
