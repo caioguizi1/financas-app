@@ -181,7 +181,7 @@ export interface Destaque {
   modo: 'negativo' | 'folga';
   /** o que aparece na faixa do modo (ex.: "Dias no negativo · 3 vezes") */
   titulo: string;
-  pontos: { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }[];
+  pontos: { d: string; rot: string; nota?: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }[];
   faixas: { de: string; ate: string }[];
 }
 

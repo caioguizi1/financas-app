@@ -116,7 +116,9 @@ export function QuantoFaltaSheet({ fut, voltaPor }: { fut: Ponto[]; voltaPor?: s
     // uma bolinha por vez no negativo, no pior dia dela; a mais funda destacada
     const pontos = q.trechos.map((t, j) => ({
       d: t.pior.d, n: q.trechos.length > 1 ? j + 1 : undefined, tipo: (j === iPior ? 'pior' : 'trecho') as 'pior' | 'trecho',
-      rot: `${q.trechos.length > 1 ? `${periodo(t)} · ` : ''}${j === iPior ? 'pior ' : ''}${brl(t.pior.v)}${q.trechos.length > 1 ? '' : ` em ${dm(t.pior.d)}`}`,
+      // v2.51: a mais funda diz por que está destacada — é ela que define o total do cartão
+      rot: q.trechos.length > 1 ? `${periodo(t)} · ${brl(t.pior.v)}` : `pior ${brl(t.pior.v)} em ${dm(t.pior.d)}`,
+      nota: q.trechos.length > 1 && j === iPior ? 'a mais funda · define o total' : undefined,
     }));
     const faixas = q.trechos.map((t) => ({ de: t.inicio.d, ate: t.volta?.d ?? fut[fut.length - 1].d }));
     closeSheet();

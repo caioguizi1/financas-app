@@ -56,8 +56,13 @@ test.describe('Início · Pra não ficar negativo', () => {
     await expect(marcas).toHaveCount(2);
     await expect(marcas).toHaveText(['1', '2']);
     await expect(page.locator('main.on .chart .ch-marca.pior')).toHaveCount(1);
-    await expect(leg.locator('span')).toHaveCount(2);
-    await expect(leg.locator('span').nth(0)).toContainText(/18\/12 a \d\d\/\d\d · pior −R\$ 1\.406,75/);
+    const linhas = leg.locator(':scope > span');
+    await expect(linhas).toHaveCount(2);
+    // a mais funda diz por que está destacada: é ela que define o total do cartão
+    await expect(linhas.nth(0)).toContainText(/18\/12 a \d\d\/\d\d · −R\$ 1\.406,75/);
+    await expect(linhas.nth(0)).toContainText('a mais funda · define o total');
+    await expect(linhas.nth(0)).toHaveClass(/destaque/);
+    await expect(linhas.nth(1)).not.toContainText('define o total');
     // cada bolinha em cima da linha do gráfico: no centro dela, o que está embaixo é o traço do gráfico
     const sobreALinha = await marcas.evaluateAll((els) => els.map((e) => {
       const r = e.getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2;
@@ -126,7 +131,10 @@ test.describe('Início · Pra não ficar negativo', () => {
     const vezes = Number((await page.locator('main.on .chart .ch-faixa').count()));
     expect(vezes).toBe(3);
     await expect(page.locator('main.on .chart .ch-marca')).toHaveText(['1', '2', '3']);
-    await expect(page.locator('main.on .chart .ch-leg span')).toHaveCount(3);
+    const linhas = page.locator('main.on .chart .ch-leg > span');
+    await expect(linhas).toHaveCount(3);
+    await expect(linhas.nth(1)).toContainText('a mais funda · define o total'); // a 2ª vez é a mais funda nesse cenário
+    await expect(page.locator('main.on .chart .ch-leg .destaque')).toHaveCount(1);
     await page.waitForTimeout(600);
     await evidencia(page, info, 'gráfico: 3 vezes, 3 bolinhas numeradas');
     // a promessa, no app: lançando cada etapa até a sua data, não falta mais nada

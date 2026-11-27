@@ -1074,3 +1074,10 @@ html { touch-action: manipulation }
 .g-modo-b { background: transparent; color: #e7e3f5 }
 .g-modo-x { background: rgba(255, 255, 255, .14); color: #fff }
 .hero.em-modo { box-shadow: 0 0 0 1px rgba(224, 87, 127, .28) inset }
+/* v2.51: a vez mais funda explica o destaque (é ela que define o total) */
+.ch-leg > span > span { display: flex; flex-direction: column; align-items: flex-start; gap: 1px }
+.ch-leg > span.destaque { align-items: flex-start }
+.ch-leg > span.destaque > .ch-ico { margin-top: 0 }
+.ch-leg em { font-style: normal; font-size: 11.5px; color: #f08aa8 }
+.ch-leg .destaque { color: #fff; font-weight: 600 }
+.ch-leg .destaque em { font-weight: 500 }

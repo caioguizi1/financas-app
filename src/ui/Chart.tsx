@@ -9,7 +9,7 @@ const W = 340, H = 140, PT = 14, PB = 10;
 /** `ghost`: projeção com uma compra simulada (linha tracejada por cima; mesmas datas de `pts`). */
 /** marca um dia no gráfico (modo "Ver no gráfico"; sai pelo botão Sair da faixa do modo). `n`: número da vez no negativo (1, 2, 3…);
  *  "pior" = a vez mais funda (destacada), "trecho" = as outras, "aperto" = dia mais apertado (âmbar). */
-export interface MarcaGrafico { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }
+export interface MarcaGrafico { d: string; rot: string; nota?: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }
 /** trecho a sombrear no gráfico (ex.: cada vez que o saldo fica negativo) */
 export interface FaixaGrafico { de: string; ate: string }
 
@@ -103,7 +103,7 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, faixas }: { pts: Pon
       </div>
       {marcas && marcas.length > 0 && (
         <m.div className="ch-leg" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} aria-live="polite">
-          {marcas.map((mk) => <span key={mk.d + mk.tipo}><i className={`ch-ico ${mk.tipo}${mk.n ? ' num' : ''}`} aria-hidden>{mk.n ?? null}</i>{mk.rot}</span>)}
+          {marcas.map((mk) => <span key={mk.d + mk.tipo} className={mk.nota ? 'destaque' : undefined}><i className={`ch-ico ${mk.tipo}${mk.n ? ' num' : ''}`} aria-hidden>{mk.n ?? null}</i><span>{mk.rot}{mk.nota && <em>{mk.nota}</em>}</span></span>)}
         </m.div>
       )}
     </div>
