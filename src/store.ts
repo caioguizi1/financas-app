@@ -130,8 +130,8 @@ interface UIStore {
   visao: 'futuro' | 'mes';
   setVisao: (v: 'futuro' | 'mes') => void;
   /** dias marcados no gráfico do Início ("Ver no gráfico" do "Pra não ficar negativo") */
-  marcas: { d: string; rot: string; baixo?: boolean }[] | null;
-  setMarcas: (m: { d: string; rot: string; baixo?: boolean }[] | null) => void;
+  marcas: Destaque | null;
+  setMarcas: (m: Destaque | null) => void;
   /** abrir o Extrato já filtrado (vindo de "Para onde foi") */
   extratoPedido: { cat: string; mk: string } | null;
   pedirExtrato: (p: { cat: string; mk: string } | null) => void;
@@ -175,6 +175,9 @@ export const useUI = create<UIStore>((set, get) => ({
 }));
 
 export const openSheet = (n: ReactNode) => useUI.getState().openSheet(n);
+/** destaque no gráfico do Início: pontos marcados e trechos sombreados */
+export interface Destaque { pontos: { d: string; rot: string; tipo: 'inicio' | 'pior' | 'aperto' }[]; faixas: { de: string; ate: string }[] }
+
 export const closeSheet = () => useUI.getState().closeSheet();
 export const pedirFechar = () => useUI.getState().pedirFechar();
 export const toast = (m: string, undo?: () => void) => useUI.getState().toast(m, undo);

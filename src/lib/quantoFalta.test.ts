@@ -49,3 +49,23 @@ describe('quanto falta pra não ficar negativo', () => {
     expect(somarAPartir(serie(vals), r.ate, r.falta).every((p) => p.v >= 0)).toBe(true);
   });
 });
+
+describe('folga apertada (sem ficar negativo)', () => {
+  it('perto de zero: avisa com o dia mais apertado', async () => {
+    const { folgaApertada } = await import('./quantoFalta');
+    expect(folgaApertada(serie([90_000, 30_000, 18_000, 70_000]))).toEqual({ folga: 18_000, dia: '2026-11-27' });
+  });
+  it('tranquilo (acima de R$ 500): nada', async () => {
+    const { folgaApertada } = await import('./quantoFalta');
+    expect(folgaApertada(serie([90_000, 60_000, 50_000]))).toBeNull();
+  });
+  it('fica negativo: quem fala é o "faltam", não a folga', async () => {
+    const { folgaApertada } = await import('./quantoFalta');
+    expect(folgaApertada(serie([90_000, -10, 50_000]))).toBeNull();
+  });
+  it('zero conta como folga apertada (não como negativo)', async () => {
+    const { folgaApertada, quantoFalta } = await import('./quantoFalta');
+    expect(quantoFalta(serie([1000, 0, 1000]))).toBeNull();
+    expect(folgaApertada(serie([1000, 0, 1000]))).toEqual({ folga: 0, dia: '2026-11-26' });
+  });
+});

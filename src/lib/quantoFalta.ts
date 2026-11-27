@@ -56,3 +56,20 @@ export function quantoFalta(fut: Ponto[]): QuantoFalta | null {
     repete: trechos.length > 1 && quedaMes > 0,
   };
 }
+
+/** abaixo disso (R$ 500), mesmo sem ficar negativo, a folga é "apertada" e o Início avisa em âmbar */
+export const LIMITE_FOLGA = 50_000;
+
+export interface FolgaApertada {
+  /** o saldo no dia mais apertado (≥ 0) */
+  folga: number;
+  /** o dia mais apertado dos 90 */
+  dia: ISODate;
+}
+
+/** Sem dia negativo, mas com o dia mais apertado abaixo de `limite`. `null` quando fica negativo ou está tranquilo. */
+export function folgaApertada(fut: Ponto[], limite = LIMITE_FOLGA): FolgaApertada | null {
+  if (!fut.length || fut.some((p) => p.v < 0)) return null;
+  const min = fut.reduce((a, p) => (p.v < a.v ? p : a), fut[0]);
+  return min.v < limite ? { folga: min.v, dia: min.d } : null;
+}

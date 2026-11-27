@@ -105,7 +105,7 @@ export function Home() {
             <span className="g"><i className="l-sim" />Com a compra ({sim.opcoes[0].parcelas === 1 ? 'à vista' : `${sim.opcoes[0].parcelas}x`})</span>
           </div>
         )}
-        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} marcas={marcas ?? undefined} onToque={() => marcas && useUI.getState().setMarcas(null)} />
+        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} marcas={marcas?.pontos} faixas={marcas?.faixas} onToque={() => marcas && useUI.getState().setMarcas(null)} />
       </m.div>
 
       {sim ? (
@@ -136,8 +136,8 @@ export function Home() {
         </div>
       )}
 
-      {/* v2.47: no lugar do aviso vermelho — quanto falta e até quando; tocar abre o detalhe */}
-      {vm.neg && <QuantoFalta fut={vm.fut} voltaPor={vm.neg.voltaPor} />}
+      {/* v2.47: no lugar do aviso vermelho — quanto falta e até quando (vermelho) ou folga apertada (âmbar) */}
+      <QuantoFalta fut={vm.fut} voltaPor={vm.neg?.voltaPor} />
       </>
       )}
 

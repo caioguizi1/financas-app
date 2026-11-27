@@ -4,7 +4,7 @@
  */
 import type { Ponto } from '../lib/engine';
 import { brl } from '../lib/money';
-import { quantoFalta, type QuantoFalta as QF } from '../lib/quantoFalta';
+import { folgaApertada, quantoFalta, type FolgaApertada, type QuantoFalta as QF } from '../lib/quantoFalta';
 import { closeSheet, openSheet, useUI } from '../store';
 import { Ico } from './Ico';
 import { SheetHeader } from './Sheet';
@@ -26,10 +26,63 @@ function Barra({ fut, q }: { fut: Ponto[]; q: QF }) {
   );
 }
 
-/** Cartão compacto: valor, prazo e a barrinha dos 90 dias. Nada a mostrar quando não fica negativo. */
+/** Barrinha da folga: sem trecho vermelho, só o dia mais apertado marcado. */
+function BarraFolga({ fut, f }: { fut: Ponto[]; f: FolgaApertada }) {
+  const i = Math.max(0, fut.findIndex((p) => p.d === f.dia));
+  return <span className="qf-bar folga" aria-hidden><span className="qf-pin" style={{ left: `${(i / (fut.length - 1)) * 100}%` }} /></span>;
+}
+
+/** Folga apertada: não fica negativo, mas o dia mais apertado fica perto de zero (âmbar). */
+/** "hoje" quando o dia mais apertado é hoje */
+const quando = (fut: Ponto[], d: string) => (d === fut[0]?.d ? 'hoje' : `em ${dm(d)}`);
+
+function Folga({ fut, f }: { fut: Ponto[]; f: FolgaApertada }) {
+  return (
+    <button className="qf folga" onClick={() => openSheet(<FolgaSheet fut={fut} />)}
+      aria-label={`Folga apertada: no dia mais apertado (${quando(fut, f.dia)}) sobram ${brl(f.folga)}. Ver detalhes`}>
+      <span className="qf-ic"><Ico n="info" size={18} /></span>
+      <span className="qf-txt">
+        <span className="qf-t">Folga de <b>{brl(f.folga)}</b> {quando(fut, f.dia)}</span>
+        <span className="qf-s">não fica negativo, mas chega perto</span>
+        <BarraFolga fut={fut} f={f} />
+      </span>
+      <Ico n="avancar" size={18} className="qf-chev" />
+    </button>
+  );
+}
+
+function FolgaSheet({ fut }: { fut: Ponto[] }) {
+  const f = folgaApertada(fut);
+  if (!f) return <><SheetHeader title="Folga apertada" /><p className="mut">A folga não está mais apertada.</p></>;
+  const ver = () => {
+    closeSheet();
+    const ui = useUI.getState();
+    ui.setVisao('futuro');
+    ui.setMarcas({ pontos: [{ d: f.dia, rot: `Mais apertado · ${brl(f.folga)} ${quando(fut, f.dia)}`, tipo: 'aperto' }], faixas: [] });
+    requestAnimationFrame(() => document.querySelector('main.on .chart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  };
+  return (
+    <>
+      <SheetHeader title="Folga apertada" />
+      <div className="qfs folga">
+        <div className="qfs-v">Folga de <b>{brl(f.folga)}</b></div>
+        <div className="qf-s">no dia mais apertado: <b>{f.dia === fut[0]?.d ? 'hoje' : dm(f.dia)}</b></div>
+        <BarraFolga fut={fut} f={f} />
+        <div className="qf-leg"><span>hoje</span><span>90 dias</span></div>
+        <p className="qf-p">O saldo não fica negativo nos próximos 90 dias. Mas um gasto a mais acima de <b>{brl(f.folga)}</b> {f.dia === fut[0]?.d ? 'hoje' : `até ${dm(f.dia)}`} deixa o saldo negativo.</p>
+      </div>
+      <div className="sl-foot"><button className="btn primary" onClick={ver}><Ico n="futuro" size={18} />Ver no gráfico</button></div>
+    </>
+  );
+}
+
+/**
+ * Cartão compacto do Início: vermelho quando falta dinheiro ("Faltam R$ X até DD/MM"), âmbar quando a folga
+ * está apertada, e nada quando está tranquilo.
+ */
 export function QuantoFalta({ fut, voltaPor }: { fut: Ponto[]; voltaPor?: string }) {
   const q = quantoFalta(fut);
-  if (!q) return null;
+  if (!q) { const f = folgaApertada(fut); return f ? <Folga fut={fut} f={f} /> : null; }
   return (
     <button className="qf" onClick={() => openSheet(<QuantoFaltaSheet fut={fut} voltaPor={voltaPor} />)}
       aria-label={`Pra não ficar negativo: faltam ${brl(q.falta)} até ${dm(q.ate)}. ${q.repete ? 'Se repete todo mês.' : `${dias(q.dias)} no negativo.`} Ver detalhes`}>
@@ -49,13 +102,14 @@ export function QuantoFaltaSheet({ fut, voltaPor }: { fut: Ponto[]; voltaPor?: s
   if (!q) return <><SheetHeader title="Pra não ficar negativo" /><p className="mut">Nos próximos 90 dias o saldo não fica negativo.</p></>;
   const t0 = q.trechos[0];
   const verNoGrafico = () => {
-    const marcas = q.pior.d === q.ate
-      ? [{ d: q.ate, rot: `1º dia negativo · pior ${brl(q.pior.v)}` }]
-      : [{ d: q.ate, rot: '1º dia negativo', baixo: true }, { d: q.pior.d, rot: `pior · ${brl(q.pior.v)}` }];
+    const pontos = q.pior.d === q.ate
+      ? [{ d: q.ate, rot: `1º dia negativo e pior · ${brl(q.pior.v)} em ${dm(q.ate)}`, tipo: 'pior' as const }]
+      : [{ d: q.ate, rot: `1º dia negativo · ${dm(q.ate)}`, tipo: 'inicio' as const }, { d: q.pior.d, rot: `Pior · ${brl(q.pior.v)} em ${dm(q.pior.d)}`, tipo: 'pior' as const }];
+    const faixas = q.trechos.map((t) => ({ de: t.inicio.d, ate: t.volta?.d ?? fut[fut.length - 1].d }));
     closeSheet();
     const ui = useUI.getState();
     ui.setVisao('futuro');
-    ui.setMarcas(marcas);
+    ui.setMarcas({ pontos, faixas });
     requestAnimationFrame(() => document.querySelector('main.on .chart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   };
   return (

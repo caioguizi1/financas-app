@@ -993,14 +993,18 @@ html { touch-action: manipulation }
 .sim .sl-top{padding-bottom:6px;border-bottom:1px solid var(--line);margin:0 -20px;padding-left:20px;padding-right:20px}
 .sim .sl-mid{padding-top:14px}
 
-/* v2.47 marcas no gráfico ("Ver no gráfico" do "Pra não ficar negativo") */
-.ch-marcas { position: absolute; left: 0; right: 0; top: 0; bottom: 22px; pointer-events: none }
-.ch-marca { position: absolute; transform: translate(-50%, -50%); display: block }
-.ch-marca i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #e0577f; box-shadow: 0 0 0 3px rgba(12, 10, 22, .85), 0 0 0 5px rgba(224, 87, 127, .35) }
-.ch-marca b { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 600; color: #fff; background: rgba(12, 10, 22, .82); border: 1px solid rgba(224, 87, 127, .55); border-radius: 8px; padding: 3px 7px }
-.ch-marca.esq b { left: auto; right: -6px; transform: none }
-.ch-marca.dir b { left: -6px; transform: none }
-.ch-marca.baixo b { bottom: auto; top: 18px }
+/* v2.47.1 marcas no gráfico ("Ver no gráfico" do "Pra não ficar negativo") */
+.ch-marcas { position: absolute; left: 0; right: 0; top: 0; height: 150px; pointer-events: none }
+.ch-marca { position: absolute; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(12, 10, 22, .85) }
+.ch-marca.pior { background: #e0577f }
+.ch-marca.inicio { background: rgba(12, 10, 22, .9); border: 2.5px solid #e0577f; box-sizing: border-box }
+.ch-faixa { fill: rgba(224, 87, 127, .11) }
+.ch-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 6px 0; font-size: 12px; color: var(--mut) }
+.ch-leg span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap }
+.ch-ico { width: 10px; height: 10px; border-radius: 50%; flex: none }
+.ch-ico.pior { background: #e0577f }
+.ch-ico.inicio { border: 2px solid #e0577f; box-sizing: border-box }
+.ch-ico.faixa { border-radius: 3px; background: rgba(224, 87, 127, .35) }
 
 /* v2.47 "Pra não ficar negativo" — cartão compacto (no lugar do aviso vermelho) e detalhe */
 .qf{margin-top:14px;width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--card);border:1px solid color-mix(in srgb,var(--out) 45%,var(--line));text-align:left;color:inherit;font:inherit;cursor:pointer}
@@ -1030,3 +1034,13 @@ html { touch-action: manipulation }
 .qfs-l small{font-weight:400;color:var(--mut)}
 .qf-p{font-size:14px;color:var(--mut);margin:14px 0 0}
 .qf-rep{font-size:14px;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 14%,transparent)}
+
+/* v2.47.1: cartão com cara de alerta (vermelho um pouco mais suave que o aviso antigo) e o estado âmbar */
+.qf { background: linear-gradient(135deg, color-mix(in srgb, var(--out) 15%, var(--card)), color-mix(in srgb, var(--out) 7%, var(--card))); border-color: color-mix(in srgb, var(--out) 42%, transparent) }
+.qf-ic { color: var(--out); background: color-mix(in srgb, var(--out) 20%, transparent) }
+.qf.folga { background: linear-gradient(135deg, color-mix(in srgb, var(--warn) 13%, var(--card)), color-mix(in srgb, var(--warn) 5%, var(--card))); border-color: color-mix(in srgb, var(--warn) 42%, transparent) }
+.qf.folga .qf-ic { color: var(--warn); background: color-mix(in srgb, var(--warn) 18%, transparent) }
+.qf.folga .qf-t b, .qfs.folga .qfs-v b { color: var(--warn) }
+.qf-bar.folga { background: linear-gradient(90deg, color-mix(in srgb, var(--in) 35%, transparent), color-mix(in srgb, var(--warn) 45%, transparent)) }
+.ch-marca.aperto { background: #f2b35b }
+.ch-ico.aperto { background: #f2b35b }

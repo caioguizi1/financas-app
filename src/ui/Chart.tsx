@@ -7,10 +7,12 @@ const W = 340, H = 140, PT = 14, PB = 10;
 
 /** Saldo projetado em degraus; arrastar mostra o dia. Abaixo de zero fica vermelho. */
 /** `ghost`: projeção com uma compra simulada (linha tracejada por cima; mesmas datas de `pts`). */
-/** marca um dia no gráfico (ex.: "1º dia negativo", "pior") — some ao tocar no gráfico */
-export interface MarcaGrafico { d: string; rot: string; baixo?: boolean }
+/** marca um dia no gráfico ("1º dia negativo" = anel, "pior" = ponto cheio) — some ao tocar no gráfico */
+export interface MarcaGrafico { d: string; rot: string; tipo: 'inicio' | 'pior' | 'aperto' }
+/** trecho a sombrear no gráfico (ex.: cada vez que o saldo fica negativo) */
+export interface FaixaGrafico { de: string; ate: string }
 
-export function BalanceChart({ pts, onScrub, ghost, marcas, onToque }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[]; marcas?: MarcaGrafico[]; onToque?: () => void }) {
+export function BalanceChart({ pts, onScrub, ghost, marcas, faixas, onToque }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[]; marcas?: MarcaGrafico[]; faixas?: FaixaGrafico[]; onToque?: () => void }) {
   const id = useId().replace(/:/g, '');
   const svgRef = useRef<SVGSVGElement>(null);
   const crossRef = useRef<SVGLineElement>(null);
@@ -61,6 +63,10 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, onToque }: { pts: Po
               o Safari ignora o pathLength e desenha o tracejado "1px 1px" literal (linha pontilhada/oca, cortada no fim). */}
           <clipPath id={`r${id}`}><m.rect x="0" y="0" height={H} initial={{ width: 0 }} animate={{ width: W }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} /></clipPath>
         </defs>
+        {faixas?.map((f) => {
+          const a = pts.findIndex((p) => p.d === f.de), b0 = pts.findIndex((p) => p.d === f.ate), b = b0 < 0 ? n - 1 : b0;
+          return a < 0 ? null : <m.rect key={f.de} className="ch-faixa" x={sx(a)} y={0} width={Math.max(1.5, sx(b) - sx(a))} height={H} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} />;
+        })}
         {ticks.map((i) => <line key={i} x1={sx(i)} x2={sx(i)} y1={PT} y2={H} stroke="rgba(255,255,255,.07)" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />)}
         {neg && <line x1="0" x2={W} y1={zeroY} y2={zeroY} stroke="rgba(255,255,255,.25)" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />}
         <m.path d={area} fill={`url(#g${id})`} clipPath={`url(#a${id})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.35 }} />
@@ -73,15 +79,16 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, onToque }: { pts: Po
         <line ref={crossRef} x1="0" x2="0" y1={PT - 6} y2={H} stroke="rgba(255,255,255,.55)" vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
       </svg>
       {marcas && marcas.length > 0 && (
-        <div className="ch-marcas" aria-live="polite">
+        <div className="ch-marcas">
           {marcas.map((mk) => {
             const i = pts.findIndex((p) => p.d === mk.d);
             if (i < 0) return null;
-            const left = (sx(i) / W) * 100, top = (sy(pts[i].v) / H) * 100;
+            // o valor do dia vale do começo dele até o dia seguinte (gráfico em degraus): marca no meio do degrau
+            const x = (sx(i) + sx(Math.min(n - 1, i + 1))) / 2;
+            // x/y do motion: um transform no CSS seria sobrescrito pela animação (a marca ficava meio tamanho fora do lugar)
             return (
-              <m.span key={mk.d + mk.rot} className={`ch-marca${left > 70 ? ' esq' : left < 18 ? ' dir' : ''}${mk.baixo ? ' baixo' : ''}`} style={{ left: `${left}%`, top: `${top}%` }} initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }}>
-                <i aria-hidden /><b>{mk.rot}</b>
-              </m.span>
+              <m.span key={mk.d + mk.tipo} className={`ch-marca ${mk.tipo}`} style={{ left: `${(x / W) * 100}%`, top: `${(sy(pts[i].v) / H) * 100}%`, x: '-50%', y: '-50%' }}
+                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }} />
             );
           })}
         </div>
@@ -93,6 +100,12 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, onToque }: { pts: Po
         ))}
         <span style={{ left: 'calc(100% - 6px)' }}>90 dias</span>
       </div>
+      {marcas && marcas.length > 0 && (
+        <m.div className="ch-leg" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} aria-live="polite">
+          {marcas.map((mk) => <span key={mk.d + mk.tipo}><i className={`ch-ico ${mk.tipo}`} aria-hidden />{mk.rot}</span>)}
+          {faixas && faixas.length > 1 && <span><i className="ch-ico faixa" aria-hidden />{faixas.length} vezes no negativo</span>}
+        </m.div>
+      )}
     </div>
   );
 }
