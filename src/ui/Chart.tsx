@@ -7,8 +7,9 @@ const W = 340, H = 140, PT = 14, PB = 10;
 
 /** Saldo projetado em degraus; arrastar mostra o dia. Abaixo de zero fica vermelho. */
 /** `ghost`: projeção com uma compra simulada (linha tracejada por cima; mesmas datas de `pts`). */
-/** marca um dia no gráfico ("1º dia negativo" = anel, "pior" = ponto cheio) — some ao tocar no gráfico */
-export interface MarcaGrafico { d: string; rot: string; tipo: 'inicio' | 'pior' | 'aperto' }
+/** marca um dia no gráfico — some ao tocar no gráfico. `n`: número da vez no negativo (1, 2, 3…);
+ *  "pior" = a vez mais funda (destacada), "trecho" = as outras, "aperto" = dia mais apertado (âmbar). */
+export interface MarcaGrafico { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }
 /** trecho a sombrear no gráfico (ex.: cada vez que o saldo fica negativo) */
 export interface FaixaGrafico { de: string; ate: string }
 
@@ -87,8 +88,8 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, faixas, onToque }: {
             const x = (sx(i) + sx(Math.min(n - 1, i + 1))) / 2;
             // x/y do motion: um transform no CSS seria sobrescrito pela animação (a marca ficava meio tamanho fora do lugar)
             return (
-              <m.span key={mk.d + mk.tipo} className={`ch-marca ${mk.tipo}`} style={{ left: `${(x / W) * 100}%`, top: `${(sy(pts[i].v) / H) * 100}%`, x: '-50%', y: '-50%' }}
-                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }} />
+              <m.span key={mk.d + mk.tipo} className={`ch-marca ${mk.tipo}${mk.n ? ' num' : ''}`} style={{ left: `${(x / W) * 100}%`, top: `${(sy(pts[i].v) / H) * 100}%`, x: '-50%', y: '-50%' }}
+                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }}>{mk.n ?? null}</m.span>
             );
           })}
         </div>
@@ -102,8 +103,7 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, faixas, onToque }: {
       </div>
       {marcas && marcas.length > 0 && (
         <m.div className="ch-leg" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} aria-live="polite">
-          {marcas.map((mk) => <span key={mk.d + mk.tipo}><i className={`ch-ico ${mk.tipo}`} aria-hidden />{mk.rot}</span>)}
-          {faixas && faixas.length > 1 && <span><i className="ch-ico faixa" aria-hidden />{faixas.length} vezes no negativo</span>}
+          {marcas.map((mk) => <span key={mk.d + mk.tipo}><i className={`ch-ico ${mk.tipo}${mk.n ? ' num' : ''}`} aria-hidden>{mk.n ?? null}</i>{mk.rot}</span>)}
         </m.div>
       )}
     </div>

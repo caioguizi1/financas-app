@@ -996,15 +996,16 @@ html { touch-action: manipulation }
 /* v2.47.1 marcas no gráfico ("Ver no gráfico" do "Pra não ficar negativo") */
 .ch-marcas { position: absolute; left: 0; right: 0; top: 0; height: 150px; pointer-events: none }
 .ch-marca { position: absolute; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(12, 10, 22, .85) }
-.ch-marca.pior { background: #e0577f }
-.ch-marca.inicio { background: rgba(12, 10, 22, .9); border: 2.5px solid #e0577f; box-sizing: border-box }
+.ch-marca.num { width: 18px; height: 18px; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums }
+.ch-marca.pior { background: #e0577f; color: #1a0610 }
+.ch-marca.trecho { background: rgba(12, 10, 22, .92); border: 2px solid #e0577f; color: #f3c3d2; box-sizing: border-box }
 .ch-faixa { fill: rgba(224, 87, 127, .11) }
-.ch-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 6px 0; font-size: 12px; color: var(--mut) }
-.ch-leg span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap }
+.ch-leg { display: flex; flex-direction: column; gap: 6px; margin: 8px 6px 0; font-size: 12px; color: var(--mut) }
+.ch-leg span { display: inline-flex; align-items: center; gap: 8px }
 .ch-ico { width: 10px; height: 10px; border-radius: 50%; flex: none }
-.ch-ico.pior { background: #e0577f }
-.ch-ico.inicio { border: 2px solid #e0577f; box-sizing: border-box }
-.ch-ico.faixa { border-radius: 3px; background: rgba(224, 87, 127, .35) }
+.ch-ico.num { width: 16px; height: 16px; display: inline-grid; place-items: center; font-size: 9.5px; font-weight: 700; font-style: normal; line-height: 1 }
+.ch-ico.pior { background: #e0577f; color: #1a0610 }
+.ch-ico.trecho { border: 2px solid #e0577f; box-sizing: border-box; color: #f3c3d2 }
 
 /* v2.47 "Pra não ficar negativo" — cartão compacto (no lugar do aviso vermelho) e detalhe */
 .qf{margin-top:14px;width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--card);border:1px solid color-mix(in srgb,var(--out) 45%,var(--line));text-align:left;color:inherit;font:inherit;cursor:pointer}
@@ -1044,3 +1045,18 @@ html { touch-action: manipulation }
 .qf-bar.folga { background: linear-gradient(90deg, color-mix(in srgb, var(--in) 35%, transparent), color-mix(in srgb, var(--warn) 45%, transparent)) }
 .ch-marca.aperto { background: #f2b35b }
 .ch-ico.aperto { background: #f2b35b }
+
+/* v2.49: cronograma "Quando precisa entrar" e "De onde vêm esses números" */
+.qfs-etapas { margin-top: 16px; padding: 4px 14px; border-radius: 16px; background: color-mix(in srgb, var(--out) 7%, var(--card2, var(--card))); border: 1px solid color-mix(in srgb, var(--out) 22%, var(--line)) }
+.qfs-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); padding: 8px 0 2px }
+.qfs-e { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px }
+.qfs-e b { font-variant-numeric: tabular-nums; white-space: nowrap }
+.qfs-e small { color: var(--mut) }
+.qfs-e.tot { border-bottom: 0; font-weight: 600 }
+.qfs-e.tot b { color: var(--out) }
+.qfs-como { margin-top: 14px; font-size: 13px; color: var(--mut) }
+.qfs-como summary { cursor: pointer; font-weight: 600; color: var(--text); padding: 6px 0; list-style: none }
+.qfs-como summary::-webkit-details-marker { display: none }
+.qfs-como summary::after { content: ' ›'; color: var(--dim) }
+.qfs-como[open] summary::after { content: ' ⌄' }
+.qfs-como p { margin: 6px 0 0; line-height: 1.45 }

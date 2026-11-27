@@ -52,8 +52,12 @@ test.describe('Início · Pra não ficar negativo', () => {
     await page.waitForTimeout(600); // fim da animação de entrada
     // legenda abaixo do eixo (não cobre "hoje"/"jan" nem a linha do zero)
     const leg = page.locator('main.on .chart .ch-leg');
-    await expect(leg).toContainText(/1º dia negativo/);
-    await expect(leg).toContainText(/[Pp]ior · −R\$ 1\.406,75 em 18\/12/);
+    // uma bolinha numerada por vez no negativo, no pior dia de cada uma; a mais funda destacada
+    await expect(marcas).toHaveCount(2);
+    await expect(marcas).toHaveText(['1', '2']);
+    await expect(page.locator('main.on .chart .ch-marca.pior')).toHaveCount(1);
+    await expect(leg.locator('span')).toHaveCount(2);
+    await expect(leg.locator('span').nth(0)).toContainText(/18\/12 a \d\d\/\d\d · pior −R\$ 1\.406,75/);
     // cada bolinha em cima da linha do gráfico: no centro dela, o que está embaixo é o traço do gráfico
     const sobreALinha = await marcas.evaluateAll((els) => els.map((e) => {
       const r = e.getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2;
@@ -61,15 +65,56 @@ test.describe('Início · Pra não ficar negativo', () => {
     }));
     expect(sobreALinha.every(Boolean), 'bolinha fora da linha').toBe(true);
     // cada vez que fica negativo vira uma faixa sombreada, e a legenda conta as vezes
-    const faixas = await page.locator('main.on .chart .ch-faixa').count();
-    expect(faixas).toBe(2);
-    await expect(leg).toContainText('2 vezes no negativo');
+    expect(await page.locator('main.on .chart .ch-faixa').count()).toBe(2);
     expect(await problemasNaTela(page)).toEqual([]);
     await evidencia(page, info, '3. "Ver no gráfico": bolinhas na linha, faixas e legenda');
     // tocar no gráfico tira as marcas
     await page.locator('main.on .chart svg').click({ position: { x: 40, y: 40 } });
     await expect(marcas).toHaveCount(0);
     await expect(leg).toHaveCount(0);
+  });
+
+  // v2.49 — o print do Caio: 3 vezes no negativo, a 1ª rasa e a funda depois. O total não pode ser
+  // cobrado até o 1º buraco: o cartão mostra o total com o prazo da vez mais funda e quanto já até a 1ª.
+  test('várias vezes no negativo: total com o prazo certo, cronograma e uma bolinha por vez', { tag: '@safari' }, async ({ page }, info) => {
+    const D = realista(); D.saldo = { ...D.saldo, valor: 60_000 };
+    D.lancamentos.push({ ...contaGrande, id: 'r1', valor: 120_000 }, { ...contaGrande, id: 'r2', valor: 300_000, data: '2027-01-11' });
+    await abrir(page, D);
+    const card = page.locator('.qf');
+    await expect(card.locator('.qf-t')).toContainText(/Faltam R\$ [\d.]+,\d\d até 15\/01/);
+    await expect(card.locator('.qf-s')).toContainText(/R\$ 106,75 já até 18\/12/);
+    expect((await card.locator('.qf-s').boundingBox())!.height, 'subtítulo em uma linha').toBeLessThan(22);
+    const total = centavos(await card.locator('.qf-t').innerText());
+    await card.click();
+    const etapas = page.locator('.sheet .qfs-e:not(.tot)');
+    await expect(etapas).toHaveCount(2);
+    await expect(etapas.nth(0)).toContainText('Até 18/12');
+    await expect(etapas.nth(1)).toContainText('Até 15/01');
+    const valores = await etapas.evaluateAll((els) => els.map((e) => e.querySelector(':scope > b')!.textContent!));
+    const cents = valores.map(centavos);
+    expect(cents[0] + cents[1]).toBe(total); // as etapas somam o total
+    expect(centavos(await page.locator('.sheet .qfs-e.tot b').innerText())).toBe(total);
+    // de onde vêm os números
+    await page.locator('.sheet .qfs-como summary').click();
+    await expect(page.locator('.sheet .qfs-como')).toContainText('estimativa do gasto típico dos cartões');
+    await evidencia(page, info, 'detalhe: quando precisa entrar e de onde vêm os números');
+    await page.locator('.sheet').getByRole('button', { name: 'Ver no gráfico' }).click();
+    const vezes = Number((await page.locator('main.on .chart .ch-faixa').count()));
+    expect(vezes).toBe(3);
+    await expect(page.locator('main.on .chart .ch-marca')).toHaveText(['1', '2', '3']);
+    await expect(page.locator('main.on .chart .ch-leg span')).toHaveCount(3);
+    await page.waitForTimeout(600);
+    await evidencia(page, info, 'gráfico: 3 vezes, 3 bolinhas numeradas');
+    // a promessa, no app: lançando cada etapa até a sua data, não falta mais nada
+    const p1 = await page.context().newPage();
+    const D1 = structuredClone(D);
+    D1.lancamentos.push(
+      { ...contaGrande, id: 'e1', tipo: 'entrada', cat: 'extra', desc: 'Venda 1', valor: cents[0], data: '2026-12-18' },
+      { ...contaGrande, id: 'e2', tipo: 'entrada', cat: 'extra', desc: 'Venda 2', valor: cents[1], data: '2027-01-15' },
+    );
+    await abrir(p1, D1);
+    await expect(p1.locator('main.on .chart')).toBeVisible();
+    await expect(p1.locator('.qf:not(.folga)')).toHaveCount(0);
   });
 
   test('folga apertada (sem ficar negativo): cartão âmbar e detalhe', async ({ page }, info) => {
@@ -116,7 +161,7 @@ test.describe('Início · Pra não ficar negativo', () => {
 
   test('buraco que se repete: avisa no cartão e explica no detalhe', async ({ page }, info) => {
     await abrir(page, repete());
-    await expect(page.locator('.qf-s')).toContainText('se repete todo mês');
+    await expect(page.locator('.qf-s')).toContainText('se repete');
     await page.locator('.qf').click();
     await expect(page.locator('.sheet .qf-rep')).toContainText('Isso se repete');
     await expect(page.locator('.sheet .qf-rep')).toContainText('por mês');

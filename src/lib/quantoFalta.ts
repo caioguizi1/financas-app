@@ -1,20 +1,33 @@
 /**
- * "Pra não ficar negativo" (v2.47): quanto precisa entrar (ou ser cortado) e até quando,
- * pra que nenhum dia dos próximos 90 fique abaixo de zero.
+ * "Pra não ficar negativo": quanto precisa entrar (ou ser cortado) e ATÉ QUANDO, pra que nenhum dia dos
+ * próximos 90 fique abaixo de zero.
  *
- * A conta: somar X a partir do 1º dia negativo levanta todos os dias seguintes em X. Então basta
- * X = |ponto mais baixo| entrando até o 1º dia negativo. Se o saldo cai mês a mês (o buraco volta),
- * uma entrada única só adia — isso é sinalizado à parte.
+ * De onde vêm os números: a projeção diária do Início (engine.projecao) — saldo informado + o que entra e
+ * sai em cada dia: fixos, lançamentos futuros, parcelas, faturas dos cartões e a estimativa do gasto típico
+ * dos cartões ainda não lançado.
+ *
+ * A conta (v2.49): o saldo fica negativo em "vezes" (trechos). Em cada vez, o que precisa estar na conta é o
+ * quanto ela fica abaixo de zero no pior dia DAQUELA vez — e precisa estar lá quando a vez começa (dali até o
+ * pior dia o saldo só piora). Dinheiro que entra fica: o que cobriu uma vez continua cobrindo as seguintes.
+ * Então o cronograma é o máximo acumulado: vez a vez, entra só a diferença para a vez mais funda até ali.
+ * O total é o pior dia dos 90; o prazo do total é o começo da vez mais funda (antes, v2.47–2.48, o total
+ * inteiro era cobrado até o 1º dia negativo, mesmo quando esse 1º buraco era pequeno).
  */
 import type { Ponto } from './engine';
 import type { ISODate } from './types';
 
 export interface Trecho { inicio: Ponto; pior: Ponto; volta?: Ponto }
+/** uma parcela do que falta: quanto entrar (a mais) até o começo de uma vez no negativo */
+export interface Etapa { ate: ISODate; valor: number; acumulado: number; trecho: number }
 export interface QuantoFalta {
-  /** quanto precisa entrar (ou ser cortado), em centavos */
+  /** quanto precisa entrar (ou ser cortado) no total, em centavos: |pior dia dos 90| */
   falta: number;
-  /** até quando: o 1º dia no negativo */
+  /** até quando o total precisa estar na conta: o começo da vez mais funda */
   ate: ISODate;
+  /** o 1º dia no negativo */
+  primeiroNeg: ISODate;
+  /** cronograma: quanto entrar até o começo de cada vez (só as que pedem dinheiro a mais) */
+  etapas: Etapa[];
   /** o ponto mais baixo dos 90 dias */
   pior: Ponto;
   /** dias com saldo negativo */
@@ -46,9 +59,17 @@ export function quantoFalta(fut: Ponto[]): QuantoFalta | null {
   const pior = trechos.reduce((a, t) => (t.pior.v < a.v ? t.pior : a), trechos[0].pior);
   const queda = fut.length > 1 ? ((fut[0].v - fut[fut.length - 1].v) / (fut.length - 1)) * 30 : 0;
   const quedaMes = queda > 0 ? Math.round(queda) : 0;
+  const etapas: Etapa[] = [];
+  let acc = 0;
+  trechos.forEach((t, k) => {
+    const precisa = -t.pior.v;
+    if (precisa > acc) { etapas.push({ ate: t.inicio.d, valor: precisa - acc, acumulado: precisa, trecho: k }); acc = precisa; }
+  });
   return {
     falta: -pior.v,
-    ate: trechos[0].inicio.d,
+    ate: etapas[etapas.length - 1].ate,
+    primeiroNeg: trechos[0].inicio.d,
+    etapas,
     pior,
     dias: fut.filter((p) => p.v < 0).length,
     trechos,

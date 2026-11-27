@@ -176,7 +176,7 @@ export const useUI = create<UIStore>((set, get) => ({
 
 export const openSheet = (n: ReactNode) => useUI.getState().openSheet(n);
 /** destaque no gráfico do Início: pontos marcados e trechos sombreados */
-export interface Destaque { pontos: { d: string; rot: string; tipo: 'inicio' | 'pior' | 'aperto' }[]; faixas: { de: string; ate: string }[] }
+export interface Destaque { pontos: { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }[]; faixas: { de: string; ate: string }[] }
 
 export const closeSheet = () => useUI.getState().closeSheet();
 export const pedirFechar = () => useUI.getState().pedirFechar();
