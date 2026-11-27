@@ -19,7 +19,7 @@ test.describe('Simulador "E se eu comprar…?"', () => {
     await digitar(page, '60000');
     await page.locator('.sheet .chip', { hasText: 'Cartão Laranja' }).click();
     await expect(page.locator('.sheet .sim-op')).toHaveCount(2);
-    await page.locator('.sheet .chip', { hasText: '+ 3x' }).click();
+    await page.locator('.sheet .sim-mais .chip', { hasText: /^3x$/ }).click();
     await expect(page.locator('.sheet .sim-op')).toHaveCount(3);
     await expect(page.locator('.sheet .sim-op').first()).toContainText('À vista');
     await expect(page.locator('.sheet .sim-op .selo.melhor')).toHaveCount(1);
@@ -82,7 +82,7 @@ test.describe('Simulador "E se eu comprar…?"', () => {
       await page.locator('.sheet .tec-ok').click();
       for (const meio of ['Pix / débito', 'Cartão Roxo', 'Cartão Laranja']) {
         await page.locator('.sheet .chip', { hasText: meio }).click();
-        if (meio !== 'Pix / débito') for (const n of ['+ 3x', '+ 6x']) { const c = page.locator('.sheet .sim-mais .chip', { hasText: n }); if (await c.count()) await c.click(); }
+        if (meio !== 'Pix / débito') for (const n of [/^3x$/, /^6x$/]) { const c = page.locator('.sheet .sim-mais .chip', { hasText: n }); if (await c.count()) await c.click(); }
         await page.waitForTimeout(150);
         const ctx = `R$ ${valor} · ${meio}`;
         const baseMin = brl(await page.locator('.sheet .sim-base-v b').innerText());
@@ -116,5 +116,39 @@ test.describe('Simulador "E se eu comprar…?"', () => {
         expect(await problemasNaTela(page), `layout · ${tema} · ${alvo}`).toEqual([]);
       }
     }
+  });
+
+  test('parcelas de 2x a 12x: todas aparecem, 2x já ligado, ligam e desligam', async ({ page }, info) => {
+    const D = realista(); D.saldo = { ...D.saldo, valor: 60_000 };
+    await abrir(page, D);
+    await page.locator('.sim-btn').click();
+    await digitar(page, '21021');
+    await page.locator('.sheet .chip', { hasText: 'Cartão Roxo' }).click();
+    const chips = page.locator('.sheet .sim-mais .chip');
+    await expect(chips).toHaveText(['2x', '3x', '4x', '5x', '6x', '7x', '8x', '9x', '10x', '11x', '12x']);
+    await expect(page.locator('.sheet .sim-mais .chip.on')).toHaveText(['2x']); // começa comparando à vista × 2x
+    await expect(page.locator('.sheet .sim-op')).toHaveCount(2);
+    for (let i = 1; i < 11; i++) await chips.nth(i).click();
+    await expect(page.locator('.sheet .sim-op')).toHaveCount(12); // à vista e 2x…12x
+    const rotulos = await page.locator('.sheet .sim-op .sim-op-h b').allInnerTexts();
+    expect(rotulos).toEqual(['À vista', '2x', '3x', '4x', '5x', '6x', '7x', '8x', '9x', '10x', '11x', '12x']);
+    // cada parcela × número de parcelas ≈ o valor (diferença de centavos do arredondamento)
+    for (let n = 2; n <= 12; n++) {
+      const t = await page.locator('.sheet .sim-op').nth(n - 1).locator('.sim-de').innerText();
+      const m = t.replace(/\s/g, '').match(/^(\d+)×R\$([\d.]+,\d{2})$/);
+      expect(m, t).not.toBeNull();
+      expect(Number(m![1])).toBe(n);
+      const parcela = Math.round(Number(m![2].replace(/\./g, '').replace(',', '.')) * 100);
+      expect(Math.abs(parcela * n - 21021)).toBeLessThanOrEqual(n);
+    }
+    expect(await problemasNaTela(page)).toEqual([]);
+    await page.locator('.sheet .sim-mais').scrollIntoViewIfNeeded();
+    await evidencia(page, info, 'todas as parcelas de 2x a 12x ligadas');
+    await chips.nth(5).click(); // desliga 7x
+    await expect(page.locator('.sheet .sim-op')).toHaveCount(11);
+    await expect(page.locator('.sheet .sim-op .sim-op-h b', { hasText: /^7x$/ })).toHaveCount(0);
+    await chips.nth(0).click(); // desliga 2x também
+    await expect(page.locator('.sheet .sim-op .sim-op-h b', { hasText: /^2x$/ })).toHaveCount(0);
+    await expect(page.locator('.sheet .sim-op')).toHaveCount(10);
   });
 });

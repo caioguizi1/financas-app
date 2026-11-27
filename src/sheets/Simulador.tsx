@@ -15,7 +15,8 @@ import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { SmartDesc } from '../ui/Smart';
 import { QuickAdd } from './QuickAdd';
 
-const EXTRAS = [3, 6, 10, 12];
+/** parcelas de 2x a 12x (à vista vem sempre; 2x começa ligado) */
+const PARCELAS = Array.from({ length: 11 }, (_, i) => i + 2);
 const SELO: Record<Veredito, string> = { tranquilo: 'Tranquilo', atencao: 'Atenção', aperta: 'Aperta' };
 const mesNome = (mk: string) => new Date(`${mk}-15T12:00`).toLocaleDateString('pt-BR', { month: 'long' });
 
@@ -26,14 +27,14 @@ export function Simulador() {
   const [desc, setDesc] = useState('');
   useRascunho(valor > 0 || !!desc.trim()); // fechar sem querer pergunta antes
   const [cartaoId, setCartaoId] = useState<string | null>(D.cartoes[0]?.id ?? null);
-  const [extras, setExtras] = useState<number[]>([]);
+  const [extras, setExtras] = useState<number[]>([2]);
   const [escolhida, setEscolhida] = useState<number | null>(null);
   const manter = useRef(false);
   const cartao = D.cartoes.find((c) => c.id === cartaoId);
   const sug = desc.trim() ? sugerir(desc, 'saida', D.aprendido) : null;
 
   const sim = useMemo(
-    () => (valor > 0 ? simular(D, { valor, cartaoId, parcelas: 1, desc: desc.trim() || undefined, cat: sug?.cat }, [1, 2, ...extras]) : null),
+    () => (valor > 0 ? simular(D, { valor, cartaoId, parcelas: 1, desc: desc.trim() || undefined, cat: sug?.cat }, [1, ...extras]) : null),
     [D, valor, cartaoId, extras, desc, sug?.cat],
   );
   const sel: OpcaoSim | undefined = sim?.opcoes.find((o) => o.parcelas === escolhida) ?? sim?.opcoes.find((o) => o.melhor) ?? sim?.opcoes[0];
@@ -110,9 +111,12 @@ export function Simulador() {
               })}
             </div>
             {cartaoId ? (
-              <div className="chips sim-mais">
-                {EXTRAS.map((n) => <Chip key={n} on={extras.includes(n)} onClick={() => setExtras((x) => (x.includes(n) ? x.filter((y) => y !== n) : [...x, n]))}>{extras.includes(n) ? `${n}x ✓` : `+ ${n}x`}</Chip>)}
-              </div>
+              <>
+                <div className="sim-mais-t">Comparar parcelado em</div>
+                <div className="chips sim-mais" role="group" aria-label="Comparar parcelado em">
+                  {PARCELAS.map((n) => <Chip key={n} on={extras.includes(n)} onClick={() => setExtras((x) => (x.includes(n) ? x.filter((y) => y !== n) : [...x, n]))}>{n}x</Chip>)}
+                </div>
+              </>
             ) : <div className="sim-nota">No Pix a compra sai na hora. Parcelado: escolha um cartão.</div>}
 
             {sim.dica && <div className="sim-dica"><Ico n="ideia" size={17} /><span>{sim.dica}</span></div>}

@@ -886,7 +886,9 @@ html { touch-action: manipulation }
 .selo.melhor,.selo.tranquilo{background:#5fe3b3;color:#04231a}
 .selo.atencao{background:#f2b35b;color:#1d1405}
 .selo.aperta{background:#e0577f;color:#2a0612}
-.sim-mais{margin-top:10px;flex-wrap:wrap}
+.sim-mais{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:6px}
+.sim-mais .chip{justify-content:center;padding-left:0;padding-right:0;font-variant-numeric:tabular-nums}
+.sim-mais-t{margin-top:12px;font-size:12px;color:var(--dim)}
 .sim-dica{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;font-size:13px;line-height:1.45;background:rgba(95,227,179,.08);border:1px solid rgba(95,227,179,.3);border-radius:16px}
 .sim-dica svg{flex:none;margin-top:1px;color:#5fe3b3}
 .sim-nota{margin-top:10px;font-size:12px;line-height:1.45;color:var(--dim)}
