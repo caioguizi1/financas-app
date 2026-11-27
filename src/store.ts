@@ -162,7 +162,7 @@ export const useUI = create<UIStore>((set, get) => ({
   marcas: null,
   setMarcas: (marcas) => set({ marcas }),
   visao: 'futuro',
-  setVisao: (visao) => set({ visao }),
+  setVisao: (visao) => set(visao === 'mes' ? { visao, marcas: null } : { visao }), // sair da Visão futura encerra o modo do gráfico
   extratoPedido: null,
   pedirExtrato: (extratoPedido) => set({ extratoPedido }),
   toasts: [],
@@ -176,7 +176,14 @@ export const useUI = create<UIStore>((set, get) => ({
 
 export const openSheet = (n: ReactNode) => useUI.getState().openSheet(n);
 /** destaque no gráfico do Início: pontos marcados e trechos sombreados */
-export interface Destaque { pontos: { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }[]; faixas: { de: string; ate: string }[] }
+export interface Destaque {
+  /** de qual cartão veio: dá o título do modo e o "Detalhes" reabre o detalhe certo */
+  modo: 'negativo' | 'folga';
+  /** o que aparece na faixa do modo (ex.: "Dias no negativo · 3 vezes") */
+  titulo: string;
+  pontos: { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }[];
+  faixas: { de: string; ate: string }[];
+}
 
 export const closeSheet = () => useUI.getState().closeSheet();
 export const pedirFechar = () => useUI.getState().pedirFechar();

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { realista } from './dados';
-import { abrir, contrasteBaixo, evidencia, problemasNaTela } from './util';
+import { abrir, contrasteBaixo, evidencia, fecharSheet, problemasNaTela } from './util';
 import type { Data, Lancamento, Recorrente } from '../src/lib/types';
 
 /**
@@ -68,10 +68,34 @@ test.describe('Início · Pra não ficar negativo', () => {
     expect(await page.locator('main.on .chart .ch-faixa').count()).toBe(2);
     expect(await problemasNaTela(page)).toEqual([]);
     await evidencia(page, info, '3. "Ver no gráfico": bolinhas na linha, faixas e legenda');
-    // tocar no gráfico tira as marcas
+    // v2.50: é um MODO — faixa clara no topo do gráfico, com Detalhes e Sair
+    const modo = page.locator('main.on .g-modo');
+    await expect(modo).toBeVisible();
+    await expect(modo).toContainText('2 vezes no negativo');
+    // o título cabe inteiro (sem "…") numa tela de iPhone
+    expect(await modo.locator('.g-modo-t span').evaluate((e) => e.scrollWidth <= e.clientWidth), 'título da faixa cortado').toBe(true);
+    // tocar/arrastar no gráfico NÃO desliga o modo (dá pra ver qualquer dia com as marcas)
     await page.locator('main.on .chart svg').click({ position: { x: 40, y: 40 } });
+    await expect(marcas).toHaveCount(2);
+    await expect(modo).toBeVisible();
+    // tocar no título (com a seta) volta ao detalhe, e o modo continua lá por baixo
+    await modo.getByRole('button', { name: /Ver detalhes/ }).click();
+    await expect(page.locator('.sheet .sheet-head h3')).toHaveText('Pra não ficar negativo');
+    await fecharSheet(page);
+    await expect(modo).toBeVisible();
+    await evidencia(page, info, '4. modo "Ver no gráfico" com faixa: título (detalhes) e Sair');
+    // "Sair" volta ao gráfico normal
+    await modo.getByRole('button', { name: /Sair/ }).click();
+    await expect(modo).toHaveCount(0);
     await expect(marcas).toHaveCount(0);
     await expect(leg).toHaveCount(0);
+    // e trocar para "Para onde foi" também encerra o modo
+    await page.locator('.qf').click();
+    await page.locator('.sheet').getByRole('button', { name: 'Ver no gráfico' }).click();
+    await expect(modo).toBeVisible();
+    await page.getByRole('tab', { name: 'Para onde foi' }).click();
+    await page.getByRole('tab', { name: 'Visão futura' }).click();
+    await expect(page.locator('main.on .g-modo')).toHaveCount(0);
   });
 
   // v2.49 — o print do Caio: 3 vezes no negativo, a 1ª rasa e a funda depois. O total não pode ser
@@ -117,6 +141,19 @@ test.describe('Início · Pra não ficar negativo', () => {
     await expect(p1.locator('.qf:not(.folga)')).toHaveCount(0);
   });
 
+  test('faixa do modo cabe inteira em iPhone estreito (375 px)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    const D = realista(); D.saldo = { ...D.saldo, valor: 60_000 };
+    D.lancamentos.push({ ...contaGrande, id: 'r1', valor: 120_000 }, { ...contaGrande, id: 'r2', valor: 300_000, data: '2027-01-11' });
+    await abrir(page, D);
+    await page.locator('.qf').click();
+    await page.locator('.sheet').getByRole('button', { name: 'Ver no gráfico' }).click();
+    const t = page.locator('main.on .g-modo-t span');
+    await expect(t).toHaveText('3 vezes no negativo');
+    expect(await t.evaluate((e) => e.scrollWidth <= e.clientWidth), 'título cortado em 375 px').toBe(true);
+    await expect(page.locator('main.on .g-modo').getByRole('button', { name: /Sair/ })).toBeVisible();
+  });
+
   test('folga apertada (sem ficar negativo): cartão âmbar e detalhe', async ({ page }, info) => {
     const D = realista(); D.saldo = { ...D.saldo, valor: 50_000 };
     await abrir(page, D);
@@ -133,6 +170,9 @@ test.describe('Início · Pra não ficar negativo', () => {
     await page.locator('.sheet').getByRole('button', { name: 'Ver no gráfico' }).click();
     await expect(page.locator('main.on .chart .ch-marca.aperto')).toHaveCount(1);
     await expect(page.locator('main.on .chart .ch-leg')).toContainText('Mais apertado');
+    await expect(page.locator('main.on .g-modo.folga')).toContainText('Dia mais apertado');
+    await page.locator('main.on .g-modo').getByRole('button', { name: /Sair/ }).click();
+    await expect(page.locator('main.on .chart .ch-marca')).toHaveCount(0);
   });
 
   test('a promessa vale: lançando o valor até a data, não falta mais (folga R$ 0,00); 1 centavo a menos, falta R$ 0,01', async ({ page }) => {
@@ -187,6 +227,12 @@ test.describe('Início · Pra não ficar negativo', () => {
       await expect(page.locator('.sheet .qfs')).toBeVisible();
       expect(await contrasteBaixo(page), 'contraste · detalhe').toEqual([]);
       expect(await problemasNaTela(page), 'layout · detalhe').toEqual([]);
+      // e a faixa do modo "Ver no gráfico"
+      await page.locator('.sheet').getByRole('button', { name: 'Ver no gráfico' }).click();
+      await expect(page.locator('main.on .g-modo')).toBeVisible();
+      await page.waitForTimeout(500);
+      expect(await contrasteBaixo(page), 'contraste · faixa do modo').toEqual([]);
+      expect(await problemasNaTela(page), 'layout · faixa do modo').toEqual([]);
       // e o âmbar (folga apertada), noutra aba
       const p2 = await page.context().newPage();
       await p2.emulateMedia({ colorScheme: tema });

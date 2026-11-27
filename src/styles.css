@@ -1060,3 +1060,17 @@ html { touch-action: manipulation }
 .qfs-como summary::after { content: ' ›'; color: var(--dim) }
 .qfs-como[open] summary::after { content: ' ⌄' }
 .qfs-como p { margin: 6px 0 0; line-height: 1.45 }
+
+/* v2.50: modo "Ver no gráfico" — faixa no topo do gráfico com o que está sendo mostrado, Detalhes e Sair */
+.g-modo { display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 10px; border-radius: 14px; background: rgba(224, 87, 127, .14); border: 1px solid rgba(224, 87, 127, .42); overflow: hidden }
+.g-modo.folga { background: rgba(242, 179, 91, .13); border-color: rgba(242, 179, 91, .42) }
+.g-modo-ic { display: grid; place-items: center; color: #f08aa8; flex: none }
+.g-modo.folga .g-modo-ic { color: #f2b35b }
+.g-modo-ic .ic-l, .g-modo-x .ic-l { margin: 0 }
+.g-modo-t { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; padding: 7px 4px; margin: -2px 0; font: inherit; font-size: 13.5px; font-weight: 600; color: #fff; cursor: pointer; text-align: left; min-height: 32px }
+.g-modo-t span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.g-modo-t .ic-l { margin: 0; color: rgba(255, 255, 255, .7); flex: none }
+.g-modo-b, .g-modo-x { flex: none; border: 0; border-radius: 10px; padding: 7px 9px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; min-height: 32px }
+.g-modo-b { background: transparent; color: #e7e3f5 }
+.g-modo-x { background: rgba(255, 255, 255, .14); color: #fff }
+.hero.em-modo { box-shadow: 0 0 0 1px rgba(224, 87, 127, .28) inset }

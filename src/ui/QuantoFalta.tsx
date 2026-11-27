@@ -51,14 +51,14 @@ function Folga({ fut, f }: { fut: Ponto[]; f: FolgaApertada }) {
   );
 }
 
-function FolgaSheet({ fut }: { fut: Ponto[] }) {
+export function FolgaSheet({ fut }: { fut: Ponto[] }) {
   const f = folgaApertada(fut);
   if (!f) return <><SheetHeader title="Folga apertada" /><p className="mut">A folga não está mais apertada.</p></>;
   const ver = () => {
     closeSheet();
     const ui = useUI.getState();
     ui.setVisao('futuro');
-    ui.setMarcas({ pontos: [{ d: f.dia, rot: `Mais apertado · ${brl(f.folga)} ${quando(fut, f.dia)}`, tipo: 'aperto' }], faixas: [] });
+    ui.setMarcas({ modo: 'folga', titulo: 'Dia mais apertado', pontos: [{ d: f.dia, rot: `Mais apertado · ${brl(f.folga)} ${quando(fut, f.dia)}`, tipo: 'aperto' }], faixas: [] });
     requestAnimationFrame(() => document.querySelector('main.on .chart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   };
   return (
@@ -122,7 +122,7 @@ export function QuantoFaltaSheet({ fut, voltaPor }: { fut: Ponto[]; voltaPor?: s
     closeSheet();
     const ui = useUI.getState();
     ui.setVisao('futuro');
-    ui.setMarcas({ pontos, faixas });
+    ui.setMarcas({ modo: 'negativo', titulo: q.trechos.length > 1 ? `${q.trechos.length} vezes no negativo` : 'Dias no negativo', pontos, faixas });
     requestAnimationFrame(() => document.querySelector('main.on .chart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   };
   return (

@@ -7,13 +7,13 @@ const W = 340, H = 140, PT = 14, PB = 10;
 
 /** Saldo projetado em degraus; arrastar mostra o dia. Abaixo de zero fica vermelho. */
 /** `ghost`: projeção com uma compra simulada (linha tracejada por cima; mesmas datas de `pts`). */
-/** marca um dia no gráfico — some ao tocar no gráfico. `n`: número da vez no negativo (1, 2, 3…);
+/** marca um dia no gráfico (modo "Ver no gráfico"; sai pelo botão Sair da faixa do modo). `n`: número da vez no negativo (1, 2, 3…);
  *  "pior" = a vez mais funda (destacada), "trecho" = as outras, "aperto" = dia mais apertado (âmbar). */
 export interface MarcaGrafico { d: string; rot: string; tipo: 'trecho' | 'pior' | 'aperto'; n?: number }
 /** trecho a sombrear no gráfico (ex.: cada vez que o saldo fica negativo) */
 export interface FaixaGrafico { de: string; ate: string }
 
-export function BalanceChart({ pts, onScrub, ghost, marcas, faixas, onToque }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[]; marcas?: MarcaGrafico[]; faixas?: FaixaGrafico[]; onToque?: () => void }) {
+export function BalanceChart({ pts, onScrub, ghost, marcas, faixas }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[]; marcas?: MarcaGrafico[]; faixas?: FaixaGrafico[] }) {
   const id = useId().replace(/:/g, '');
   const svgRef = useRef<SVGSVGElement>(null);
   const crossRef = useRef<SVGLineElement>(null);
@@ -49,7 +49,7 @@ export function BalanceChart({ pts, onScrub, ghost, marcas, faixas, onToque }: {
   return (
     <div
       className="chart"
-      onPointerDown={(e) => { (e.target as Element).setPointerCapture?.(e.pointerId); onToque?.(); scrub(e.clientX); }}
+      onPointerDown={(e) => { (e.target as Element).setPointerCapture?.(e.pointerId); scrub(e.clientX); }}
       onPointerMove={(e) => (e.buttons || e.pointerType === 'mouse') && scrub(e.clientX)}
       onPointerUp={end} onPointerLeave={end} onPointerCancel={end}
     >

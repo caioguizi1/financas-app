@@ -18,7 +18,7 @@ import { faturasAtuais } from '../lib/faturas';
 import { trechoNegativo } from '../lib/insights';
 import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
-import { QuantoFalta } from '../ui/QuantoFalta';
+import { FolgaSheet, QuantoFalta, QuantoFaltaSheet } from '../ui/QuantoFalta';
 import { Button, itemVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
@@ -89,7 +89,20 @@ export function Home() {
 
       {visao === 'mes' ? <ParaOndeFoi /> : (
       <>
-      <m.div className="hero" initial={{ opacity: 0, y: 12, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }}>
+      <m.div className={`hero${marcas ? ' em-modo' : ''}`} initial={{ opacity: 0, y: 12, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 26 }}>
+        {/* v2.50: "Ver no gráfico" é um MODO do gráfico — faixa com o que está sendo mostrado, Detalhes e Sair */}
+        <AnimatePresence initial={false}>
+          {marcas && (
+            <m.div key="modo" className={`g-modo ${marcas.modo}`} role="status" initial={{ opacity: 0, height: 0, marginBottom: 0 }} animate={{ opacity: 1, height: 'auto', marginBottom: 12 }} exit={{ opacity: 0, height: 0, marginBottom: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 32 }}>
+              <span className="g-modo-ic"><Ico n={marcas.modo === 'folga' ? 'info' : 'alerta'} size={15} /></span>
+              {/* o título é o botão de detalhes (seta), pra caber inteiro até em 375 px */}
+              <button className="g-modo-t" aria-label={`Ver detalhes: ${marcas.titulo}`} onClick={() => openSheet(marcas.modo === 'folga' ? <FolgaSheet fut={vm.fut} /> : <QuantoFaltaSheet fut={vm.fut} voltaPor={vm.neg?.voltaPor} />)}>
+                <span>{marcas.titulo}</span><Ico n="avancar" size={15} />
+              </button>
+              <button className="g-modo-x" onClick={() => useUI.getState().setMarcas(null)} aria-label="Sair do modo e voltar ao gráfico normal"><Ico n="fechar" size={16} />Sair</button>
+            </m.div>
+          )}
+        </AnimatePresence>
         <div className="lbl">{sp ? diaLabel(sp.d) : 'Saldo hoje'}</div>
         <div className={`big num ${shown < 0 ? 'neg' : ''}`}>{sp ? brl(sp.v) : <AnimatedBRL value={vm.hoje} />}</div>
         <div className="sub">
@@ -105,7 +118,7 @@ export function Home() {
             <span className="g"><i className="l-sim" />Com a compra ({sim.opcoes[0].parcelas === 1 ? 'à vista' : `${sim.opcoes[0].parcelas}x`})</span>
           </div>
         )}
-        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} marcas={marcas?.pontos} faixas={marcas?.faixas} onToque={() => marcas && useUI.getState().setMarcas(null)} />
+        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} marcas={marcas?.pontos} faixas={marcas?.faixas} />
       </m.div>
 
       {sim ? (
