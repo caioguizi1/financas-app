@@ -71,6 +71,10 @@ test.describe('Lançar pelo ＋', () => {
     await aba(page, 'Extrato');
     await page.locator('.item:visible', { hasText: 'Show' }).first().click();
     await page.locator('.sheet .amount.tap').click();
+    // v2.52: o teclado continua do valor da tela (antes o 1º número substituía tudo); pra trocar, apaga e digita
+    await expect(page.locator('.sheet .amount').first()).toContainText('50,00');
+    for (let i = 0; i < 4; i++) await page.locator('.sheet .key[aria-label="Apagar"]').click();
+    await expect(page.locator('.sheet .amount').first()).toContainText('0,00');
     for (const k of '7000') await page.locator(`.sheet .key[aria-label="${k}"]`).click();
     await page.locator('.sheet .tec-ok').click();
     await page.locator('.sheet [data-primary]').click();

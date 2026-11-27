@@ -260,7 +260,7 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
       )}
       </div>
       <div className="sl-foot">
-      <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar={!novo} small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
+      <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad small value={l.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="actions tight">
         <Button disabled={!l.valor} onClick={salvar}>{fixo ? (dupFixo ? 'Salvar outro fixo mesmo assim' : 'Salvar como fixo') : novo ? 'Lançar' : 'Salvar'}</Button>
       </div>

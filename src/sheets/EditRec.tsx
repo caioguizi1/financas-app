@@ -83,7 +83,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} onUsar={() => { setManual(true); set({ cat: sug!.cat, ico: sug!.ico }); }} />
       <AmountDisplay value={r.valor} onClick={tec.abrir} ativo={tec.aberto} />
-      <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad recomecar={!novo} value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
+      <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="lab">Repete</div>
       <Segmented<Freq> value={freq} onChange={mudarFreq} options={[{ v: 'mensal', label: 'Todo mês' }, { v: 'semanal', label: 'Toda semana' }, { v: 'anual', label: 'Todo ano' }]} />
       {freq === 'semanal' && (

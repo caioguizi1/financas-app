@@ -34,21 +34,24 @@ export function AnimatedBRL({ value, sign, className }: { value: number; sign?: 
 const stack: string[] = [];
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', '⌫'];
 
-/** `recomecar`: o primeiro dígito começa um valor novo (edição); ⌫ continua ajustando o atual. */
-export function Keypad({ value, onChange, small, recomecar }: { value: number; onChange: (v: number) => void; small?: boolean; recomecar?: boolean }) {
+/**
+ * Teclado de valor. Sempre continua do valor que está na tela (v2.52: antes, numa edição, o 1º número
+ * digitado substituía o valor inteiro — R$ 78,29 + "5" virava R$ 0,05 e parecia que tinha zerado).
+ * ⌫ apaga o último dígito; segurar o ⌫ limpa o valor.
+ */
+export function Keypad({ value, onChange, small }: { value: number; onChange: (v: number) => void; small?: boolean }) {
   const id = useId();
   const ref = useRef({ value, onChange });
   ref.current = { value, onChange };
-  const primeiro = useRef(!!recomecar);
+  const segurar = useRef<{ t?: ReturnType<typeof setTimeout>; limpou: boolean }>({ limpou: false });
 
   const press = (k: string) => {
-    const { onChange: set } = ref.current;
-    let v = ref.current.value;
-    if (k === '⌫') { primeiro.current = false; return set(Math.floor(v / 10)); }
-    if (primeiro.current) { primeiro.current = false; v = 0; }
+    const { onChange: set, value: v } = ref.current;
+    if (k === '⌫') return set(Math.floor(v / 10));
     const n = Number(String(v) + k);
     if (n < 1e11) set(n);
   };
+  const soltar = () => { clearTimeout(segurar.current.t); segurar.current.t = undefined; };
 
   useEffect(() => {
     stack.push(id);
@@ -70,7 +73,13 @@ export function Keypad({ value, onChange, small, recomecar }: { value: number; o
   return (
     <div className={`keys ${small ? 'small' : ''}`}>
       {KEYS.map((k) => (
-        <button key={k} className="key" onClick={() => press(k)} aria-label={k === '⌫' ? 'Apagar' : k}>
+        <button key={k} className="key" aria-label={k === '⌫' ? 'Apagar' : k}
+          onClick={() => { if (k === '⌫' && segurar.current.limpou) { segurar.current.limpou = false; return; } press(k); }}
+          {...(k === '⌫' ? {
+            // segurar o ⌫ limpa o valor (como no teclado do iPhone, sem perder nada sem querer)
+            onPointerDown: () => { segurar.current.limpou = false; soltar(); segurar.current.t = setTimeout(() => { segurar.current.limpou = true; ref.current.onChange(0); navigator.vibrate?.(10); }, 550); },
+            onPointerUp: soltar, onPointerLeave: soltar, onPointerCancel: soltar, onContextMenu: (e: { preventDefault: () => void }) => e.preventDefault(),
+          } : {})}>
           {k}
         </button>
       ))}
