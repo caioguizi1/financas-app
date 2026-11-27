@@ -129,6 +129,9 @@ interface UIStore {
   /** Início: "Visão futura" (gráfico de saldo) ou "Para onde foi" (gastos por categoria) */
   visao: 'futuro' | 'mes';
   setVisao: (v: 'futuro' | 'mes') => void;
+  /** dias marcados no gráfico do Início ("Ver no gráfico" do "Pra não ficar negativo") */
+  marcas: { d: string; rot: string; baixo?: boolean }[] | null;
+  setMarcas: (m: { d: string; rot: string; baixo?: boolean }[] | null) => void;
   /** abrir o Extrato já filtrado (vindo de "Para onde foi") */
   extratoPedido: { cat: string; mk: string } | null;
   pedirExtrato: (p: { cat: string; mk: string } | null) => void;
@@ -156,6 +159,8 @@ export const useUI = create<UIStore>((set, get) => ({
   pedirFechar: () => { const s = get(); if (s.temRascunho()) set({ confirmarSaida: true }); else s.closeSheet(); },
   sim: null,
   setSim: (sim) => set({ sim }),
+  marcas: null,
+  setMarcas: (marcas) => set({ marcas }),
   visao: 'futuro',
   setVisao: (visao) => set({ visao }),
   extratoPedido: null,

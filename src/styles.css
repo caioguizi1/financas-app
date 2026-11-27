@@ -13,8 +13,10 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* v2.47: fatia "+N categorias" da rosca — neutra, diferente do cinza-lilás de "Outros" */
 :root {
   color-scheme: dark;
+  --pf-resto: #5e5975;
   /* base */
   --bg: #07060c;
   --card: #100e1a;
@@ -990,3 +992,41 @@ html { touch-action: manipulation }
 /* o topo fixo (valor) e a lista: corte claro, sem texto "por baixo" do subtítulo */
 .sim .sl-top{padding-bottom:6px;border-bottom:1px solid var(--line);margin:0 -20px;padding-left:20px;padding-right:20px}
 .sim .sl-mid{padding-top:14px}
+
+/* v2.47 marcas no gráfico ("Ver no gráfico" do "Pra não ficar negativo") */
+.ch-marcas { position: absolute; left: 0; right: 0; top: 0; bottom: 22px; pointer-events: none }
+.ch-marca { position: absolute; transform: translate(-50%, -50%); display: block }
+.ch-marca i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #e0577f; box-shadow: 0 0 0 3px rgba(12, 10, 22, .85), 0 0 0 5px rgba(224, 87, 127, .35) }
+.ch-marca b { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 600; color: #fff; background: rgba(12, 10, 22, .82); border: 1px solid rgba(224, 87, 127, .55); border-radius: 8px; padding: 3px 7px }
+.ch-marca.esq b { left: auto; right: -6px; transform: none }
+.ch-marca.dir b { left: -6px; transform: none }
+.ch-marca.baixo b { bottom: auto; top: 18px }
+
+/* v2.47 "Pra não ficar negativo" — cartão compacto (no lugar do aviso vermelho) e detalhe */
+.qf{margin-top:14px;width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--card);border:1px solid color-mix(in srgb,var(--out) 45%,var(--line));text-align:left;color:inherit;font:inherit;cursor:pointer}
+.qf:active{transform:scale(.99)}
+.qf-ic{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:var(--out);background:color-mix(in srgb,var(--out) 14%,transparent)}
+.qf-ic .ic-l,.qf-chev{margin:0}
+.qf-chev{flex:none;color:var(--dim)}
+.qf-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.qf-t{font-size:15px;font-weight:600}
+.qf-t b{color:var(--out);white-space:nowrap}
+.qf-s{font-size:12.5px;color:var(--mut)}
+.qf-s b{color:var(--text)}
+.qf-bar{position:relative;display:block;height:5px;border-radius:99px;background:color-mix(in srgb,var(--in) 35%,transparent);margin-top:7px}
+.qf-neg{position:absolute;top:0;bottom:0;border-radius:99px;background:var(--out)}
+.qf-pin{position:absolute;top:-3px;width:3px;height:11px;margin-left:-1.5px;border-radius:2px;background:var(--text)}
+.qfs{padding:4px 0 8px}
+.qfs-v{font-size:28px;font-weight:700}
+.qfs-v b{white-space:nowrap}
+.qfs .qf-bar{height:8px;margin-top:16px}
+.qfs .qf-pin{top:-4px;height:16px;width:4px;margin-left:-2px}
+.qf-leg{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-top:4px}
+.qfs-l{margin:14px 0 0}
+.qfs-l div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.qfs-l dt{color:var(--mut);font-size:14px}
+.qfs-l dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.qfs-l dd.neg{color:var(--out)}
+.qfs-l small{font-weight:400;color:var(--mut)}
+.qf-p{font-size:14px;color:var(--mut);margin:14px 0 0}
+.qf-rep{font-size:14px;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--warn) 14%,transparent)}

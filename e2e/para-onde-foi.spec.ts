@@ -65,4 +65,40 @@ test.describe('Início · Para onde foi', () => {
     await expect(page.locator('main.on .catf .chip.on')).toContainText('Mercado');
     expect(erros).toEqual([]);
   });
+
+  // v2.47 — o print do Caio: uma "lacuna sem cor" no topo da rosca. Categorias menores que o espaço
+  // entre fatias sumiam e o fundo aparecia. Agora a rosca espelha a lista e nenhuma fatia some.
+  test('rosca fecha a volta: espelha a lista e nenhuma fatia some', { tag: '@safari' }, async ({ page }, info) => {
+    const d = vazio();
+    let n = 0;
+    const g = (cat: string, valor: number): Lancamento => ({ id: `r${n++}`, tipo: 'saida', valor, cat, data: '2026-11-10', desc: `Gasto ${cat}`, cartaoId: null, parcelas: 1, criado: 1, meio: 'pix' });
+    // 4 grandes + 8 pequenas (3 delas abaixo de 0,7% do total — as que sumiam)
+    d.lancamentos = [g('compras', 257_613), g('pets', 202_724), g('casa', 130_125), g('outros', 86_929), g('mercado', 40_000), g('comida', 25_000),
+      g('transporte', 15_000), g('saude', 12_000), g('lazer', 6_000), g('contas', 3_000), g('assinaturas', 1_500), g('educacao', 800)];
+    await abrir(page, d);
+    await page.getByRole('tab', { name: 'Para onde foi' }).click();
+    const C = 2 * Math.PI * 70;
+    const medir = () => page.locator('.pf-rosca .pf-fatia').evaluateAll((els) => els.map((e) => ({ k: e.getAttribute('data-fatia'), len: Number(e.getAttribute('stroke-dasharray')!.split(' ')[0]), off: -Number(e.getAttribute('stroke-dashoffset')) })));
+    const conferir = (fs: { len: number; off: number }[]) => {
+      for (const f of fs) expect(f.len, 'fatia sumida').toBeGreaterThanOrEqual(2.99);
+      const ult = fs[fs.length - 1];
+      expect(ult.off + ult.len + 3, 'a volta não fecha').toBeCloseTo(C, 3);
+    };
+    // fechada: 4 linhas + "+8 categorias" → 5 fatias, na mesma ordem
+    await expect(page.locator('.pf-linha')).toHaveCount(5);
+    let fs = await medir();
+    expect(fs.map((f) => f.k)).toEqual(['compras', 'pets', 'casa', 'outros', '__resto']);
+    conferir(fs);
+    // a fatia agrupada tem cor própria, diferente de "Outros"
+    const cores = await page.locator('.pf-rosca .pf-fatia').evaluateAll((els) => els.map((e) => getComputedStyle(e).stroke));
+    expect(cores[4]).not.toBe(cores[3]);
+    await evidencia(page, info, 'rosca com 4 categorias + "+8 categorias", sem lacuna');
+    // aberta: todas as 12 categorias, cada uma visível
+    await page.locator('.pf-linha', { hasText: '+ 8 categorias' }).click();
+    await expect(page.locator('.pf-linha')).toHaveCount(12);
+    fs = await medir();
+    expect(fs).toHaveLength(12);
+    conferir(fs);
+    await evidencia(page, info, 'todas as 12 categorias: a menor (R$ 8) ainda aparece');
+  });
 });

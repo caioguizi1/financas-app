@@ -7,7 +7,10 @@ const W = 340, H = 140, PT = 14, PB = 10;
 
 /** Saldo projetado em degraus; arrastar mostra o dia. Abaixo de zero fica vermelho. */
 /** `ghost`: projeção com uma compra simulada (linha tracejada por cima; mesmas datas de `pts`). */
-export function BalanceChart({ pts, onScrub, ghost }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[] }) {
+/** marca um dia no gráfico (ex.: "1º dia negativo", "pior") — some ao tocar no gráfico */
+export interface MarcaGrafico { d: string; rot: string; baixo?: boolean }
+
+export function BalanceChart({ pts, onScrub, ghost, marcas, onToque }: { pts: Ponto[]; onScrub: (i: number | null) => void; ghost?: Ponto[]; marcas?: MarcaGrafico[]; onToque?: () => void }) {
   const id = useId().replace(/:/g, '');
   const svgRef = useRef<SVGSVGElement>(null);
   const crossRef = useRef<SVGLineElement>(null);
@@ -43,7 +46,7 @@ export function BalanceChart({ pts, onScrub, ghost }: { pts: Ponto[]; onScrub: (
   return (
     <div
       className="chart"
-      onPointerDown={(e) => { (e.target as Element).setPointerCapture?.(e.pointerId); scrub(e.clientX); }}
+      onPointerDown={(e) => { (e.target as Element).setPointerCapture?.(e.pointerId); onToque?.(); scrub(e.clientX); }}
       onPointerMove={(e) => (e.buttons || e.pointerType === 'mouse') && scrub(e.clientX)}
       onPointerUp={end} onPointerLeave={end} onPointerCancel={end}
     >
@@ -69,6 +72,20 @@ export function BalanceChart({ pts, onScrub, ghost }: { pts: Ponto[]; onScrub: (
         {gline && <path className="ghost" d={gline} fill="none" stroke="#F2B35B" strokeWidth={2} strokeDasharray="5 4" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />}
         <line ref={crossRef} x1="0" x2="0" y1={PT - 6} y2={H} stroke="rgba(255,255,255,.55)" vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
       </svg>
+      {marcas && marcas.length > 0 && (
+        <div className="ch-marcas" aria-live="polite">
+          {marcas.map((mk) => {
+            const i = pts.findIndex((p) => p.d === mk.d);
+            if (i < 0) return null;
+            const left = (sx(i) / W) * 100, top = (sy(pts[i].v) / H) * 100;
+            return (
+              <m.span key={mk.d + mk.rot} className={`ch-marca${left > 70 ? ' esq' : left < 18 ? ' dir' : ''}${mk.baixo ? ' baixo' : ''}`} style={{ left: `${left}%`, top: `${top}%` }} initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 24 }}>
+                <i aria-hidden /><b>{mk.rot}</b>
+              </m.span>
+            );
+          })}
+        </div>
+      )}
       <div className="xl">
         <span style={{ left: 6 }}>hoje</span>
         {ticks.filter((i) => i > n * 0.16 && i < n * 0.86).map((i) => (

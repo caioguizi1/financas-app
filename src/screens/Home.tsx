@@ -18,11 +18,11 @@ import { faturasAtuais } from '../lib/faturas';
 import { trechoNegativo } from '../lib/insights';
 import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
+import { QuantoFalta } from '../ui/QuantoFalta';
 import { Button, itemVariants } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { springSnappy } from '../ui/motion';
-import { Aviso } from '../ui/Aviso';
 import { CatTile } from '../ui/CatIco';
 import { Ico } from '../ui/Ico';
 import { nomeExib } from '../ui/nome';
@@ -33,12 +33,13 @@ export function Home() {
   // compra simulada no gráfico (só na tela); some se os dados mudarem, pra não mostrar conta velha
   const sim = useUI((s) => s.sim);
   const visao = useUI((s) => s.visao);
+  const marcas = useUI((s) => s.marcas);
   const setVisao = useUI.getState().setVisao;
   // compra pequena perto da escala do gráfico: a linha tracejada fica em cima da outra; avisa em texto
   const simPequena = !!sim && (() => { const vs = sim.base.pts.map((p) => p.v); const faixa = Math.max(...vs, 0) - Math.min(...vs, 0); return sim.compra.valor < faixa * 0.015; })();
   const simCartao = sim?.compra.cartaoId ? D.cartoes.find((c) => c.id === sim.compra.cartaoId) : undefined;
   const dPrev = useRef(D);
-  useEffect(() => { if (dPrev.current !== D) { dPrev.current = D; if (useUI.getState().sim) useUI.getState().setSim(null); } }, [D]);
+  useEffect(() => { if (dPrev.current !== D) { dPrev.current = D; const ui = useUI.getState(); if (ui.sim) ui.setSim(null); if (ui.marcas) ui.setMarcas(null); } }, [D]);
   const t = today();
   const now = new Date();
 
@@ -104,7 +105,7 @@ export function Home() {
             <span className="g"><i className="l-sim" />Com a compra ({sim.opcoes[0].parcelas === 1 ? 'à vista' : `${sim.opcoes[0].parcelas}x`})</span>
           </div>
         )}
-        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} />
+        <BalanceChart pts={vm.fut} onScrub={setScrubI} ghost={sim?.opcoes[0].pts} marcas={marcas ?? undefined} onToque={() => marcas && useUI.getState().setMarcas(null)} />
       </m.div>
 
       {sim ? (
@@ -135,14 +136,8 @@ export function Home() {
         </div>
       )}
 
-      {vm.neg && (
-        <Aviso nivel="grave">
-          Seu saldo fica <b>negativo a partir de {diaLabel(vm.neg.inicio.d).toLowerCase()}</b> ({brl(vm.neg.inicio.v)})
-          {vm.neg.pior.d !== vm.neg.inicio.d && <> e chega a <b>{brl(vm.neg.pior.v)}</b> em {dm(vm.neg.pior.d)}</>}
-          {vm.neg.volta ? <>. Volta ao positivo em {dm(vm.neg.volta.d)}{vm.neg.voltaPor ? ` (${vm.neg.voltaPor})` : ''}.</> : <> e não volta ao positivo nos próximos 90 dias.</>}
-          {' '}Vale segurar gastos até lá.
-        </Aviso>
-      )}
+      {/* v2.47: no lugar do aviso vermelho — quanto falta e até quando; tocar abre o detalhe */}
+      {vm.neg && <QuantoFalta fut={vm.fut} voltaPor={vm.neg.voltaPor} />}
       </>
       )}
 

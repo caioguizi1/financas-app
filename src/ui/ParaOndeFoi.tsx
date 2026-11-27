@@ -7,6 +7,7 @@ import { catN } from '../lib/categories';
 import { addMonths, dm, MES, MESL, monthKey, today } from '../lib/dates';
 import { gastosDoMes, historicoCat, resumoGastos, type CatMes } from '../lib/gastosMes';
 import { brl } from '../lib/money';
+import { fatiasRosca } from '../lib/rosca';
 import { closeSheet, getData, openSheet, useData, useUI } from '../store';
 import { Button } from './Controls';
 import { CatTile, COR_CAT } from './CatIco';
@@ -31,20 +32,22 @@ function Variacao({ agora, antes, mk }: { agora: number; antes: number; mk: stri
   );
 }
 
-function Rosca({ cats, total }: { cats: CatMes[]; total: number }) {
-  let off = 0;
-  const fatias = cats.map((c) => {
-    const len = Math.max(0, c.pct * C - (cats.length > 1 ? GAP : 0));
-    const f = { cat: c.cat, len, off };
-    off += c.pct * C;
-    return f;
-  });
+/** Fatia agrupada ("+N categorias"): cor própria, diferente de "Outros". */
+const RESTO = '__resto';
+const corFatia = (k: string) => (k === RESTO ? 'var(--pf-resto)' : corDe(k));
+
+/** A rosca mostra o mesmo que a lista: as categorias da lista e, se houver, uma fatia "+N categorias". */
+function Rosca({ cats, resto, total }: { cats: CatMes[]; resto: CatMes[]; total: number }) {
+  const restoPct = resto.reduce((a, c) => a + c.pct, 0);
+  const itens = [...cats.map((c) => ({ chave: c.cat, pct: c.pct })), ...(resto.length ? [{ chave: RESTO, pct: restoPct }] : [])];
+  const fatias = fatiasRosca(itens, C, GAP);
+  const rotulo = [...cats.map((c) => `${catN(c.cat)} ${Math.round(c.pct * 100)}%`), ...(resto.length ? [`mais ${resto.length} categorias ${Math.round(restoPct * 100)}%`] : [])].join(', ');
   return (
     <div className="pf-rosca">
-      <svg viewBox="0 0 170 170" role="img" aria-label={`Gastos por categoria: ${cats.map((c) => `${catN(c.cat)} ${Math.round(c.pct * 100)}%`).join(', ')}`}>
+      <svg viewBox="0 0 170 170" role="img" aria-label={`Gastos por categoria: ${rotulo}`}>
         <circle cx="85" cy="85" r={R} className="pf-trilho" />
         {fatias.map((f) => (
-          <circle key={f.cat} cx="85" cy="85" r={R} className="pf-fatia" stroke={corDe(f.cat)} strokeDasharray={`${f.len} ${C}`} strokeDashoffset={-f.off} />
+          <circle key={f.chave} cx="85" cy="85" r={R} className="pf-fatia" data-fatia={f.chave} stroke={corFatia(f.chave)} strokeDasharray={`${f.len} ${C}`} strokeDashoffset={-f.off} />
         ))}
       </svg>
       <div className="pf-centro"><span>gastos</span><b className="num">{brl(total).replace(/,\d\d$/, '')}</b></div>
@@ -75,7 +78,7 @@ export function ParaOndeFoi() {
         </div>
         {g.cats.length ? (
           <div className="pf-topo">
-            <Rosca cats={g.cats} total={g.total} />
+            <Rosca cats={linhas} resto={resto} total={g.total} />
             <div className="pf-lado">
               <Variacao agora={g.total} antes={g.totalAntes} mk={mk} />
               {g.ateDia && g.totalAntes > 0 && <small className="pf-cmp">comparando até o dia {g.ateDia}</small>}
@@ -107,7 +110,7 @@ export function ParaOndeFoi() {
               <CatTile cat="outros" />
               <span className="pf-meio">
                 <span className="pf-t"><b>+ {resto.length} categorias</b><b className="num">{brl(resto.reduce((a, c) => a + c.total, 0))}</b></span>
-                <span className="pf-barra"><i style={{ width: `${Math.max(3, (resto.reduce((a, c) => a + c.total, 0) / maior) * 100)}%`, background: COR_CAT.outros }} /></span>
+                <span className="pf-barra"><i style={{ width: `${Math.max(3, (resto.reduce((a, c) => a + c.total, 0) / maior) * 100)}%`, background: 'var(--pf-resto)' }} /></span>
               </span>
               <span className="pf-pct num">{Math.round(resto.reduce((a, c) => a + c.pct, 0) * 100)}%</span>
             </button>
