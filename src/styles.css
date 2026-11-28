@@ -1130,3 +1130,13 @@ html { touch-action: manipulation }
 .reemb-nota { font-size: 12.5px; color: var(--mut); padding: 8px 2px 0; line-height: 1.4 }
 .fs-row > span:first-child { white-space: nowrap }
 .fs-nota b { color: var(--text); font-weight: 600 }
+
+/*
+ * v2.55 · garantia: itens de lista nunca ficam invisíveis.
+ * Eles nascem transparentes e aparecem em cascata (motion). No iPhone, essa animação às vezes travava no
+ * começo e as caixas de Fixos ficavam vazias (os itens ocupando espaço, invisíveis). Uma animação CSS vale
+ * mais que o estilo que o motion deixa no item: 1,4 s depois de o item aparecer na tela, ele fica visível,
+ * aconteça o que acontecer com a animação de entrada. (Não mexe em transform: arrastar pro lado continua.)
+ */
+@keyframes garante-visivel { to { opacity: 1 } }
+.list > .swipe, .stats > .stat, .insights > .insight, .months > *, .list > .item, .extra-grid > .extra-card { animation: garante-visivel 1ms linear 1.4s forwards }
