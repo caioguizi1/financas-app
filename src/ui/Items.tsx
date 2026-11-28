@@ -27,13 +27,15 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
   const mk = monthKey(today());
   const ate = prox ? ` · ${brl(prox.tipo === 'entrada' ? prox.valor : -prox.valor)} a partir de ${mesCurto(prox.inicio)}` : r.fim ? ` · até ${MES[+r.fim.slice(5) - 1]}/${r.fim.slice(2, 4)}` : r.inicio > mk ? ` · começa em ${mesCurto(r.inicio)}` : '';
   const edit = () => openSheet(<EditRec rec={r} />);
+  // a próxima pausa (ou a que está valendo agora)
+  const pausaProx = r.pausas?.find((p) => p.ate >= today());
   return (
     <SwipeRow id={`rec-${r.id}`} onTap={edit} onEdit={edit} onDelete={() => apagarRec(r)}>
       <div className="item">
         <CatTile cat={r.cat} ico={r.ico} />
         <div className="m">
           <div className="t">{nomeExib(r.desc)}</div>
-          <div className="s">{quando(r)}{freqDe(r) !== 'mensal' ? ` · ≈ ${brl(porMes(r))}/mês` : ''}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{ate}</div>
+          <div className="s">{quando(r)}{r.agrupar && !c ? ` · paga junto dia ${r.agrupar.dia}` : ''}{freqDe(r) !== 'mensal' ? ` · ≈ ${brl(porMes(r))}/mês` : ''}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{r.reembolso && freqDe(r) === 'semanal' ? ` · reembolso ${r.reembolso.pct}%` : ''}{pausaProx ? ` · pausa ${dm(pausaProx.de)}–${dm(pausaProx.ate)}` : ''}{ate}</div>
         </div>
         <div className={`v num ${r.tipo === 'entrada' ? 'pos' : ''}`}>{brl(r.tipo === 'entrada' ? r.valor : -r.valor)}</div>
       </div>
@@ -52,11 +54,13 @@ export function EvItem({ e, showDate = true }: { e: Evento; showDate?: boolean }
       const l = D.lancamentos.find((x) => x.id === e.ref);
       if (l) openSheet(<QuickAdd lanc={l} />);
     } else {
-      const r = D.recorrentes.find((x) => x.id === e.ref);
+      // reembolso de um fixo (v2.54): abre o próprio fixo
+      const r = D.recorrentes.find((x) => x.id === (e.reembolso?.rec ?? e.ref));
       if (r) openSheet(<EditRec rec={r} />);
     }
   };
-  const sub = [showDate ? diaLabel(e.data) : '', e.itens ? `${e.itens.length} ${e.itens.length === 1 ? 'item' : 'itens'}` : e.cartao ? `${e.cartao}` : ''].filter(Boolean).join(' · ');
+  const sessoes = e.sessoes ? `${e.sessoes} ${e.sessoes === 1 ? 'sessão' : 'sessões'}${e.reembolso ? ` de ${MES[+e.reembolso.mk.slice(5) - 1]}` : ''}` : '';
+  const sub = [showDate ? diaLabel(e.data) : '', sessoes, e.itens ? `${e.itens.length} ${e.itens.length === 1 ? 'item' : 'itens'}` : e.cartao ? `${e.cartao}` : ''].filter(Boolean).join(' · ');
   return (
     // Fixos só editam daqui (apagar um fixo some de todos os meses — isso fica na aba Fixos)
     <SwipeRow id={`ev-${e.ref}-${e.data}`} onTap={edit} onEdit={edit} onDelete={e.lanc && !e.itens ? () => apagarLanc(e.ref) : undefined}>

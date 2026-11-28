@@ -11,7 +11,8 @@ import type { Recorrente, Tipo } from '../lib/types';
 import { closeSheet, getData, mutate, toast, withUndo } from '../store';
 import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { Button, Chip, DayGrid, Segmented } from '../ui/Controls';
-import { DIAS_SEMANA_CURTO, MES_CURTO, freqDe, quando, type Freq } from '../lib/recorrencia';
+import { DIAS_SEMANA, DIAS_SEMANA_CURTO, MES_CURTO, freqDe, quando, type Freq } from '../lib/recorrencia';
+import { Pausas, PagaEReembolso, ProximosMeses } from './FixoSessoes';
 import { Aviso } from '../ui/Aviso';
 import { AmountDisplay, Keypad, TecladoRecolhivel, useTeclado } from '../ui/Money';
 import { CatGlyph } from '../ui/CatIco';
@@ -59,7 +60,11 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
 
   const salvar = () => {
     if (falta) return;
-    const { semana, mes, freq: _f, ...base } = r;
+    // v2.54: "pago junto" e reembolso só valem pra semanal de saída (e "junto" só fora do cartão)
+    const sessao = freq === 'semanal' && r.tipo === 'saida';
+    const { semana, mes, freq: _f, agrupar, reembolso, ...base } = r;
+    Object.assign(base, sessao ? { ...(agrupar && !r.cartaoId ? { agrupar } : {}), ...(reembolso ? { reembolso } : {}) } : {});
+    if (!r.pausas?.length) delete (base as Partial<Recorrente>).pausas;
     const final: Recorrente = { ...base, ...(freq !== 'mensal' ? { freq } : {}), ...(freq === 'semanal' ? { semana } : {}), ...(freq === 'anual' ? { mes } : {}), cat, ico: ico !== catE(cat) ? ico : undefined, dia: freq === 'semanal' ? r.dia ?? 1 : r.dia!, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(cat), ...(novo ? { criado: Date.now() } : {}) };
     const { id: _id, inicio: _ini, fim: _fim, serie: _s, ...mudancas } = final;
     mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouValor ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
@@ -83,6 +88,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} onUsar={() => { setManual(true); set({ cat: sug!.cat, ico: sug!.ico }); }} />
       <AmountDisplay value={r.valor} onClick={tec.abrir} ativo={tec.aberto} />
+      {freq === 'semanal' && <div className="fs-sub">valor de cada {DIAS_SEMANA[r.semana ?? 1]}</div>}
       <TecladoRecolhivel aberto={tec.aberto} onOk={tec.fechar}><Keypad value={r.valor} onChange={(valor) => set({ valor })} /></TecladoRecolhivel>
       <div className="lab">Repete</div>
       <Segmented<Freq> value={freq} onChange={mudarFreq} options={[{ v: 'mensal', label: 'Todo mês' }, { v: 'semanal', label: 'Toda semana' }, { v: 'anual', label: 'Todo ano' }]} />
@@ -119,6 +125,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
           <div className="dim hint">{r.cartaoId ? 'Entra na fatura do cartão e sai no vencimento dela.' : r.meio === 'boleto' ? 'Sai da conta no dia do boleto.' : 'Sai direto da conta no dia escolhido.'}</div>
         </>
       )}
+      {freq === 'semanal' && r.tipo === 'saida' && <PagaEReembolso r={r} set={set} nomeDia={DIAS_SEMANA[r.semana ?? 1]} />}
+      <Pausas r={r} set={set} rotulo={freq === 'semanal' ? DIAS_SEMANA[r.semana ?? 1] : freq === 'anual' ? 'vez' : 'mês'} />
+      <ProximosMeses r={r} />
       {mudouValor && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor} />}
       {historico.length > 1 && (
         <>

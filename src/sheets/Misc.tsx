@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { today } from '../lib/dates';
+import { addDays, dm, today } from '../lib/dates';
 
 import { chaveEvento, eventosEntre, projecao } from '../lib/engine';
 import { brl } from '../lib/money';
@@ -21,10 +21,27 @@ export function AjustarSaldo() {
   const doDia = eventosEntre(D0, hoje, hoje).filter((e) => !e.estimativa);
   const [pend, setPend] = useState<Set<string>>(() => new Set(D0.saldo.data === hoje ? D0.saldo.pendentes ?? [] : []));
   const alternar = (k: string) => setPend((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+  // v2.54: reembolsos de fixo previstos pros próximos 10 dias (podem cair antes) ou que já deviam ter caído
+  // desde o último saldo conferido. Futuro: começa em "ainda não"; atrasado: começa em "já caiu".
+  const reembs = eventosEntre(D0, addDays(D0.saldo.data, 1), addDays(hoje, 10)).filter((e) => e.reembolso && e.data !== hoje);
+  const [caiu, setCaiu] = useState<Set<string>>(() => new Set(reembs.filter((e) => e.data < hoje).map(chaveEvento)));
+  const alternarReemb = (k: string) => setCaiu((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const salvar = () => {
     const valor = v * sg;
     closeSheet();
-    withUndo(`Saldo ajustado (${brl(valor - atual, true)})`, (d) => ({ ...d, saldo: { valor, data: hoje, ts: Date.now(), pendentes: pend.size ? [...pend] : undefined } }));
+    // reembolso que já caiu: passa a valer hoje (e está nesse saldo); atrasado que não caiu: previsto pra amanhã
+    const datas = new Map<string, Record<string, string>>();
+    for (const e of reembs) {
+      const k = chaveEvento(e), sim = caiu.has(k);
+      const nova = sim && e.data > hoje ? hoje : !sim && e.data < hoje ? addDays(hoje, 1) : null;
+      if (!nova) continue;
+      datas.set(e.reembolso!.rec, { ...(datas.get(e.reembolso!.rec) ?? {}), [e.reembolso!.mk]: nova });
+    }
+    withUndo(`Saldo ajustado (${brl(valor - atual, true)})`, (d) => ({
+      ...d,
+      saldo: { valor, data: hoje, ts: Date.now(), pendentes: pend.size ? [...pend] : undefined },
+      recorrentes: datas.size ? d.recorrentes.map((r) => (datas.has(r.id) && r.reembolso ? { ...r, reembolso: { ...r.reembolso, datas: { ...(r.reembolso.datas ?? {}), ...datas.get(r.id)! } } } : r)) : d.recorrentes,
+    }));
   };
   return (
     <>
@@ -46,6 +63,24 @@ export function AjustarSaldo() {
               </button>
             );
           })}
+        </div>
+      )}
+      {reembs.length > 0 && (
+        <div className="hoje-box reemb-box">
+          <div className="lab" style={{ marginTop: 0 }}>Reembolso — já caiu na conta?</div>
+          {reembs.map((e) => {
+            const k = chaveEvento(e);
+            const sim = caiu.has(k);
+            const atrasado = e.data < hoje;
+            return (
+              <button key={k} className={`hoje-it ${sim ? 'ok' : ''}`} onClick={() => alternarReemb(k)} aria-pressed={sim}>
+                <span className="t"><CatGlyph cat={e.cat} ico={e.ico} />{nomeExib(e.desc)}<small className="reemb-q">{atrasado ? `era pra ${dm(e.data)}` : `previsto até ${dm(e.data)}`}{e.sessoes ? ` · ${e.sessoes} sess${e.sessoes > 1 ? 'ões' : 'ão'}` : ''}</small></span>
+                <span className="num pos">{brl(e.valor, true)}</span>
+                <span className="st">{sim ? '✓ já caiu' : 'ainda não'}</span>
+              </button>
+            );
+          })}
+          <div className="reemb-nota">{caiu.size ? 'O que já caiu passa a valer hoje e não é contado de novo depois.' : 'Toque no que já caiu: ele passa a valer hoje e não é contado de novo na data prevista.'}</div>
         </div>
       )}
       <Keypad value={v} onChange={setV} />

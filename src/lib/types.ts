@@ -30,6 +30,19 @@ export interface Recorrente {
   semana?: number;
   /** Anual: mês (1–12); o dia fica em `dia`. */
   mes?: number;
+  /**
+   * v2.54 · Semanal fora do cartão: as sessões do mês são pagas JUNTAS, nesse dia do mesmo mês
+   * (31 vira o último dia). Valor = sessões do mês (sem as pausadas) × `valor`.
+   */
+  agrupar?: { dia: number };
+  /**
+   * v2.54 · Semanal: parte do que foi pago volta (ex.: 100% do convênio), no dia `dia` do MÊS SEGUINTE às sessões.
+   * O app conta com ele só nesse dia (o último provável, o lado seguro). `datas`: quando caiu antes (ou a nova
+   * previsão, se atrasou), por mês das sessões.
+   */
+  reembolso?: { pct: number; dia: number; datas?: Record<MonthKey, ISODate> };
+  /** v2.54 · Períodos sem ocorrência (ex.: férias). Datas inclusivas. */
+  pausas?: { de: ISODate; ate: ISODate }[];
   /** Quando foi criado (ms). No dia em que o saldo foi informado, a ocorrência de um fixo criado DEPOIS
    *  desconta (como um lançamento); sem isso, contava como "já estava no saldo do banco" (v2.42). */
   criado?: number;
@@ -131,6 +144,10 @@ export interface Evento {
   parcela?: { i: number; n: number };
   /** Item agrupado (fatura): as compras que o compõem. */
   itens?: Evento[];
+  /** Fixo por sessão (v2.54): quantas sessões este pagamento/reembolso cobre. */
+  sessoes?: number;
+  /** Reembolso de um fixo (v2.54): de qual fixo e de qual mês de sessões. */
+  reembolso?: { rec: string; mk: MonthKey };
   criado: number;
 }
 

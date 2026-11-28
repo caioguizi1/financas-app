@@ -1088,3 +1088,45 @@ html { touch-action: manipulation }
 .data-aviso { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 32%, transparent); font-size: 13px; color: var(--mut); line-height: 1.4 }
 .data-aviso .ic-l { margin: 1px 0 0; color: var(--warn); flex: none }
 .data-aviso b { color: var(--text); font-weight: 600 }
+
+/* v2.54 · fixo por sessão: como paga, reembolso, pausas, próximos meses */
+.fs-linha { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 14px; color: var(--mut); flex-wrap: wrap }
+.fs-card { background: var(--card2); border-radius: 16px; padding: 4px 14px }
+.fs-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px }
+.fs-row:last-child { border-bottom: 0 }
+.fs-row .chips { flex-wrap: nowrap; gap: 6px }
+.fs-row .chip { padding: 6px 10px; font-size: 13.5px }
+.fs-dia { display: inline-flex; align-items: center; gap: 8px }
+.fs-sw { width: 46px; height: 28px; border-radius: 99px; background: var(--line); position: relative; flex: none; border: 0; cursor: pointer; transition: background .2s }
+.fs-sw.on { background: var(--in) }
+.fs-sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25) }
+.fs-sw.on i { left: 21px }
+.fs-nota { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--mut); padding: 10px 0 8px; line-height: 1.4 }
+.fs-nota .ic-l { margin: 1px 0 0; flex: none; color: var(--acc-hi) }
+.fs-pausa { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line) }
+.fs-pausa .ic-l { margin: 0; color: var(--warn); flex: none }
+.fs-pausa > span { flex: 1; display: flex; flex-direction: column }
+.fs-pausa small { color: var(--mut); font-size: 12.5px }
+.fs-pausa.passou { opacity: .6 }
+.fs-x { border: 0; background: none; color: var(--dim); padding: 8px; cursor: pointer }
+.fs-x .ic-l { margin: 0 }
+.fs-add { border: 0; background: none; color: var(--acc-hi); font: inherit; font-weight: 600; padding: 11px 0; font-size: 14px; cursor: pointer }
+.fs-nova { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 0 }
+.fs-nova label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--mut) }
+.fs-nova .field { margin: 0; padding: 10px; font-size: 14px }
+.fs-nova-b { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.fs-mes { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line) }
+.fs-mes:last-child { border-bottom: 0 }
+.fs-m { display: flex; flex-direction: column }
+.fs-m b { text-transform: capitalize }
+.fs-m small, .fs-v small { color: var(--mut); font-size: 12px; font-weight: 400 }
+.fs-v { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px }
+.fs-v .out { color: var(--out) }
+.fs-v .in { color: var(--in) }
+.fs-sub { text-align: center; color: var(--mut); font-size: 13px; margin-top: -4px }
+/* v2.54 · "Reembolso — já caiu?" ao conferir o saldo */
+.reemb-box { margin-top: 10px }
+.reemb-q { display: block; font-size: 12px; color: var(--mut); font-weight: 400; margin-top: 2px }
+.reemb-nota { font-size: 12.5px; color: var(--mut); padding: 8px 2px 0; line-height: 1.4 }
+.fs-row > span:first-child { white-space: nowrap }
+.fs-nota b { color: var(--text); font-weight: 600 }

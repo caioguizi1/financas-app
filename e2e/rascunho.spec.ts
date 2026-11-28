@@ -49,7 +49,7 @@ test.describe('O que você digita não some', () => {
       await toqueTremido(page, `.sheet .seg button:has-text("${rot}")`, dy);
       await page.waitForTimeout(500);
       await expect(page.locator('.sheet'), `toque em "${rot}" (${dy} px) fechou a janela`).toHaveCount(1);
-      await expect(page.locator('.sheet .seg button.on')).toHaveText(rot);
+      await expect(page.locator('.sheet .seg').first().locator('button.on')).toHaveText(rot); // 1º seletor = Repete (o "Como paga" do semanal é outro)
       expect(await valor(page)).toMatch(/R\$199,90/);
       await expect(page.locator('.sheet .smart-desc input')).toHaveValue('Assinatura anual');
     }
