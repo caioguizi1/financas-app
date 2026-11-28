@@ -97,3 +97,20 @@ export function CompraCartaoItem({ l, cartao, venc }: { l: Lancamento; cartao: C
     </SwipeRow>
   );
 }
+
+/** v2.57 · Fixo no cartão no dia da cobrança (extrato): toca pra editar o fixo. */
+export function FixoCartaoItem({ r, cartao, venc, data }: { r: Recorrente; cartao: Cartao; venc: ISODate; data: ISODate }) {
+  const edit = () => openSheet(<EditRec rec={r} />);
+  return (
+    <SwipeRow id={`fc-${r.id}-${data}`} onTap={edit} onEdit={edit}>
+      <div className="item no-cartao">
+        <CatTile cat={r.cat} ico={r.ico} />
+        <div className="m">
+          <div className="t">{r.desc}</div>
+          <div className="s">{`Fixo · ${cartao.nome} · fatura ${dm(venc)}`}</div>
+        </div>
+        <div className="v nc-v"><b className="num">{brl(-r.valor)}</b></div>
+      </div>
+    </SwipeRow>
+  );
+}

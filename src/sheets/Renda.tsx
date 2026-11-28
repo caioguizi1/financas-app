@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'motion/react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { addMonths, mesCurto, monthKey, today } from '../lib/dates';
 import { holerite, TABELAS_ANO, type Holerite } from '../lib/folha';
 import { brl } from '../lib/money';
@@ -132,8 +132,8 @@ export function RendaSheet() {
 }
 
 /** Seletor "vale a partir de" com a explicação do que acontece. */
-export function VigenciaPicker({ vig, setVig, mk, temHistorico, antes, depois }: {
-  vig: Vigencia; setVig: (v: Vigencia) => void; mk: string; temHistorico: boolean; antes: number; depois: number;
+export function VigenciaPicker({ vig, setVig, mk, temHistorico, antes, depois, extra }: {
+  vig: Vigencia; setVig: (v: Vigencia) => void; mk: string; temHistorico: boolean; antes: number; depois: number; extra?: ReactNode;
 }) {
   if (!temHistorico) return null;
   const prox = addMonths(mk, 1);
@@ -147,6 +147,7 @@ export function VigenciaPicker({ vig, setVig, mk, temHistorico, antes, depois }:
       <div className="lab">Vale a partir de</div>
       <Segmented value={vig} onChange={setVig} options={[{ v: mk, label: `Este mês` }, { v: prox, label: mesCurto(prox) }, { v: 'sempre', label: 'Corrigir tudo' }]} />
       <div className="vig-txt">{txt}</div>
+      {extra}
     </>
   );
 }

@@ -333,6 +333,9 @@ button.item:active { background: var(--card2) }
 .vr-v small { font-size: 13px; color: var(--mut); margin-right: 3px }
 .vr-v.zero { color: var(--dim) }
 .vig-txt { font-size: 13px; color: var(--mut); margin-top: 8px; line-height: 1.4 }
+.vig-nota { font-size: 13px; color: var(--mut); margin-top: 8px; line-height: 1.45; display: grid; gap: 6px }
+.vig-nota b { color: var(--text) }
+.vig-alerta { color: var(--text); background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); border-radius: 12px; padding: 9px 11px }
 .hist { background: var(--card2); border-radius: 14px; padding: 4px 12px }
 .hist-row { display: flex; align-items: center; gap: 6px; font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--mut) }
 .hist-row:last-child { border-bottom: 0 }

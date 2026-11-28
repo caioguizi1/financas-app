@@ -5,7 +5,8 @@
 import { addDays, dateOf, parse } from './dates';
 import { eventosEntre, pagamentoCartao, pagamentoFatura } from './engine';
 import { uid } from './money';
-import type { Cartao, Data, Evento, ISODate, Lancamento } from './types';
+import { cobrancas } from './cobrancas';
+import type { Cartao, Data, Evento, ISODate, Lancamento, Recorrente } from './types';
 
 export interface Fatura {
   cartao: Cartao;
@@ -129,6 +130,22 @@ export function comprasNoCartao(D: Data, ini: ISODate, fim: ISODate) {
     if (!cartao) continue;
     const ev = eventosEntre({ ...D, recorrentes: [], lancamentos: [l] }, addDays(l.data, -1), addDays(l.data, 120)).find((e) => e.venc);
     out.push({ l, cartao, venc: ev?.venc ?? null });
+  }
+  return out;
+}
+
+/**
+ * v2.57 · Fixos no cartão cobrados num período, pelo DIA DA COBRANÇA (como as compras acima): no extrato,
+ * só informativo — o dinheiro sai no vencimento da fatura. Assim, trocar um fixo de Pix pro cartão
+ * (ou de cartão) aparece no dia certo, e não só dentro da fatura.
+ */
+export function fixosNoCartao(D: Data, ini: ISODate, fim: ISODate) {
+  const out: { r: Recorrente; cartao: Cartao; data: ISODate; venc: ISODate }[] = [];
+  for (const r of D.recorrentes) {
+    if (!r.cartaoId || r.tipo !== 'saida') continue;
+    const cartao = D.cartoes.find((c) => c.id === r.cartaoId);
+    if (!cartao) continue;
+    for (const data of cobrancas(r, ini, fim)) out.push({ r, cartao, data, venc: pagamentoCartao(cartao, data) });
   }
   return out;
 }

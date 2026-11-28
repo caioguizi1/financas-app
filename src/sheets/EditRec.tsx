@@ -2,7 +2,8 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { aprender, normalizar, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
-import { mesCurto, monthKey, today } from '../lib/dates';
+import { addMonths, dm, mesCurto, monthKey, today } from '../lib/dates';
+import { jaCobrouNoMes, proximaCobranca } from '../lib/cobrancas';
 import { brl } from '../lib/money';
 import { aplicarAlteracao, encerrar as encerrarRec, serieDe, versoes, type Vigencia } from '../lib/versions';
 import { VigenciaPicker } from './Renda';
@@ -51,6 +52,12 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const mk = monthKey(today());
   const freq = freqDe(r);
   const mudouValor = !novo && !!rec && (r.valor !== rec.valor || r.dia !== rec.dia || freq !== freqDe(rec) || r.semana !== rec.semana || r.mes !== rec.mes);
+  // v2.57: trocar COMO é pago (Pix ↔ cartão, outro cartão, boleto, "pago junto", reembolso) também tem
+  // "a partir de": antes reescrevia o passado e a cobrança que já aconteceu ia (ou saía) da fatura.
+  const reemb = (x?: Draft['reembolso']) => (x ? `${x.pct}|${x.dia}` : '');
+  const mudouPagamento = !novo && !!rec && ((r.cartaoId ?? null) !== (rec.cartaoId ?? null) || (r.cartaoId ? '' : r.meio ?? 'pix') !== (rec.cartaoId ? '' : rec.meio ?? 'pix')
+    || (r.agrupar?.dia ?? 0) !== (rec.agrupar?.dia ?? 0) || reemb(r.reembolso) !== reemb(rec.reembolso));
+  const mudouRegra = mudouValor || mudouPagamento;
   // o que falta pra salvar, conforme a frequência
   const faltaQuando = freq === 'semanal' ? r.semana == null : freq === 'anual' ? !r.dia || !r.mes : !r.dia;
   const faltaAnual = [!r.dia && 'o dia', !r.mes && 'o mês'].filter(Boolean).join(' e ');
@@ -63,21 +70,28 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   };
   // já existe um fixo com esse nome? (evita contar duas vezes)
   const dup = novo && r.desc.trim() ? D.recorrentes.find((x) => x.tipo === r.tipo && normalizar(x.desc) === normalizar(r.desc) && (!x.fim || x.fim >= mk)) : undefined;
-  const [vig, setVig] = useState<Vigencia>(mk);
+  // a cobrança deste mês já passou? então, por padrão, a mudança vale do mês que vem (ela fica como foi)
+  const jaCobrou = useMemo(() => (!novo && rec?.id ? jaCobrouNoMes(rec as Recorrente, mk, today()) : null), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [vigSel, setVig] = useState<Vigencia | null>(null);
+  const vig: Vigencia = vigSel ?? (jaCobrou ? addMonths(mk, 1) : mk);
   const historico = !novo && r.id ? versoes(D.recorrentes, serieDe(r as Recorrente)) : [];
 
-  const salvar = () => {
-    if (falta) return;
+  const montar = (): Recorrente => {
     // v2.54: "pago junto" e reembolso só valem pra semanal de saída (e "junto" só fora do cartão)
     const sessao = freq === 'semanal' && r.tipo === 'saida';
     const { semana, mes, freq: _f, agrupar, reembolso, ...base } = r;
     Object.assign(base, sessao ? { ...(agrupar && !r.cartaoId ? { agrupar } : {}), ...(reembolso ? { reembolso } : {}) } : {});
     if (!r.pausas?.length) delete (base as Partial<Recorrente>).pausas;
     const final: Recorrente = { ...base, ...(freq !== 'mensal' ? { freq } : {}), ...(freq === 'semanal' ? { semana } : {}), ...(freq === 'anual' ? { mes } : {}), cat, ico: ico !== catE(cat) ? ico : undefined, dia: freq === 'semanal' ? r.dia ?? 1 : r.dia!, id: r.id ?? uid(), inicio: r.inicio ?? monthKey(today()), desc: r.desc.trim() || catN(cat), ...(novo ? { criado: Date.now() } : {}) };
+    return final;
+  };
+  const salvar = () => {
+    if (falta) return;
+    const final = montar();
     const { id: _id, inicio: _ini, fim: _fim, serie: _s, ...mudancas } = final;
-    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouValor ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
+    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouRegra ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
     closeSheet();
-    toast(novo ? 'Fixo adicionado' : mudouValor && vig !== 'sempre' ? `Atualizado a partir de ${mesCurto(vig)}` : 'Atualizado');
+    toast(novo ? 'Fixo adicionado' : mudouRegra && vig !== 'sempre' ? `Atualizado a partir de ${mesCurto(vig)}` : 'Atualizado');
   };
   const apagar = () => {
     closeSheet();
@@ -136,7 +150,8 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       {freq === 'semanal' && r.tipo === 'saida' && <PagaEReembolso r={r} set={set} nomeDia={DIAS_SEMANA[r.semana ?? 1]} />}
       <Pausas r={r} set={set} rotulo={freq === 'semanal' ? DIAS_SEMANA[r.semana ?? 1] : freq === 'anual' ? 'vez' : 'mês'} />
       <ProximosMeses r={r} />
-      {mudouValor && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor} />}
+      {mudouRegra && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor}
+        extra={!falta && <NotaVigencia final={montar()} vig={vig} mk={mk} jaCobrou={jaCobrou} inicio={rec!.inicio!} />} />}
       {historico.length > 1 && (
         <>
           <div className="lab">Histórico</div>
@@ -158,6 +173,22 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
         {!novo && <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês (mantém o histórico)</Button>}
       </div>
       </div>
+    </div>
+  );
+}
+
+/** Embaixo do "Vale a partir de": o que acontece com a cobrança deste mês e onde cai a próxima. */
+function NotaVigencia({ final, vig, mk, jaCobrou, inicio }: { final: Recorrente; vig: Vigencia; mk: string; jaCobrou: string | null; inicio: string }) {
+  const D = getData();
+  const t = today();
+  const desde = vig === 'sempre' ? inicio : vig;
+  const p = proximaCobranca(D, { ...final, inicio: desde }, `${desde}-01` > t ? `${desde}-01` : t);
+  return (
+    <div className="vig-nota">
+      {jaCobrou && vig !== 'sempre' && (vig === mk
+        ? <div className="vig-alerta">A cobrança de {dm(jaCobrou)} já passou. Com <b>Este mês</b>, ela também muda pro jeito novo — se já foi paga do jeito antigo, pode contar duas vezes.</div>
+        : <div>A cobrança de {dm(jaCobrou)} fica como foi.</div>)}
+      {p && <div>Próxima: <b>{dm(p.data)}</b>{p.cartao ? <> no {p.cartao.nome} · entra na fatura que vence <b>{dm(p.venc!)}</b>{p.sai !== p.venc ? <> (paga {dm(p.sai)})</> : null}</> : <> · sai da conta no dia</>}.</div>}
     </div>
   );
 }

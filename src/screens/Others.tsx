@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { diaLabel, dm, MESL, monthKey, today } from '../lib/dates';
 import { resumoMes } from '../lib/engine';
 import { ativaEm, serieDe } from '../lib/versions';
-import { agruparFaturas, comprasNoCartao } from '../lib/faturas';
+import { agruparFaturas, comprasNoCartao, fixosNoCartao } from '../lib/faturas';
 import type { Recorrente } from '../lib/types';
 import { ExtraSheet } from '../sheets/Extras';
 import { ImportarSheet } from '../sheets/Importar';
@@ -22,7 +22,7 @@ import { catN } from '../lib/categories';
 import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
 import { Lista } from '../ui/Lista';
-import { CompraCartaoItem, EvItem, RecItem } from '../ui/Items';
+import { CompraCartaoItem, EvItem, FixoCartaoItem, RecItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { spring } from '../ui/motion';
 import { diasSemBackup, exportar, importar, lembrarBackup } from './backup';
@@ -68,7 +68,11 @@ export function Extrato() {
   const cartao = comprasNoCartao(D, ini, fim).filter((x) => !cat || x.l.cat === cat);
   const cartaoDia = new Map<string, typeof cartao>();
   cartao.forEach((x) => cartaoDia.set(x.l.data, [...(cartaoDia.get(x.l.data) ?? []), x]));
-  const days = [...new Set([...byDay.keys(), ...cartaoDia.keys()])].sort().reverse();
+  const fixosCartao = fixosNoCartao(D, ini, fim).filter((x) => !cat || x.r.cat === cat);
+  const fixoDia = new Map<string, typeof fixosCartao>();
+  fixosCartao.forEach((x) => fixoDia.set(x.data, [...(fixoDia.get(x.data) ?? []), x]));
+  const noCartao = (d: string) => -(cartaoDia.get(d) ?? []).reduce((s, x) => s + x.l.valor, 0) - (fixoDia.get(d) ?? []).reduce((s, x) => s + x.r.valor, 0);
+  const days = [...new Set([...byDay.keys(), ...cartaoDia.keys(), ...fixoDia.keys()])].sort().reverse();
   const sob = ent - sai;
   const move = (d: 1 | -1) => { const x = new Date(y, mo + d, 1); setDir(d); setYM([x.getFullYear(), x.getMonth()]); };
 
@@ -107,10 +111,11 @@ export function Extrato() {
               {evd.length > 0 && <div className="list"><AnimatePresence presenceAffectsLayout={false} initial={false}>
                 {evd.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}
               </AnimatePresence></div>}
-              {(cartaoDia.get(d) ?? []).length > 0 && (
+              {(cartaoDia.get(d) ?? []).length + (fixoDia.get(d) ?? []).length > 0 && (
                 <>
-                  <div className="nc-lab"><span>No cartão · sai na fatura</span><span className="num">{brl(-(cartaoDia.get(d) ?? []).reduce((s, x) => s + x.l.valor, 0))}</span></div>
+                  <div className="nc-lab"><span>No cartão · sai na fatura</span><span className="num">{brl(noCartao(d))}</span></div>
                   <div className="list nc-list"><AnimatePresence presenceAffectsLayout={false} initial={false}>
+                    {(fixoDia.get(d) ?? []).map((x) => <FixoCartaoItem key={`fc-${x.r.id}-${x.data}`} r={x.r} cartao={x.cartao} venc={x.venc} data={x.data} />)}
                     {(cartaoDia.get(d) ?? []).map((x) => <CompraCartaoItem key={`cc-${x.l.id}`} l={x.l} cartao={x.cartao} venc={x.venc} />)}
                   </AnimatePresence></div>
                 </>
@@ -120,7 +125,7 @@ export function Extrato() {
         }) : <div className="card empty" style={{ marginTop: 14 }}>{cat ? `Nada em ${catN(cat)} neste mês.` : 'Nenhuma movimentação neste mês.'}</div>}
       </Lista>
       )}</DiasDoMes>
-      <div className="footnote">Compras no cartão aparecem no dia da compra como "no cartão" (sem entrar nos totais) e saem da conta no dia em que a fatura vence.</div>
+      <div className="footnote">Compras e fixos no cartão aparecem no dia da compra como "no cartão" (sem entrar nos totais) e saem da conta no dia em que a fatura vence.</div>
     </>
   );
 }
