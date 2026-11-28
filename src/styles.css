@@ -1132,11 +1132,24 @@ html { touch-action: manipulation }
 .fs-nota b { color: var(--text); font-weight: 600 }
 
 /*
- * v2.55 · garantia: itens de lista nunca ficam invisíveis.
- * Eles nascem transparentes e aparecem em cascata (motion). No iPhone, essa animação às vezes travava no
- * começo e as caixas de Fixos ficavam vazias (os itens ocupando espaço, invisíveis). Uma animação CSS vale
- * mais que o estilo que o motion deixa no item: 1,4 s depois de o item aparecer na tela, ele fica visível,
- * aconteça o que acontecer com a animação de entrada. (Não mexe em transform: arrastar pro lado continua.)
+ * v2.56 · entrada das listas em CSS puro (substitui o motion e a garantia da v2.55).
+ * `backwards`: antes de começar, o item fica no estado "de" (transparente, 8 px abaixo); terminou, não sobra
+ * estilo nenhum — nada pode ficar preso fora do lugar. Cascata de 35 ms nos 12 primeiros itens.
  */
-@keyframes garante-visivel { to { opacity: 1 } }
-.list > .swipe, .stats > .stat, .insights > .insight, .months > *, .list > .item, .extra-grid > .extra-card { animation: garante-visivel 1ms linear 1.4s forwards }
+@keyframes entra { from { opacity: 0; transform: translateY(8px) } }
+.anima > * { animation: entra 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) 0.04s backwards }
+.anima > :nth-child(2) { animation-delay: 0.075s }
+.anima > :nth-child(3) { animation-delay: 0.110s }
+.anima > :nth-child(4) { animation-delay: 0.145s }
+.anima > :nth-child(5) { animation-delay: 0.180s }
+.anima > :nth-child(6) { animation-delay: 0.215s }
+.anima > :nth-child(7) { animation-delay: 0.250s }
+.anima > :nth-child(8) { animation-delay: 0.285s }
+.anima > :nth-child(9) { animation-delay: 0.320s }
+.anima > :nth-child(10) { animation-delay: 0.355s }
+.anima > :nth-child(11) { animation-delay: 0.390s }
+.anima > :nth-child(12) { animation-delay: 0.425s }
+.anima > :nth-child(n + 13) { animation: none } /* além dos 12 primeiros (fora da tela): sem animação, mais leve */
+@media (prefers-reduced-motion: reduce) { .anima > * { animation: none } }
+/* v2.56: subtítulo dos fixos em no máximo 2 linhas (não espreme o valor) */
+.item .s.s2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }

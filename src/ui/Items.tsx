@@ -35,7 +35,7 @@ export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
         <CatTile cat={r.cat} ico={r.ico} />
         <div className="m">
           <div className="t">{nomeExib(r.desc)}</div>
-          <div className="s">{quando(r)}{r.agrupar && !c ? ` · paga junto dia ${r.agrupar.dia}` : ''}{freqDe(r) !== 'mensal' ? ` · ≈ ${brl(porMes(r))}/mês` : ''}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{r.reembolso && freqDe(r) === 'semanal' ? ` · reembolso ${r.reembolso.pct}%` : ''}{pausaProx ? ` · pausa ${dm(pausaProx.de)}–${dm(pausaProx.ate)}` : ''}{ate}</div>
+          <div className="s s2">{quando(r)}{r.agrupar && !c ? ` · paga junto dia ${r.agrupar.dia}` : ''}{freqDe(r) !== 'mensal' ? ` · ≈ ${brl(Math.round(porMes(r) / 100) * 100).replace(/,00$/, '')}/mês` : ''}{c ? ` · ${c.nome}` : r.meio === 'boleto' ? ' · boleto' : r.tipo === 'saida' ? ' · Pix/débito' : ''}{r.reembolso && freqDe(r) === 'semanal' ? ` · reembolso ${r.reembolso.pct}%` : ''}{pausaProx ? ` · pausa ${dm(pausaProx.de)}–${dm(pausaProx.ate)}` : ''}{ate}</div>
         </div>
         <div className={`v num ${r.tipo === 'entrada' ? 'pos' : ''}`}>{brl(r.tipo === 'entrada' ? r.valor : -r.valor)}</div>
       </div>

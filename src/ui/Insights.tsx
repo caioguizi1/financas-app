@@ -7,7 +7,7 @@ import { uid } from '../lib/money';
 import { closeSheet, getData, openSheet, useData, withUndo } from '../store';
 import { SheetHeader } from './Sheet';
 import { ParcelasSheet } from '../sheets/Parcelas';
-import { Button, itemVariants } from './Controls';
+import { Button } from './Controls';
 import { springSnappy } from './motion';
 import { Ico, icoDaDica } from './Ico';
 import { exportar } from '../screens/backup';
@@ -34,7 +34,7 @@ export function InsightsStrip() {
       <h2>Pra você</h2>
       <Lista className="insights">
         {lista.map((i) => (
-          <m.div key={i.id} variants={itemVariants} className={`insight ${i.tom}`} whileTap={{ scale: 0.98 }} transition={springSnappy}
+          <m.div key={i.id} className={`insight ${i.tom}`} whileTap={{ scale: 0.98 }} transition={springSnappy}
             onClick={(e) => {
               // texto cortado (3 linhas) e sem ação: o toque mostra a dica inteira
               const el = e.currentTarget as HTMLElement;

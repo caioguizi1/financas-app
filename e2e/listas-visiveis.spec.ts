@@ -53,22 +53,36 @@ test.describe('Listas nunca ficam invisíveis', () => {
     expect(await invisiveis(page)).toEqual([]);
   });
 
-  // a garantia em si: simula a animação travada (o estilo que o motion deixa no item: opacidade 0)
-  test('animação travada: o item preso em opacidade 0 aparece mesmo assim', { tag: '@safari' }, async ({ page }) => {
-    await abrir(page, realista());
-    await aba(page, 'Fixos');
-    await page.waitForTimeout(1600);
-    // (1) item que já estava na tela e ficou preso
-    await page.evaluate(() => document.querySelectorAll<HTMLElement>('main.on .list > .swipe').forEach((e) => { e.style.opacity = '0'; }));
-    expect(await invisiveis(page)).toEqual([]);
-    // (2) item novo que nasce preso (como numa tela que muda escondida)
-    await page.evaluate(() => {
-      const l = document.querySelector('main.on .list')!, n = l.querySelector('.swipe')!.cloneNode(true) as HTMLElement;
-      n.style.opacity = '0'; n.dataset.teste = 'novo'; l.appendChild(n);
+  // v2.56 — a causa de verdade (print do app real: linhas desalinhadas em Saídas): o motion deixava o item
+  // preso transparente E 8 px abaixo. Agora a entrada é CSS puro: nenhum item guarda estilo, e as linhas
+  // ficam coladas umas nas outras, sem sobrepor nem abrir buraco.
+  for (const tema of ['dark', 'light'] as const) {
+    test(`linhas alinhadas e sem estilo preso em todas as listas · ${tema === 'dark' ? 'escuro' : 'claro'}`, { tag: '@safari' }, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: tema });
+      await abrir(page, realista());
+      const probs: string[] = [];
+      for (const t of ['Início', 'Extrato', 'Fixos', 'Ajustes', 'Fixos', 'Início'] as const) {
+        await aba(page, t);
+        await page.waitForTimeout(900);
+        probs.push(...(await page.evaluate((t) => {
+          const out: string[] = [];
+          for (const l of document.querySelectorAll('main.on .list')) {
+            const rows = [...l.children].filter((e) => (e as HTMLElement).offsetParent !== null) as HTMLElement[];
+            rows.forEach((r, i) => {
+              const st = r.getAttribute('style') ?? '';
+              if (/opacity|transform/.test(st)) out.push(`${t}: estilo preso na linha "${r.innerText.split('\n')[0]}" (${st})`);
+              const cs = getComputedStyle(r);
+              if (cs.transform !== 'none' && !cs.animationName.includes('entra')) out.push(`${t}: linha "${r.innerText.split('\n')[0]}" deslocada (${cs.transform})`);
+              if (i > 0) {
+                const a = rows[i - 1].getBoundingClientRect(), b = r.getBoundingClientRect();
+                if (Math.abs(b.top - a.bottom) > 1.5) out.push(`${t}: entre "${rows[i - 1].innerText.split('\n')[0]}" e "${r.innerText.split('\n')[0]}" há ${Math.round(b.top - a.bottom)} px`);
+              }
+            });
+          }
+          return out;
+        }, t)));
+      }
+      expect(probs).toEqual([]);
     });
-    const op = () => page.locator('main.on [data-teste="novo"]').evaluate((e) => Number(getComputedStyle(e).opacity));
-    expect(await op()).toBeLessThan(0.1); // no começo, preso
-    await page.waitForTimeout(1600);
-    expect(await op()).toBe(1); // depois de 1,4 s, à vista
-  });
+  }
 });

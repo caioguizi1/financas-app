@@ -19,7 +19,7 @@ import { trechoNegativo } from '../lib/insights';
 import { agruparFaturas } from '../lib/faturas';
 import { BalanceChart } from '../ui/Chart';
 import { FolgaSheet, QuantoFalta, QuantoFaltaSheet } from '../ui/QuantoFalta';
-import { Button, itemVariants } from '../ui/Controls';
+import { Button } from '../ui/Controls';
 import { EvItem } from '../ui/Items';
 import { AnimatedBRL } from '../ui/Money';
 import { springSnappy } from '../ui/motion';
@@ -138,8 +138,8 @@ export function Home() {
       )}
 
       <Lista className="stats">
-        <m.div variants={itemVariants} className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${vm.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={vm.fimMes} /></div></m.div>
-        <m.div variants={itemVariants} className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
+        <m.div className="stat"><div className="k">Fim de {MESL[now.getMonth()]}</div><div className={`v num ${vm.fimMes < 0 ? 'neg' : ''}`}><AnimatedBRL value={vm.fimMes} /></div></m.div>
+        <m.div className="stat"><div className="k">Daqui a 90 dias</div><div className={`v num ${ultimo < 0 ? 'neg' : ''}`}><AnimatedBRL value={ultimo} /></div></m.div>
       </Lista>
 
       {vm.estPct >= 25 && (
@@ -196,7 +196,7 @@ export function Home() {
           const tot = Math.max(r.ent + r.sai, 1);
           const res = r.ent - r.sai;
           return (
-            <m.div key={r.de} variants={itemVariants} whileTap={{ scale: 0.98 }} transition={springSnappy} className="month">
+            <m.div key={r.de} whileTap={{ scale: 0.98 }} transition={springSnappy} className="month">
               <div className="mt">
                 <span className="t">{r.nome}</span>
                 <span className={`res ${res < 0 ? 'neg' : 'pos'}`}>{res < 0 ? '▼' : '▲'} {brl(res, true)}</span>

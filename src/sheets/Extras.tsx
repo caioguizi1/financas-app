@@ -6,7 +6,7 @@ import { EXTRAS, type ExtraModelo } from '../lib/extras';
 import { brl, uid } from '../lib/money';
 import type { Lancamento } from '../lib/types';
 import { closeSheet, getData, openSheet, restore, mutate, toast } from '../store';
-import { Button, itemVariants, listVariants, Segmented, Stepper } from '../ui/Controls';
+import { Button, Segmented, Stepper } from '../ui/Controls';
 import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { QuickAdd } from './QuickAdd';
 import { ValueRows } from '../ui/ValueRows';
@@ -26,9 +26,9 @@ export function ExtraSheet({ k, rascunho }: { k?: string; rascunho?: RascunhoExt
       <>
         <SheetHeader title="Recebimento extra" voltar={voltar} />
         <p className="mut small" style={{ marginBottom: 12 }}>Coloque na previsão o dinheiro que vai entrar fora do salário. O app já soma na projeção.</p>
-        <m.div className="extra-grid" variants={listVariants} initial={false} animate="shown">
+        <m.div className="extra-grid">
           {EXTRAS.map((e) => (
-            <m.button key={e.k} variants={itemVariants} whileTap={{ scale: 0.95 }} className="extra-card" onClick={() => setModelo(e)}>
+            <m.button key={e.k} whileTap={{ scale: 0.95 }} className="extra-card" onClick={() => setModelo(e)}>
               <span className="ex-ico"><CatGlyph cat={e.cat} ico={e.ico} size={24} solo /></span><span>{e.nome}</span>
             </m.button>
           ))}

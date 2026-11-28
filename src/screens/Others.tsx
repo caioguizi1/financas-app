@@ -17,7 +17,7 @@ import { openSheet, resetData, useData, useUI } from '../store';
 import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
 import { AjustarSaldo, EditNome } from '../sheets/Misc';
-import { Button, Chip, itemVariants, Segmented } from '../ui/Controls';
+import { Button, Chip, Segmented } from '../ui/Controls';
 import { catN } from '../lib/categories';
 import { getTema, setTema, type Tema } from '../lib/tema';
 import { IChevron } from '../ui/Icons';
@@ -102,7 +102,7 @@ export function Extrato() {
           const evd = byDay.get(d) ?? [];
           const tot = evd.reduce((a, e) => a + e.valor, 0);
           return (
-            <m.div key={d} variants={itemVariants}>
+            <m.div key={d}>
               <div className="day"><span>{diaLabel(d)}{d > t ? ' · previsto' : ''}</span>{evd.length > 0 && <span className="num">{brl(tot, true)}</span>}</div>
               {evd.length > 0 && <div className="list"><AnimatePresence presenceAffectsLayout={false} initial={false}>
                 {evd.map((e) => <EvItem key={`${e.ref}-${e.desc}`} e={e} showDate={false} />)}
@@ -185,7 +185,7 @@ export function Ajustes() {
   const [tema, setT] = useState<Tema>(getTema);
   const estiloIco = useEstiloIco();
   const Row = ({ ico, t, s, onClick }: { ico: React.ReactNode; t: string; s?: string; onClick: () => void }) => (
-    <m.button variants={itemVariants} className="item" onClick={onClick}>
+    <m.button className="item" onClick={onClick}>
       <div className="ico">{ico}</div><div className="m"><div className="t">{t}</div>{s && <div className="s">{s}</div>}</div><span className="dim"><IChevron /></span>
     </m.button>
   );

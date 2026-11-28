@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { aprender, normalizar, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
@@ -26,6 +26,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const set = (p: Partial<Draft>) => setR((x) => ({ ...x, ...p }));
   // coisa digitada e não salva? fechar sem querer pergunta antes (o modelo do cadastro, sem valor, não conta)
   const r0 = useRef(JSON.stringify(r));
+  // fileira de categorias: a escolhida sempre à vista (centralizada), sem animação na abertura (v2.56)
+  const catsRef = useRef<HTMLDivElement>(null);
+  const catsPrimeira = useRef(true);
   useRascunho(JSON.stringify(r) !== r0.current);
   const cats = r.tipo === 'entrada' ? CAT_IN : CAT_OUT;
   const D = getData();
@@ -39,6 +42,11 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const usaSug = !manual && !!sug && (novo || normalizar(r.desc) !== descInicial);
   const cat = usaSug ? sug!.cat : r.cat;
   const ico = usaSug ? sug!.ico || catE(cat) : r.ico || catE(cat);
+  useLayoutEffect(() => {
+    const box = catsRef.current, chip = box?.querySelector<HTMLElement>('.chip.on');
+    if (box && chip) box.scrollTo({ left: chip.offsetLeft - (box.clientWidth - chip.offsetWidth) / 2, behavior: catsPrimeira.current ? 'auto' : 'smooth' });
+    catsPrimeira.current = false;
+  }, [cat]);
 
   const mk = monthKey(today());
   const freq = freqDe(r);
@@ -111,7 +119,7 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
         </>
       )}
       <div className="lab">Categoria</div>
-      <div className="chips scroll">
+      <div className="chips scroll" ref={catsRef}>
         {cats.map(([k, e, n]) => <Chip key={k} on={cat === k} onClick={() => { setManual(true); set({ cat: k, ico: undefined }); }}><CatGlyph cat={k} ico={e} />{n}</Chip>)}
       </div>
       {r.tipo === 'saida' && (

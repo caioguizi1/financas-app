@@ -3,7 +3,6 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { create } from 'zustand';
 import { IEdit, ITrash } from './Icons';
 import { spring } from './motion';
-import { itemVariants } from './Controls';
 
 /** Só uma linha aberta por vez, como no iOS. */
 const useOpenRow = create<{ id: string | null; set: (id: string | null) => void }>((set) => ({ id: null, set: (id) => set({ id }) }));
@@ -44,7 +43,7 @@ export function SwipeRow({ id, onTap, onEdit, onDelete, children }: {
   };
 
   return (
-    <m.div className="swipe" variants={itemVariants} exit={{ height: 0, opacity: 0, transition: { duration: 0.22 } }}>
+    <m.div className="swipe" initial={false} exit={{ height: 0, opacity: 0, transition: { duration: 0.22 } }}>
       {W > 0 && (
         <div className="swipe-actions" aria-hidden={openId !== id}>
           {onEdit && <button className="sa edit" onClick={() => { setOpen(null); onEdit(); }}><IEdit /><span>Editar</span></button>}

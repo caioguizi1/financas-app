@@ -8,7 +8,6 @@ import { corDoCartao } from '../lib/imagens';
 import { mesCurto } from '../lib/dates';
 import { brl } from '../lib/money';
 import { getData, openSheet } from '../store';
-import { itemVariants, listVariants } from '../ui/Controls';
 import { SheetHeader } from '../ui/Sheet';
 import { QuickAdd } from './QuickAdd';
 import { CatTile } from '../ui/CatIco';
@@ -80,11 +79,11 @@ export function ParcelasSheet() {
         opcoes={[{ id: 'fim', label: 'Termina antes' }, { id: 'fim-', label: 'Termina depois' }, { id: 'valor', label: 'Maior valor restante' }, { id: 'valor-', label: 'Menor valor restante' },
           { id: 'parcela', label: 'Maior parcela' }, { id: 'compra', label: 'Compra mais recente' }, { id: 'compra-', label: 'Compra mais antiga' }]} />
       {catOk && <div className="fat-tot" style={{ margin: '0 2px 8px' }}><span className="mut">{abertas.length} {abertas.length === 1 ? 'compra' : 'compras'} nesta categoria</span><b className="num">{brl(totFiltro)}</b></div>}
-      <m.div key={`${ordem}|${catOk}`} className="list" variants={listVariants} initial={jaMudou.current ? 'hidden' : false} animate="shown">
+      <m.div key={`${ordem}|${catOk}`} className={`list${jaMudou.current ? ' anima' : ''}`}>
         {abertas.map((p) => {
           const c = p.lanc.cartaoId ? D.cartoes.find((x) => x.id === p.lanc.cartaoId) : undefined;
           return (
-            <m.button key={p.lanc.id} variants={itemVariants} className="item parc" onClick={() => openSheet(<QuickAdd lanc={p.lanc} />)}>
+            <m.button key={p.lanc.id} className="item parc" onClick={() => openSheet(<QuickAdd lanc={p.lanc} />)}>
               <CatTile cat={p.lanc.cat} ico={p.lanc.ico} />
               <div className="m">
                 <div className="t">{p.lanc.desc ? nomeExib(p.lanc.desc) : 'Compra parcelada'}</div>

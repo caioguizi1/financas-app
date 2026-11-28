@@ -98,7 +98,7 @@ test.describe('Fixos: repetir todo mês, semana ou ano', () => {
     await page.locator('.sheet [data-primary]').click();
     await page.waitForTimeout(600);
     expect((await dados(page)).recorrentes[0]).toMatchObject({ desc: 'Seguro do carro', freq: 'anual', mes: 8, dia: 20, valor: 240000 });
-    await expect(page.locator('.item:visible', { hasText: /≈ R\$\s?200,00\/mês/ })).toHaveCount(1);
+    await expect(page.locator('.item:visible', { hasText: /≈ R\$\s?200(,00)?\/mês/ })).toHaveCount(1);
     expect(erros).toEqual([]);
   });
 });

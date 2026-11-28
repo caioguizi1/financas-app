@@ -7,7 +7,7 @@ import { brl, uid } from '../lib/money';
 import { getData, mutate, openSheet, useData } from '../store';
 import { EditCartao } from '../sheets/EditCartao';
 import { EditRec } from '../sheets/EditRec';
-import { Button, Chip, DayGrid, itemVariants, listVariants } from '../ui/Controls';
+import { Button, Chip, DayGrid } from '../ui/Controls';
 import { IBack, ICheck, IChevron, ITrend } from '../ui/Icons';
 import { RecItem } from '../ui/Items';
 import { AmountDisplay, AnimatedBRL, Keypad } from '../ui/Money';
@@ -108,9 +108,9 @@ export function Onboarding() {
       body = <>
         <div className="q">Como ela cai na conta?</div>
         <div className="h">Muita empresa paga em duas partes: adiantamento (vale) e o restante.</div>
-        <m.div className="list" variants={listVariants} initial="hidden" animate="shown">
+        <m.div className="list anima">
           {([[1, 'Uma vez por mês', 'Tudo num dia só'], [2, 'Duas vezes por mês', 'Adiantamento + salário, ou quinzena']] as const).map(([f, t, s]) => (
-            <m.button key={f} variants={itemVariants} className="item" onClick={() => { const o = { ...ob, freq: f }; setOb(o); next(o); }}>
+            <m.button key={f} className="item" onClick={() => { const o = { ...ob, freq: f }; setOb(o); next(o); }}>
               <div className="ico">{f}×</div><div className="m"><div className="t">{t}</div><div className="s">{s}</div></div><span className="dim"><IChevron /></span>
             </m.button>
           ))}
@@ -157,7 +157,7 @@ export function Onboarding() {
           <Chip onClick={() => openSheet(<EditRec tipo="saida" />)}>＋ Outro</Chip>
         </div>
         {fix.length > 0 && <>
-          <m.div className="list" style={{ marginTop: 18 }} variants={listVariants} initial="hidden" animate="shown"><AnimatePresence presenceAffectsLayout={false} initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>
+          <m.div className="list anima" style={{ marginTop: 18 }}><AnimatePresence presenceAffectsLayout={false} initial={false}>{fix.map((r) => <RecItem key={r.id} r={r} />)}</AnimatePresence></m.div>
           <div className="row" style={{ padding: '12px 4px' }}><span className="mut">Total fixo</span><span className="sp" /><b className="num"><AnimatedBRL value={-tot} /></b></div>
         </>}
       </>;
@@ -169,9 +169,9 @@ export function Onboarding() {
         <div className="q">Usa cartão de crédito?</div>
         <div className="h">Assim o app joga cada compra pro dia certo: o vencimento da fatura.</div>
         {D.cartoes.length > 0 && (
-          <m.div className="list" style={{ marginBottom: 14 }} variants={listVariants} initial="hidden" animate="shown">
+          <m.div className="list anima" style={{ marginBottom: 14 }}>
             {D.cartoes.map((c) => (
-              <m.button key={c.id} variants={itemVariants} className="item" onClick={() => openSheet(<EditCartao cartao={c} />)}>
+              <m.button key={c.id} className="item" onClick={() => openSheet(<EditCartao cartao={c} />)}>
                 <div className="ico"><CartaoMini c={c} /></div><div className="m"><div className="t">{c.nome}</div><div className="s">Fecha dia {c.fechamento} · vence dia {c.vencimento}</div></div>
               </m.button>
             ))}
