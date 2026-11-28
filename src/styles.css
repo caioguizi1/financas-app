@@ -1081,3 +1081,10 @@ html { touch-action: manipulation }
 .ch-leg em { font-style: normal; font-size: 11.5px; color: #f08aa8 }
 .ch-leg .destaque { color: #fff; font-weight: 600 }
 .ch-leg .destaque em { font-weight: 500 }
+
+/* v2.53: fileiras que rolam de lado somem suave nas bordas (o chip não parece "cortado") */
+.chips.scroll { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%) }
+/* aviso de data antes do saldo conferido */
+.data-aviso { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 32%, transparent); font-size: 13px; color: var(--mut); line-height: 1.4 }
+.data-aviso .ic-l { margin: 1px 0 0; color: var(--warn); flex: none }
+.data-aviso b { color: var(--text); font-weight: 600 }

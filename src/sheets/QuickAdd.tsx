@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CAT_IN, CAT_OUT, catE, catN } from '../lib/categories';
 import { aprender, sugerir } from '../lib/smart';
 import { SmartDesc, SmartHint } from '../ui/Smart';
@@ -47,6 +47,9 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
   const cat = usaSug ? sug!.cat : catEscolhida || cats[0][0];
   const ico = sug && sug.cat === cat ? sug.ico || catE(cat) : manual && lanc?.ico && lanc.cat === cat ? lanc.ico : catE(cat);
   const chipsRef = useRef<HTMLDivElement>(null);
+  // fileira de datas: o chip escolhido fica sempre à vista (centralizado), sem animação na abertura
+  const datasRef = useRef<HTMLDivElement>(null);
+  const datasPrimeira = useRef(true);
   const primeiraVez = useRef(true);
   useEffect(() => {
     // centraliza o chip escolhido só na faixa de chips. Na abertura, só se ele não estiver entre os primeiros
@@ -95,8 +98,16 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
   const fmtData = (iso: string) => `${dm(iso)}/${iso.slice(2, 4)}`;
 
   const t = today();
-  const datas: [string, string][] = [[t, 'Hoje'], [addDays(t, -1), 'Ontem'], [addDays(t, -2), diaLabel(addDays(t, -2))]];
+  // v2.53: em ordem de calendário (anteontem · ontem · hoje · amanhã), com hoje centralizado na fileira
+  const datas: [string, string][] = [[addDays(t, -2), diaLabel(addDays(t, -2))], [addDays(t, -1), 'Ontem'], [t, 'Hoje'], [addDays(t, 1), 'Amanhã']];
   const outraData = !datas.some(([d]) => d === l.data);
+  // não mexe no saldo: data antes do saldo informado e o valor sai/entra na conta nessa data (não cartão, não parcelado, não fixo)
+  const antesDoSaldo = l.data < D.saldo.data && !fixo && !cartao && !(meio === 'pixparc');
+  useLayoutEffect(() => {
+    const box = datasRef.current, chip = box?.querySelector<HTMLElement>('.chip.on');
+    if (box && chip) box.scrollTo({ left: chip.offsetLeft - (box.clientWidth - chip.offsetWidth) / 2, behavior: datasPrimeira.current ? 'auto' : 'smooth' });
+    datasPrimeira.current = false;
+  }, [l.data]);
 
   const dFixo = parse(l.data);
   const diaFixo = dFixo.getDate();
@@ -228,13 +239,22 @@ export function QuickAdd({ lanc, inicial }: { lanc?: Lancamento; inicial?: Parti
         </>
       )}
 
-      <div className="chips scroll" style={{ marginTop: 12 }}>
+      <div className="chips scroll" ref={datasRef} style={{ marginTop: 12 }}>
         {datas.map(([d, n]) => <Chip key={d} on={l.data === d} onClick={() => set({ data: d })}>{n}</Chip>)}
         <label className={`chip ${outraData ? 'on' : ''}`} style={{ position: 'relative' }}>
           <Ico n="data" size={16} />{outraData ? dm(l.data) : 'Outra data'}
           <input type="date" value={l.data} onChange={(e) => e.target.value && set({ data: e.target.value })} className="date-overlay" />
         </label>
       </div>
+
+      {/* v2.53: data antes do saldo conferido com o banco — não mexe no saldo (já está nele); avisar em vez de calar */}
+      <AnimatePresence presenceAffectsLayout={false} initial={false}>
+        {antesDoSaldo && (
+          <Expande>
+            <div className="data-aviso" role="note"><Ico n="info" size={16} /><span>Antes do saldo que você conferiu em <b>{dm(D.saldo.data)}</b>: esse valor já deve estar no saldo do banco, então entra só no histórico e <b>não muda o saldo</b>. Se ainda não caiu na conta, use <b>Hoje</b>.</span></div>
+          </Expande>
+        )}
+      </AnimatePresence>
 
       {podeFixo && (
         <div className="ent-extra">
