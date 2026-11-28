@@ -340,6 +340,13 @@ button.item:active { background: var(--card2) }
 .hist-row { display: flex; align-items: center; gap: 6px; font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--mut) }
 .hist-row:last-child { border-bottom: 0 }
 .hist-row.on { color: var(--text) }
+.hist-row.tap { cursor: pointer; color: var(--acc-hi) }
+.hist-row.tap::after { content: "›"; margin-left: 2px; font-size: 16px; line-height: 1 }
+.agend { background: color-mix(in srgb, var(--acc) 10%, var(--card2)); border: 1px solid color-mix(in srgb, var(--acc) 30%, transparent); border-radius: 16px; padding: 12px 14px; margin: 4px 0 14px }
+.agend-t { font-weight: 650; font-size: 14.5px }
+.agend-s { color: var(--mut); font-size: 13.5px; margin-top: 3px; line-height: 1.4 }
+.agend-b { margin-top: 10px }
+.agend-b .btn { font-size: 14px; padding: 11px 8px; white-space: nowrap }
 .extra-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px }
 .extra-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px; border-radius: 18px; background: var(--card2); border: 1px solid var(--line); font-weight: 600; font-size: 15px; text-align: left }
 .ex-ico { font-size: 26px; line-height: 1 }

@@ -1,7 +1,7 @@
 
 import { diaLabel, dm, MES, mesCurto, monthKey, today } from '../lib/dates';
 import { freqDe, porMes, quando } from '../lib/recorrencia';
-import { serieDe } from '../lib/versions';
+import { oQueMuda, serieDe } from '../lib/versions';
 import { brl } from '../lib/money';
 import type { Cartao, Evento, ISODate, Lancamento, Recorrente } from '../lib/types';
 import { catN } from '../lib/categories';
@@ -25,7 +25,7 @@ export const apagarLanc = (id: string) =>
 export function RecItem({ r, prox }: { r: Recorrente; prox?: Recorrente }) {
   const c = r.cartaoId ? getData().cartoes.find((x) => x.id === r.cartaoId) : undefined;
   const mk = monthKey(today());
-  const ate = prox ? ` · ${brl(prox.tipo === 'entrada' ? prox.valor : -prox.valor)} a partir de ${mesCurto(prox.inicio)}` : r.fim ? ` · até ${MES[+r.fim.slice(5) - 1]}/${r.fim.slice(2, 4)}` : r.inicio > mk ? ` · começa em ${mesCurto(r.inicio)}` : '';
+  const ate = prox ? ` · muda em ${mesCurto(prox.inicio)}: ${oQueMuda(r, prox, getData().cartoes)}` : r.fim ? ` · até ${MES[+r.fim.slice(5) - 1]}/${r.fim.slice(2, 4)}` : r.inicio > mk ? ` · começa em ${mesCurto(r.inicio)}` : '';
   const edit = () => openSheet(<EditRec rec={r} />);
   // a próxima pausa (ou a que está valendo agora)
   const pausaProx = r.pausas?.find((p) => p.ate >= today());

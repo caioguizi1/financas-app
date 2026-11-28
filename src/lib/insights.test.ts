@@ -15,11 +15,27 @@ const lanc = (id: string, data: string, valor: number, cat = 'comida', desc = ''
   ({ id, tipo: 'saida', valor, cat, desc, data, criado: 1, ...extra });
 
 describe('insights', () => {
-  it('gasto por dia até o próximo salário desconta as contas antes dele', () => {
+  it('gasto por dia desconta as contas: 3.000 − aluguel 2.000 = 1.000 pra 11 dias até a véspera do salário', () => {
     const i = gerarInsights(base(), HOJE).find((x) => x.id === 'dia')!;
-    // 3.000 − aluguel 2.000 (dia 1) = 1.000 ÷ 12 dias até 05/12 → R$ 83/dia
-    expect(i.titulo).toBe('R$ 83,00 por dia');
-    expect(i.texto).toContain('05/12');
+    // 24/11 … 04/12 = 11 dias → R$ 90/dia (o salário de 05/12 cobre o resto)
+    expect(i.titulo).toBe('R$ 90,00 por dia');
+    expect(i.texto).toContain('04/12');
+  });
+  it('v2.58: conta o que vem DEPOIS do salário (antes ficava de fora e a dica ficava folgada demais)', () => {
+    // só salário (8.000 dia 5) + uma compra grande de 8.500 em 07/12, logo depois dele
+    const D = base({ recorrentes: [base().recorrentes[0]], lancamentos: [lanc('g', '2026-12-07', 850_000, 'casa', 'Conserto', { meio: 'pix' })] });
+    const i = gerarInsights(D, HOJE).find((x) => x.id === 'dia')!;
+    // antes: 3.000 ÷ 12 dias até o salário = R$ 250/dia. Agora: 07/12 fica 2.500 e o próximo salário é 05/01
+    // → 2.500 ÷ 42 dias (até 04/01) = R$ 59/dia
+    expect(i.titulo).toBe('R$ 59,00 por dia');
+    expect(i.texto).toContain('04/01');
+  });
+  it('v2.58: se o saldo fica negativo em algum dia dos próximos 90, não sugere gasto por dia', () => {
+    const fatura = { id: 'f', tipo: 'saida' as const, desc: 'Fatura grande', cat: 'fatura', valor: 950_000, dia: 7, inicio: '2026-01' };
+    const i = gerarInsights(base({ recorrentes: [...base().recorrentes, fatura] }), HOJE).find((x) => x.id === 'dia')!;
+    expect(i.tom).toBe('alerta');
+    expect(i.titulo).toBe('Contas acima do saldo');
+    expect(i.texto).toContain('07/12');
   });
   it('alerta quando as contas passam do saldo', () => {
     const i = gerarInsights(base({ saldo: { valor: 100_000, data: HOJE, ts: 1 } }), HOJE).find((x) => x.id === 'dia')!;

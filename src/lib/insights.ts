@@ -87,22 +87,25 @@ export function gerarInsights(D: Data, hoje: ISODate): Insight[] {
   const out: Insight[] = [];
   const mk = monthKey(hoje);
   const p = projecao(D, 60, hoje);
-  const saldoHoje = p.saldoEm(hoje) ?? D.saldo.valor;
 
-  // 1) quanto dá pra gastar por dia até a próxima entrada
-  const prox = p.evs.find((e) => e.valor > 0 && e.data > hoje);
-  if (prox) {
-    const n = Math.max(1, dias(hoje, prox.data));
-    const janela = p.pts.filter((x) => x.d >= hoje && x.d < prox.data);
-    const piso = janela.length ? Math.min(...janela.map((x) => x.v)) : saldoHoje;
-    const porDia = Math.floor(piso / n / 100) * 100;
-    if (piso > 0) {
-      out.push({ id: 'dia', ico: '💸', tom: 'bom', peso: 100, titulo: `${brl(porDia)} por dia`,
-        texto: `É o que dá pra gastar até ${dm(prox.data)} (${prox.desc}), já descontando as contas de antes.` });
-    } else {
-      out.push({ id: 'dia', ico: '🧯', tom: 'alerta', peso: 110, titulo: 'Contas acima do saldo',
-        texto: `Até ${dm(prox.data)} (${prox.desc}) as saídas previstas passam do que você tem. Segure os gastos variáveis.` });
-    }
+  // 1) quanto dá pra gastar por dia — v2.58: olhando os 90 dias (o mesmo horizonte do cartão "Pra não ficar
+  // negativo"), não só até a próxima entrada. Antes, faturas e contas logo depois do salário ficavam de fora
+  // e a dica podia dizer "R$ 412 por dia" com o saldo indo pro negativo dias depois.
+  // Conta: o maior gasto igual todo dia que ainda deixa o saldo ≥ 0 em todos os dias à frente
+  // (em cada dia d: saldo previsto em d ÷ dias até d; vale o menor).
+  const p90 = projecao(D, 90, hoje);
+  const fut = p90.pts.filter((x) => x.d > hoje);
+  const neg = fut.find((x) => x.v < 0);
+  if (neg) {
+    out.push({ id: 'dia', ico: '🧯', tom: 'alerta', peso: 110, titulo: 'Contas acima do saldo',
+      texto: `Em ${dm(neg.d)} as saídas previstas passam do que você tem. Segure os gastos variáveis — veja quanto falta no cartão vermelho do Início.` });
+  } else if (fut.length) {
+    let lim = fut[0], porDiaC = Infinity;
+    for (const x of fut) { const r = x.v / dias(hoje, x.d); if (r < porDiaC) { porDiaC = r; lim = x; } }
+    const porDia = Math.floor(porDiaC / 100) * 100;
+    const causa = p90.evs.filter((e) => e.data === lim.d && e.valor < 0).sort((a, b) => a.valor - b.valor)[0];
+    out.push({ id: 'dia', ico: '💸', tom: 'bom', peso: 100, titulo: `${brl(porDia)} por dia`,
+      texto: `Sem o saldo ficar negativo nos próximos 3 meses. O dia mais apertado é ${dm(lim.d)}${causa ? ` (${nomeVisivel(D, causa.desc)})` : ''}.` });
   }
 
   // 2) dia apertado nos próximos 30 dias (sem ficar negativo)
