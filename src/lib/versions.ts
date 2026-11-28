@@ -4,8 +4,9 @@
  * Nada do passado é reescrito — como numa GMUD, o registro anterior fica.
  */
 import { addMonths } from './dates';
-import { uid } from './money';
-import type { MonthKey, Recorrente } from './types';
+import { brl, uid } from './money';
+import { quando } from './recorrencia';
+import type { Cartao, MonthKey, Recorrente } from './types';
 
 /** 'sempre' = corrigir um erro (reescreve todas as versões daquela linha). */
 export type Vigencia = 'sempre' | MonthKey;
@@ -22,10 +23,33 @@ export function aplicarAlteracao(recs: Recorrente[], id: string, mudancas: Parti
   if (desde === 'sempre' || desde <= old.inicio) {
     return recs.map((r) => (r.id === id ? { ...r, ...mudancas, id: r.id, inicio: r.inicio, fim: r.fim, serie } : r));
   }
+  // v2.58: já existe uma versão começando nesse mês (mudança agendada)? ela vira a configuração nova —
+  // antes nascia outra versão em cima dela e o fixo contava duas vezes a partir daí
+  const mesma = versoes(recs, serie).find((r) => r.inicio === desde && r.id !== id);
+  if (mesma) return recs.map((r) => (r.id === mesma.id ? { ...r, ...mudancas, id: r.id, inicio: r.inicio, fim: r.fim, serie } : r));
   const prox = versoes(recs, serie).find((r) => r.inicio > desde);
   const fimNova = prox ? addMonths(prox.inicio, -1) : old.fim && old.fim >= desde ? old.fim : undefined;
   const nova: Recorrente = { ...old, ...mudancas, id: uid(), serie, inicio: desde, fim: fimNova };
   return [...recs.map((r) => (r.id === id ? { ...r, serie, fim: addMonths(desde, -1) } : r)), nova];
+}
+
+/**
+ * v2.58 · Desfaz uma mudança agendada (ou qualquer versão que não seja a primeira): a versão some e a
+ * anterior volta a valer no período dela. Ex.: "Apartamento no PicPay a partir de dez" cancelado → continua
+ * como era. A primeira versão não se cancela (isso é apagar o fixo).
+ */
+export function cancelarVersao(recs: Recorrente[], id: string): Recorrente[] {
+  const alvo = recs.find((r) => r.id === id);
+  if (!alvo) return recs;
+  const vs = versoes(recs, serieDe(alvo));
+  const i = vs.findIndex((r) => r.id === id);
+  if (i <= 0) return recs;
+  const ant = vs[i - 1];
+  return recs.filter((r) => r.id !== id).map((r) => {
+    if (r.id !== ant.id) return r;
+    const { fim: _f, ...sem } = r;
+    return alvo.fim ? { ...sem, fim: alvo.fim } : sem;
+  });
 }
 
 /** Para de valer a partir de `desde` (some daí pra frente; o passado fica). */
@@ -55,4 +79,19 @@ export function substituirRenda(recs: Recorrente[], novas: NovaRenda[], desde: V
     return { id: uid(), onb: 'renda', tipo: 'entrada', cat: 'salario', desc: n.desc, valor: n.valor, dia: n.dia, inicio: ini, serie: mesma ? serieDe(mesma) : undefined };
   });
   return [...outros, ...encerradas, ...novos];
+}
+
+/** Como é pago, em poucas palavras (saídas): nome do cartão, "boleto" ou "Pix/débito". */
+export const meioNome = (r: Recorrente, cartoes: Cartao[]) =>
+  r.tipo !== 'saida' ? '' : r.cartaoId ? cartoes.find((c) => c.id === r.cartaoId)?.nome ?? 'cartão' : r.meio === 'boleto' ? 'boleto' : 'Pix/débito';
+
+/** v2.58 · O que muda de uma versão pra outra ("Cartão PicPay · R$ 1.900,00 · dia 15"). */
+export function oQueMuda(de: Recorrente, para: Recorrente, cartoes: Cartao[]): string {
+  const out: string[] = [];
+  if (para.valor !== de.valor) out.push(brl(para.tipo === 'entrada' ? para.valor : -para.valor));
+  if (meioNome(para, cartoes) !== meioNome(de, cartoes)) out.push(meioNome(para, cartoes));
+  if (quando(para) !== quando(de)) out.push(quando(para).replace(/^Todo dia/, 'dia'));
+  if ((para.agrupar?.dia ?? 0) !== (de.agrupar?.dia ?? 0)) out.push(para.agrupar ? `paga junto dia ${para.agrupar.dia}` : 'paga a cada sessão');
+  if ((para.reembolso?.pct ?? 0) !== (de.reembolso?.pct ?? 0)) out.push(para.reembolso ? `reembolso ${para.reembolso.pct}%` : 'sem reembolso');
+  return out.join(' · ') || 'mesma configuração';
 }

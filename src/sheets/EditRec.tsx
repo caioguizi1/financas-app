@@ -5,11 +5,11 @@ import { SmartDesc, SmartHint } from '../ui/Smart';
 import { addMonths, dm, mesCurto, monthKey, today } from '../lib/dates';
 import { jaCobrouNoMes, proximaCobranca } from '../lib/cobrancas';
 import { brl } from '../lib/money';
-import { aplicarAlteracao, encerrar as encerrarRec, serieDe, versoes, type Vigencia } from '../lib/versions';
+import { aplicarAlteracao, cancelarVersao, encerrar as encerrarRec, oQueMuda, serieDe, versoes, type Vigencia } from '../lib/versions';
 import { VigenciaPicker } from './Renda';
 import { uid } from '../lib/money';
 import type { Recorrente, Tipo } from '../lib/types';
-import { closeSheet, getData, mutate, toast, withUndo } from '../store';
+import { closeSheet, getData, mutate, openSheet, toast, withUndo } from '../store';
 import { SheetHeader, useRascunho } from '../ui/Sheet';
 import { Button, Chip, DayGrid, Segmented } from '../ui/Controls';
 import { DIAS_SEMANA, DIAS_SEMANA_CURTO, MES_CURTO, freqDe, quando, type Freq } from '../lib/recorrencia';
@@ -75,6 +75,15 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
   const [vigSel, setVig] = useState<Vigencia | null>(null);
   const vig: Vigencia = vigSel ?? (jaCobrou ? addMonths(mk, 1) : mk);
   const historico = !novo && r.id ? versoes(D.recorrentes, serieDe(r as Recorrente)) : [];
+  // v2.58: mudança agendada — a que vem depois desta, e se esta mesma é uma (começa depois deste mês)
+  const iAqui = historico.findIndex((v) => v.id === r.id);
+  const agendadaDepois = iAqui >= 0 ? historico.slice(iAqui + 1).find((v) => v.inicio > mk) : undefined;
+  const antes = iAqui > 0 ? historico[iAqui - 1] : undefined;
+  const ehAgendada = !!antes && !!rec?.inicio && rec.inicio > mk;
+  const cancelarMudanca = (v: Recorrente) => {
+    closeSheet();
+    withUndo(`Mudança de ${mesCurto(v.inicio)} cancelada`, (d) => ({ ...d, recorrentes: cancelarVersao(d.recorrentes, v.id) }));
+  };
 
   const montar = (): Recorrente => {
     // v2.54: "pago junto" e reembolso só valem pra semanal de saída (e "junto" só fora do cartão)
@@ -89,9 +98,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
     if (falta) return;
     const final = montar();
     const { id: _id, inicio: _ini, fim: _fim, serie: _s, ...mudancas } = final;
-    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouRegra ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
+    mutate((d) => ({ ...d, recorrentes: novo ? [...d.recorrentes, final] : aplicarAlteracao(d.recorrentes, final.id, mudancas, mudouRegra && !ehAgendada ? vig : 'sempre'), aprendido: r.desc.trim() ? aprender(d.aprendido ?? {}, final.desc, final.tipo, cat, final.ico) : d.aprendido }));
     closeSheet();
-    toast(novo ? 'Fixo adicionado' : mudouRegra && vig !== 'sempre' ? `Atualizado a partir de ${mesCurto(vig)}` : 'Atualizado');
+    toast(novo ? 'Fixo adicionado' : ehAgendada ? `Mudança de ${mesCurto(rec!.inicio!)} atualizada` : mudouRegra && vig !== 'sempre' ? `Atualizado a partir de ${mesCurto(vig)}` : 'Atualizado');
   };
   const apagar = () => {
     closeSheet();
@@ -105,8 +114,19 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
 
   return (
     <div className="sl">
-      <SheetHeader title={`${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo ? undefined : apagar} />
+      <SheetHeader title={ehAgendada ? `Mudança de ${mesCurto(rec!.inicio!)}` : `${novo ? 'Novo' : 'Editar'} ${r.tipo === 'entrada' ? 'recebimento' : 'gasto'} fixo`} onDelete={novo || ehAgendada ? undefined : apagar} />
       <div className="sl-mid" data-scroll>
+      {ehAgendada && <div className="agend"><div className="agend-t">Mudança agendada</div><div className="agend-s">Até {mesCurto(addMonths(rec!.inicio!, -1))} continua como era; daqui em diante vale o que está abaixo. Mudanças aqui só mexem nesta mudança.</div></div>}
+      {agendadaDepois && (
+        <div className="agend">
+          <div className="agend-t">Mudança agendada · a partir de {mesCurto(agendadaDepois.inicio)}</div>
+          <div className="agend-s">{oQueMuda(rec as Recorrente, agendadaDepois, cartoes)}</div>
+          <div className="btn-row agend-b">
+            <Button kind="ghost" onClick={() => openSheet(<EditRec rec={agendadaDepois} />)}>Editar mudança</Button>
+            <Button kind="ghost" onClick={() => cancelarMudanca(agendadaDepois)}>Cancelar mudança</Button>
+          </div>
+        </div>
+      )}
       <SmartDesc value={r.desc} onChange={(desc) => set({ desc })} ico={ico} cat={cat} placeholder={r.tipo === 'saida' ? 'Nome (ex: Internet, Ração, Academia)' : 'Nome (ex: Salário, Freela)'} />
       <SmartHint sug={sug} aplicada={usaSug} atual={cat} onUsar={() => { setManual(true); set({ cat: sug!.cat, ico: sug!.ico }); }} />
       <AmountDisplay value={r.valor} onClick={tec.abrir} ativo={tec.aberto} />
@@ -150,14 +170,15 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
       {freq === 'semanal' && r.tipo === 'saida' && <PagaEReembolso r={r} set={set} nomeDia={DIAS_SEMANA[r.semana ?? 1]} />}
       <Pausas r={r} set={set} rotulo={freq === 'semanal' ? DIAS_SEMANA[r.semana ?? 1] : freq === 'anual' ? 'vez' : 'mês'} />
       <ProximosMeses r={r} />
-      {mudouRegra && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor}
+      {mudouRegra && !ehAgendada && <VigenciaPicker vig={vig} setVig={setVig} mk={mk} temHistorico antes={rec!.valor} depois={r.valor}
         extra={!falta && <NotaVigencia final={montar()} vig={vig} mk={mk} jaCobrou={jaCobrou} inicio={rec!.inicio!} />} />}
       {historico.length > 1 && (
         <>
           <div className="lab">Histórico</div>
           <div className="hist">
             {historico.map((v) => (
-              <div key={v.id} className={`hist-row ${v.id === r.id ? 'on' : ''}`}>
+              <div key={v.id} className={`hist-row ${v.id === r.id ? 'on' : ''}${v.id !== r.id && v.inicio > mk ? ' tap' : ''}`}
+                {...(v.id !== r.id && v.inicio > mk ? { role: 'button', tabIndex: 0, 'aria-label': `Abrir a mudança de ${mesCurto(v.inicio)}`, onClick: () => openSheet(<EditRec rec={v} />) } : {})}>
                 <span>{mesCurto(v.inicio)} → {v.fim ? mesCurto(v.fim) : 'hoje'}</span><span className="sp" /><b className="num">{brl(v.valor)}</b><span className="dim"> · {quando(v).replace('Todo dia', 'dia').replace('Todo ano, ', '').toLowerCase()}</span>
               </div>
             ))}
@@ -170,7 +191,9 @@ export function EditRec({ rec, tipo = 'saida' }: { rec?: Draft; tipo?: Tipo }) {
         {dup && !falta && <Aviso nivel="atencao">Você já tem <b>{dup.desc}</b> em Fixos ({brl(dup.valor)}, {quando(dup).toLowerCase()}). Se for o mesmo, edite ele em vez de criar outro, pra não contar duas vezes.</Aviso>}
         <Button disabled={!!falta} onClick={salvar}>{dup ? 'Salvar outro mesmo assim' : 'Salvar'}</Button>
         {falta && <div className="need">Falta {falta}</div>}
-        {!novo && <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês (mantém o histórico)</Button>}
+        {ehAgendada
+          ? <Button kind="link" onClick={() => cancelarMudanca(rec as Recorrente)}>Cancelar esta mudança (volta a ser como era)</Button>
+          : !novo && <Button kind="link" onClick={encerrar}>Encerrar a partir deste mês (mantém o histórico)</Button>}
       </div>
       </div>
     </div>
